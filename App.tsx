@@ -4,7 +4,7 @@ import HomeView from './components/HomeView';
 import ClassicNoteEditor from './components/NoteEditor';
 import StickyNoteEditor from './components/StickyNoteEditor';
 import JournalEditor from './components/JournalEditor';
-import ExploreView from './components/ExploreView';
+import CalendarView from './components/CalendarView';
 import IdeasView from './components/IdeasView';
 import AgendaView from './components/AgendaView';
 import SpaceView from './components/SpaceView';
@@ -30,7 +30,7 @@ import { ArrowUpIcon, CloseIcon } from './components/icons';
 import NewNoteTypeModal from './components/NewNoteTypeModal';
 
 
-import { View, Note, Space, Board, BoardType, Task, Meeting, NoteType, TaskPriority } from './types';
+import { View, Note, Space, Board, BoardType, Task, Meeting, NoteType, TaskPriority, CalendarEvent } from './types';
 
 // Timer Component
 const TimerComponent = ({ initialSeconds, onClose }: { initialSeconds: number; onClose: () => void }) => {
@@ -304,6 +304,7 @@ const App: React.FC = () => {
   const [boards, setBoards] = useState<Board[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
 
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
   const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
@@ -332,6 +333,7 @@ const App: React.FC = () => {
       const savedBoards = localStorage.getItem('silo-boards');
       const savedTasks = localStorage.getItem('silo-tasks');
       const savedMeetings = localStorage.getItem('silo-meetings');
+      const savedCalendarEvents = localStorage.getItem('silo-calendar-events');
       const savedGeminiKey = localStorage.getItem('gemini-api-key');
 
       if (savedNotes) {
@@ -353,6 +355,7 @@ const App: React.FC = () => {
         setTasks(migratedTasks);
       }
       if (savedMeetings) setMeetings(JSON.parse(savedMeetings));
+      if (savedCalendarEvents) setCalendarEvents(JSON.parse(savedCalendarEvents));
       if (savedGeminiKey) setGeminiApiKey(savedGeminiKey);
 
     } catch (error) {
@@ -367,10 +370,11 @@ const App: React.FC = () => {
       localStorage.setItem('silo-boards', JSON.stringify(boards));
       localStorage.setItem('silo-tasks', JSON.stringify(tasks));
       localStorage.setItem('silo-meetings', JSON.stringify(meetings));
+      localStorage.setItem('silo-calendar-events', JSON.stringify(calendarEvents));
     } catch (error) {
       console.error("Failed to save data to localStorage", error);
     }
-  }, [notes, spaces, boards, tasks, meetings]);
+  }, [notes, spaces, boards, tasks, meetings, calendarEvents]);
 
   const handleToggleAiChat = useCallback(() => setIsAiChatVisible(prev => !prev), []);
   const handleSetTimer = useCallback((props: { initialSeconds: number }) => setActiveClock({ type: 'timer', props }), []);
@@ -421,6 +425,25 @@ const App: React.FC = () => {
   const handleDeleteTask = (taskId: string) => { setTasks(tasks.filter(task => task.id !== taskId)); };
   const handleDeleteMeeting = (meetingId: string) => { setMeetings(meetings.filter(meeting => meeting.id !== meetingId)); };
 
+  const handleAddCalendarEvents = (date: string, items: { id: string; type: 'note' | 'task' }[]) => {
+    const newEvents: CalendarEvent[] = items.map(item => ({
+        id: `${date}-${item.id}`,
+        date,
+        itemId: item.id,
+        itemType: item.type,
+    }));
+
+    setCalendarEvents(prev => {
+        const existingEventIds = new Set(prev.map(e => e.id));
+        const uniqueNewEvents = newEvents.filter(e => !existingEventIds.has(e.id));
+        return [...prev, ...uniqueNewEvents];
+    });
+  };
+
+  const handleDeleteCalendarEvent = (eventId: string) => {
+    setCalendarEvents(prev => prev.filter(e => e.id !== eventId));
+  };
+
   const handleAddSpace = (name: string) => {
     if (name.trim() === '') return;
     setSpaces([...spaces, { id: new Date().toISOString(), name }]);
@@ -467,7 +490,7 @@ const App: React.FC = () => {
         if (currentNote?.type === NoteType.JOURNAL) return <JournalEditor currentNote={currentNote} onSave={handleSaveNote} />;
         if (currentNote?.type === NoteType.STICKY) return <StickyNoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
         return <ClassicNoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
-      case View.EXPLORE: return <ExploreView />;
+      case View.CALENDAR: return <CalendarView events={calendarEvents} notes={notes} tasks={tasks} onAddEvents={handleAddCalendarEvents} onDeleteEvent={handleDeleteCalendarEvent} onEditNote={handleEditNote} />;
       case View.IDEAS: return <IdeasView />;
       case View.AGENDA: return <AgendaView tasks={tasks} meetings={meetings} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onDeleteMeeting={handleDeleteMeeting} />;
       case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} />;

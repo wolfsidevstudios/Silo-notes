@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { View, Space } from '../types';
-import { HomeIcon, CreateIcon, ExploreIcon, IdeasIcon, PlusIcon, HashtagIcon, SettingsIcon, SiloLabsIcon, SiloAiIcon, AgendaIcon } from './icons';
+import { HomeIcon, CreateIcon, CalendarIcon, IdeasIcon, PlusIcon, HashtagIcon, SettingsIcon, SiloLabsIcon, SiloAiIcon, AgendaIcon } from './icons';
 
 interface SidebarProps {
   activeView: View;
@@ -62,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <nav className="space-y-2">
           <NavItem icon={<HomeIcon />} label="Home" isActive={isNavActive(View.HOME)} onClick={() => onViewChange(View.HOME)} />
           <NavItem icon={<CreateIcon />} label="Create" isActive={isNavActive(View.CREATE)} onClick={onOpenNewNoteModal} />
-          <NavItem icon={<ExploreIcon />} label="Explore" isActive={isNavActive(View.EXPLORE)} onClick={() => onViewChange(View.EXPLORE)} />
+          <NavItem icon={<CalendarIcon />} label="Calendar" isActive={isNavActive(View.CALENDAR)} onClick={() => onViewChange(View.CALENDAR)} />
           <NavItem icon={<IdeasIcon />} label="Ideas" isActive={isNavActive(View.IDEAS)} onClick={() => onViewChange(View.IDEAS)} />
           <NavItem icon={<AgendaIcon />} label="Agenda" isActive={isNavActive(View.AGENDA)} onClick={() => onViewChange(View.AGENDA)} />
           <NavItem icon={<SiloLabsIcon />} label="Silo Labs" isActive={isNavActive(View.SILO_LABS)} onClick={() => onViewChange(View.SILO_LABS)} />

@@ -1,7 +1,7 @@
 export enum View {
   HOME = 'HOME',
   CREATE = 'CREATE',
-  EXPLORE = 'EXPLORE',
+  CALENDAR = 'CALENDAR',
   IDEAS = 'IDEAS',
   AGENDA = 'AGENDA',
   SPACE = 'SPACE',
@@ -58,6 +58,13 @@ export interface Meeting {
   title: string;
   dateTime: string;
   createdAt: string; // ISO string
+}
+
+export interface CalendarEvent {
+  id: string;
+  date: string; // YYYY-MM-DD
+  itemId: string;
+  itemType: 'note' | 'task';
 }
 
 export interface Space {
