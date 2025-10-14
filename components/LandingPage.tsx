@@ -50,85 +50,213 @@ const FaqItem = ({ question, answer }: { question: string; answer: string }) => 
 };
 
 const AppPreviewAnimation = () => {
-    const [phase, setPhase] = useState(0); // 0: typing, 1: secure, 2: ai, 3: modern
+    const [phase, setPhase] = useState(0); // 0: intro, 1: carousel, 2: typing, 3: rewrite, 4: grid, 5: ai-timer, 6: ai-task, 7: loop
+    const [subPhase, setSubPhase] = useState('start');
     const [typedText, setTypedText] = useState('');
-    const [showSave, setShowSave] = useState(false);
-    const textToType = "Brainstorming session for the new marketing campaign...\n\n- Key message: 'Simplicity is the ultimate sophistication.'\n- Target audience: Creative professionals, students.\n- Channels: Social media, blog posts, partnerships.";
-    const animatedTexts = ["Save and secure", "AI Powered", "Modern UI"];
+    const [aiChatText, setAiChatText] = useState('');
+    const [timerSeconds, setTimerSeconds] = useState(300);
+    const [tasks, setTasks] = useState<{id: number, text: string}[]>([]);
+
+    const noteText = "Brainstorming session for the new marketing campaign...\n- Key message: 'Simplicity is the ultimate sophistication.'\n- Target audience: Creative professionals, students.";
+    const rewrittenNoteText = "Marketing Campaign Brainstorm:\n\nWe're targeting creative pros and students with a core message of sophisticated simplicity. Let's explore this concept further.";
 
     useEffect(() => {
-        let typingInterval: number;
         let timeout: number;
+        let interval: number;
 
-        if (phase === 0) {
-            typingInterval = window.setInterval(() => {
-                setTypedText(prev => {
-                    if (prev.length < textToType.length) {
-                        return textToType.substring(0, prev.length + 2); // Type faster
-                    }
-                    clearInterval(typingInterval);
-                    timeout = window.setTimeout(() => setShowSave(true), 500);
+        const runAnimation = () => {
+            switch (phase) {
+                case 0: // Intro text
                     timeout = window.setTimeout(() => setPhase(1), 2500);
-                    return prev;
-                });
-            }, 30);
-        } else if (phase > 0 && phase <= animatedTexts.length) {
-            timeout = window.setTimeout(() => {
-                setPhase(p => p + 1);
-            }, 2500);
-        } else if (phase > animatedTexts.length) {
-            // Restart the animation
-            timeout = window.setTimeout(() => {
-                setTypedText('');
-                setShowSave(false);
-                setPhase(0);
-            }, 2500);
-        }
+                    break;
+                case 1: // Carousel
+                    timeout = window.setTimeout(() => setPhase(2), 3000);
+                    break;
+                case 2: // Typing
+                    if (subPhase === 'start') {
+                        setSubPhase('typing');
+                        interval = window.setInterval(() => {
+                            setTypedText(prev => {
+                                if (prev.length < noteText.length) {
+                                    return noteText.substring(0, prev.length + 2);
+                                }
+                                clearInterval(interval);
+                                setSubPhase('show-tools');
+                                return prev;
+                            });
+                        }, 25);
+                    }
+                    if (subPhase === 'show-tools') {
+                        timeout = window.setTimeout(() => setSubPhase('click-rewrite'), 1500);
+                    }
+                    if (subPhase === 'click-rewrite') {
+                        timeout = window.setTimeout(() => setPhase(3), 500);
+                    }
+                    break;
+                case 3: // Rewrite
+                     if (subPhase !== 'done') {
+                        setTypedText(rewrittenNoteText);
+                        setSubPhase('click-save');
+                        timeout = window.setTimeout(() => setSubPhase('done'), 1500);
+                     }
+                     if (subPhase === 'done') {
+                         timeout = window.setTimeout(() => setPhase(4), 500);
+                     }
+                    break;
+                case 4: // Grid
+                    timeout = window.setTimeout(() => setPhase(5), 3000);
+                    break;
+                case 5: // AI Timer
+                    if (subPhase === 'done') {
+                        setSubPhase('typing-timer');
+                        const timerText = "start a 5 minute timer";
+                        interval = window.setInterval(() => {
+                            setAiChatText(prev => {
+                                if(prev.length < timerText.length) {
+                                    return timerText.substring(0, prev.length + 1);
+                                }
+                                clearInterval(interval);
+                                setSubPhase('show-timer');
+                                return prev;
+                            });
+                        }, 50);
+                    }
+                     if (subPhase === 'show-timer') {
+                        interval = window.setInterval(() => setTimerSeconds(s => s > 0 ? s - 1 : 0), 10);
+                        timeout = window.setTimeout(() => {
+                           clearInterval(interval);
+                           setPhase(6);
+                        }, 2500);
+                    }
+                    break;
+                case 6: // AI Task
+                    if (phase === 6 && subPhase !== 'start') {
+                       setSubPhase('typing-task');
+                       setAiChatText('');
+                       const taskText = "add a task to buy groceries";
+                       interval = window.setInterval(() => {
+                           setAiChatText(prev => {
+                               if (prev.length < taskText.length) return taskText.substring(0, prev.length + 1);
+                               clearInterval(interval);
+                               setSubPhase('show-task');
+                               return prev;
+                           });
+                       }, 50);
+                    }
+                    if (subPhase === 'show-task') {
+                        setTasks([{id: 1, text: 'Buy groceries'}]);
+                        timeout = window.setTimeout(() => setPhase(7), 2500);
+                    }
+                    break;
+                case 7: // Loop
+                     // Reset all states for looping
+                    setTypedText('');
+                    setAiChatText('');
+                    setTimerSeconds(300);
+                    setTasks([]);
+                    setSubPhase('start');
+                    setPhase(0); // Go back to start
+                    break;
+            }
+        };
+
+        runAnimation();
 
         return () => {
-            clearInterval(typingInterval);
             clearTimeout(timeout);
+            clearInterval(interval);
         };
-    }, [phase, animatedTexts.length, textToType.length]);
+    }, [phase, subPhase]);
 
 
     return (
         <section className="py-20 sm:py-24 bg-white">
             <div className="mx-auto max-w-5xl px-6 lg:px-8">
                 <div className="relative w-full h-96 bg-gray-100 rounded-2xl shadow-xl overflow-hidden flex items-center justify-center p-4">
-                    {/* Notepad UI */}
-                    <div className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${phase > 0 ? 'opacity-0' : 'opacity-100'}`}>
+                    
+                    {/* Phase 0: Intro */}
+                    <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${phase === 0 ? 'opacity-100' : 'opacity-0'}`}>
+                        <h2 className="text-4xl lg:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600">Introducing Silo Notes</h2>
+                    </div>
+
+                    {/* Phase 1: Carousel */}
+                    <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${phase === 1 ? 'opacity-100' : 'opacity-0'}`}>
+                         <div className="absolute w-[900px] flex gap-4 animate-carousel">
+                            <div className="w-60 h-60 bg-yellow-200 rounded-lg p-4 shadow-lg"><h3 className="font-bold">Quick Idea</h3><p className="text-sm">A sticky note for thoughts.</p></div>
+                            <div className="w-60 h-60 bg-gray-50 rounded-lg p-4 shadow-lg border"><h3 className="font-bold">Project Plan</h3><p className="text-sm">A classic note for details.</p></div>
+                            <div className="w-60 h-60 bg-amber-50 rounded-lg p-4 shadow-lg border"><h3 className="font-bold">Daily Reflection</h3><p className="text-sm">A journal entry.</p></div>
+                            <div className="w-60 h-60 bg-blue-200 rounded-lg p-4 shadow-lg"><h3 className="font-bold">To-Do List</h3><p className="text-sm">- Item 1</p></div>
+                         </div>
+                    </div>
+
+                    {/* Phase 2 & 3: Notepad UI */}
+                    <div className={`absolute inset-0 transition-opacity duration-500 ${phase === 2 || phase === 3 ? 'opacity-100' : 'opacity-0'}`}>
                         <div className="w-full h-full bg-white rounded-lg flex flex-col p-6 lg:p-8">
-                            {/* Header */}
-                            <div className="flex items-center justify-between mb-8 flex-shrink-0">
+                            <div className="flex items-center justify-between mb-4 flex-shrink-0">
                                 <h1 className="text-2xl font-bold text-gray-400">Classic Note</h1>
-                                <button className={`font-semibold py-2 px-6 rounded-full transition-colors duration-300 ${showSave ? 'bg-green-600 text-white' : 'bg-black text-white'}`}>
-                                    {showSave ? 'Saved!' : 'Save Note'}
+                                <button className={`font-semibold py-2 px-6 rounded-full transition-all duration-300 ${subPhase === 'click-save' ? 'bg-green-600 text-white' : 'bg-black text-white'}`}>
+                                    {subPhase === 'click-save' ? 'Saved!' : 'Save Note'}
                                 </button>
                             </div>
-
-                            {/* Editor area */}
                             <div className="flex-grow flex flex-col overflow-hidden">
-                                <div className="text-4xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-200">
+                                <div className="text-4xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">
                                     Marketing Campaign
                                 </div>
                                 <div className="flex-1 w-full text-lg leading-relaxed text-gray-700">
-                                    <pre className="whitespace-pre-wrap font-sans">{typedText}<span className="blinking-cursor">|</span></pre>
+                                    <pre className="whitespace-pre-wrap font-sans transition-opacity duration-500">{typedText}{phase === 2 && subPhase === 'typing' && <span className="blinking-cursor">|</span>}</pre>
+                                </div>
+                                <div className={`flex-shrink-0 mt-4 flex items-center justify-center gap-2 flex-wrap transition-opacity duration-500 ${subPhase.startsWith('show-tools') || subPhase.startsWith('click-rewrite') ? 'opacity-100' : 'opacity-0'}`}>
+                                    <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-white border border-gray-200">Summarize</button>
+                                    <button className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-white border border-gray-200 transition-all ${subPhase === 'click-rewrite' ? 'bg-black text-white scale-95' : ''}`}>Rewrite</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    {/* Animated Text */}
-                    <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-1000 ease-in-out ${phase > 0 ? 'opacity-100' : 'opacity-0'}`}>
-                       {animatedTexts.map((text, index) => (
-                           <h2 key={index} className={`text-5xl lg:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 absolute transition-opacity duration-700 ${phase === index + 1 ? 'opacity-100' : 'opacity-0'}`}>
-                               {text}
-                           </h2>
-                       ))}
+                    
+                     {/* Phase 4: Grid View */}
+                    <div className={`absolute inset-0 grid grid-cols-3 gap-4 p-4 transition-opacity duration-500 ${phase === 4 ? 'opacity-100' : 'opacity-0'}`}>
+                        <div className="bg-white p-2 rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0s'}}><p className="font-bold text-xs">Campaign</p><p className="text-xs">Rewritten marketing...</p></div>
+                        <div className="bg-yellow-200 p-2 rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.1s'}}><p className="font-bold text-xs">Quick Idea</p></div>
+                        <div className="bg-white p-2 rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.2s'}}><p className="font-bold text-xs">Meeting Notes</p></div>
+                        <div className="bg-amber-100 p-2 rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.15s'}}><p className="font-bold text-xs">Journal</p></div>
+                        <div className="bg-white p-2 rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.25s'}}><p className="font-bold text-xs">Book List</p></div>
+                        <div className="bg-blue-200 p-2 rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.3s'}}><p className="font-bold text-xs">Recipe</p></div>
                     </div>
+
+                    {/* Phase 5 & 6: AI Chat */}
+                     <div className={`absolute inset-0 flex flex-col items-center justify-center gap-8 transition-opacity duration-500 ${phase === 5 || phase === 6 ? 'opacity-100' : 'opacity-0'}`}>
+                        {/* AI Bar */}
+                        <div className="w-[500px] h-14 bg-white rounded-full shadow-lg border flex items-center px-4 gap-2">
+                             <p className="flex-1 text-sm">{aiChatText}<span className="blinking-cursor">|</span></p>
+                             <div className="w-10 h-10 bg-black text-white rounded-full"></div>
+                        </div>
+                        {/* Timer UI */}
+                        <div className={`bg-black text-white w-80 rounded-3xl p-6 text-center transition-opacity duration-500 ${subPhase === 'show-timer' ? 'opacity-100' : 'opacity-0'}`}>
+                            <p className="text-5xl font-mono">{Math.floor(timerSeconds / 60).toString().padStart(2, '0')}:{(timerSeconds % 60).toString().padStart(2, '0')}</p>
+                        </div>
+                        {/* Task UI */}
+                         <div className={`bg-white p-6 rounded-2xl shadow-sm border w-[500px] transition-opacity duration-500 ${subPhase === 'show-task' ? 'opacity-100' : 'opacity-0'}`}>
+                            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Tasks</h2>
+                            {tasks.map(task => <div key={task.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-md"><input type="checkbox" className="h-5 w-5 rounded" /><span>{task.text}</span></div>)}
+                         </div>
+                    </div>
+
                 </div>
             </div>
-             <style>{`.blinking-cursor { animation: blink 1s step-end infinite; } @keyframes blink { 50% { opacity: 0; } }`}</style>
+            <style>{`
+                .blinking-cursor { animation: blink 1s step-end infinite; } 
+                @keyframes blink { 50% { opacity: 0; } }
+                @keyframes carousel {
+                    0% { transform: translateX(0); }
+                    100% { transform: translateX(-300px); }
+                }
+                .animate-carousel { animation: carousel 3s linear infinite; }
+                @keyframes fade-in-up {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
+            `}</style>
         </section>
     );
 };
