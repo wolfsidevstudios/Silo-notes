@@ -57,14 +57,12 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
     
     const clientId = 'qy8KhVTKRZG1Pl4dhQwZSw';
     const redirectUri = window.location.origin + window.location.pathname;
-    // Scopes needed to fetch user profile and upcoming meetings.
-    const scope = 'user:read meeting:read';
 
     const verifier = generateRandomString(128);
     sessionStorage.setItem('zoom_code_verifier', verifier);
     const challenge = await generateCodeChallenge(verifier);
 
-    const authUrl = `https://zoom.us/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256&scope=${encodeURIComponent(scope)}`;
+    const authUrl = `https://zoom.us/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256`;
     window.location.href = authUrl;
   };
 
