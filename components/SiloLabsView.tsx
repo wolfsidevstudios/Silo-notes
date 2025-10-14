@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View } from '../types';
-import { SiloLabsIcon, SummarizeIcon, RewriteIcon, SettingsIcon, VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, SiloAiIcon } from './icons';
+import { SiloLabsIcon, SummarizeIcon, RewriteIcon, VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, SiloAiIcon, FlashcardIcon, QuizIcon, YouTubeIcon, ConceptExplainerIcon } from './icons';
 
 interface SiloLabsViewProps {
   onViewChange: (view: View) => void;
@@ -89,13 +89,37 @@ const SiloLabsView: React.FC<SiloLabsViewProps> = ({ onViewChange }) => {
               description="Rephrase your text to change its tone, improve clarity, or simply find a new perspective."
               onClick={() => onViewChange(View.REWRITE_TOOL)}
             />
+            <ToolCard
+              icon={<FlashcardIcon />}
+              title="Notes to Flashcards"
+              description="Automatically generate flashcards from your notes to help you study and memorize key information."
+              onClick={() => onViewChange(View.FLASHCARD_TOOL)}
+            />
+            <ToolCard
+              icon={<QuizIcon />}
+              title="Notes to Quiz"
+              description="Turn your study materials into interactive quizzes to test your knowledge and prepare for exams."
+              onClick={() => onViewChange(View.QUIZ_TOOL)}
+            />
+             <ToolCard
+              icon={<YouTubeIcon />}
+              title="YouTube to Notes"
+              description="Paste a video transcript to instantly create well-structured, beautiful notes from educational content."
+              onClick={() => onViewChange(View.YOUTUBE_TO_NOTES_TOOL)}
+            />
+            <ToolCard
+              icon={<ConceptExplainerIcon />}
+              title="Concept Explainer"
+              description="Struggling with a complex topic? Paste it here and get a simple, easy-to-understand explanation."
+              onClick={() => onViewChange(View.CONCEPT_EXPLAINER_TOOL)}
+            />
           </>
         ) : (
-           <div className="md:col-span-2 lg:col-span-1">
+           <div className="md:col-span-2 lg:col-span-3">
              <div className="text-center p-6 h-full flex flex-col items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed">
                 <h2 className="text-lg font-semibold text-gray-700">Unlock More AI Tools</h2>
-                <p className="text-gray-500 text-sm mt-2 mb-4">
-                    Add your Gemini API key in settings to access Summarize and Rewrite tools.
+                <p className="text-gray-500 text-sm mt-2 mb-4 max-w-md">
+                    Add your Gemini API key in settings to access Summarize, Rewrite, and a suite of powerful new study tools.
                 </p>
                 <button
                     onClick={() => onViewChange(View.SETTINGS)}

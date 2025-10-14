@@ -29,6 +29,10 @@ import { GoogleGenAI } from "@google/genai";
 import { ArrowUpIcon, CloseIcon, SiloAiIcon } from './components/icons';
 import NewNoteTypeModal from './components/NewNoteTypeModal';
 import AiNoteEditor from './components/AiNoteEditor';
+import FlashcardToolView from './components/FlashcardToolView';
+import QuizToolView from './components/QuizToolView';
+import YouTubeToNotesToolView from './components/YouTubeToNotesToolView';
+import ConceptExplainerToolView from './components/ConceptExplainerToolView';
 
 
 import { View, Note, Space, Board, BoardType, Task, Meeting, NoteType, TaskPriority, CalendarEvent } from './types';
@@ -510,6 +514,10 @@ const App: React.FC = () => {
       case View.VOICE_MEMO_TOOL: return <VoiceMemoToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
       case View.SPEECH_TO_TEXT_TOOL: return <SpeechToTextToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
       case View.TEXT_TO_SPEECH_TOOL: return <TextToSpeechToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.FLASHCARD_TOOL: return <FlashcardToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.QUIZ_TOOL: return <QuizToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.YOUTUBE_TO_NOTES_TOOL: return <YouTubeToNotesToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.CONCEPT_EXPLAINER_TOOL: return <ConceptExplainerToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
       default: return <HomeView notes={notes} onEditNote={handleEditNote} />;
     }
   };
