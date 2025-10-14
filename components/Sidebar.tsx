@@ -116,16 +116,18 @@ const Sidebar: React.FC<SidebarProps> = ({
           className={`font-semibold text-white bg-black hover:bg-gray-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black rounded-full flex items-center justify-center ${isCollapsed ? 'w-12 h-12' : 'flex-1 py-3 px-4'}`}
           title="New Note"
         >
-          {isCollapsed ? <CreateIcon /> : <span>New Note</span>}
+          {isCollapsed ? <PlusIcon /> : <span>New Note</span>}
         </button>
-        <button
-          onClick={onToggleAiChat}
-          className="p-3 bg-gray-200 text-black rounded-full hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-          aria-label="Open Silo AI"
-          title="Open Silo AI"
-        >
-          <SiloAiIcon />
-        </button>
+        {!isCollapsed && (
+            <button
+            onClick={onToggleAiChat}
+            className="p-3 bg-gray-200 text-black rounded-full hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+            aria-label="Open Silo AI"
+            title="Open Silo AI"
+            >
+            <SiloAiIcon />
+            </button>
+        )}
       </div>
 
        <div className="border-t border-gray-200 pt-4 mt-4 -mx-4 px-4">

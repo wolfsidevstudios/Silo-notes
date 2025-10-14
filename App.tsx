@@ -26,7 +26,7 @@ import LoginPage from './components/LoginPage';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import { GoogleGenAI } from "@google/genai";
-import { ArrowUpIcon, CloseIcon } from './components/icons';
+import { ArrowUpIcon, CloseIcon, SiloAiIcon } from './components/icons';
 import NewNoteTypeModal from './components/NewNoteTypeModal';
 
 
@@ -542,6 +542,16 @@ const App: React.FC = () => {
           {activeClock.type === 'timer' && <TimerComponent {...activeClock.props} onClose={handleCloseClock} />}
           {activeClock.type === 'stopwatch' && <StopwatchComponent onClose={handleCloseClock} />}
         </div>
+      )}
+       {isSidebarCollapsed && (
+        <button
+          onClick={handleToggleAiChat}
+          className="fixed bottom-8 right-8 z-40 p-3 bg-gray-200 text-black rounded-full hover:bg-gray-300 transition-all duration-200 shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black animate-pop-in"
+          aria-label="Open Silo AI"
+          title="Open Silo AI"
+        >
+          <SiloAiIcon />
+        </button>
       )}
     </div>
   );
