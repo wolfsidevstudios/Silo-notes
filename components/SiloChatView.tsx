@@ -76,7 +76,19 @@ If the user is just chatting or you are clarifying, "action" should be null. Alw
                         nullable: true,
                         properties: {
                             type: { type: Type.STRING },
-                            payload: { type: Type.OBJECT }
+                            payload: {
+                                type: Type.OBJECT,
+                                properties: {
+                                    // Note properties
+                                    type: { type: Type.STRING, nullable: true }, // NoteType
+                                    title: { type: Type.STRING, nullable: true },
+                                    content: { type: Type.STRING, nullable: true },
+                                    // Task properties
+                                    priority: { type: Type.STRING, nullable: true },
+                                    // Meeting properties
+                                    dateTime: { type: Type.STRING, nullable: true },
+                                }
+                            }
                         }
                     }
                 }
