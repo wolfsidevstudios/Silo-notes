@@ -257,10 +257,19 @@ const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey, onAddTask, onAddMe
     );
 };
 
+interface UserProfile {
+    name: string;
+    picture: string;
+    email: string;
+}
 
 const App: React.FC = () => {
   // Authentication & Routing
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('silo-authenticated') === 'true');
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(() => {
+    const savedProfile = localStorage.getItem('silo-user-profile');
+    return savedProfile ? JSON.parse(savedProfile) : null;
+  });
   const [route, setRoute] = useState(window.location.hash || '#/');
 
   useEffect(() => {
@@ -271,15 +280,19 @@ const App: React.FC = () => {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (profile: UserProfile) => {
     localStorage.setItem('silo-authenticated', 'true');
+    localStorage.setItem('silo-user-profile', JSON.stringify(profile));
     setIsAuthenticated(true);
+    setUserProfile(profile);
     window.location.hash = '#/home';
   };
 
   const handleLogout = () => {
     localStorage.removeItem('silo-authenticated');
+    localStorage.removeItem('silo-user-profile');
     setIsAuthenticated(false);
+    setUserProfile(null);
     window.location.hash = '#/';
   };
 
@@ -448,7 +461,7 @@ const App: React.FC = () => {
       case View.EXPLORE: return <ExploreView />;
       case View.IDEAS: return <IdeasView />;
       case View.AGENDA: return <AgendaView tasks={tasks} meetings={meetings} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onDeleteMeeting={handleDeleteMeeting} />;
-      case View.SETTINGS: return <SettingsView onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} />;
+      case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} />;
       case View.SILO_LABS: return <SiloLabsView onViewChange={handleViewChange} />;
       case View.SUMMARIZE_TOOL: return <SummarizeToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
       case View.REWRITE_TOOL: return <RewriteToolView onBack={() => handleViewChange(View.SILO_LABS)} />;

@@ -7,18 +7,46 @@ declare global {
   }
 }
 
+interface UserProfile {
+    name: string;
+    picture: string;
+    email: string;
+}
+
 interface LoginPageProps {
-    onLoginSuccess: () => void;
+    onLoginSuccess: (profile: UserProfile) => void;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     const signInButtonRef = useRef<HTMLDivElement>(null);
 
+    const decodeJwtResponse = (token: string) => {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (e) {
+            console.error("Error decoding JWT", e);
+            return null;
+        }
+    }
+
     const handleCredentialResponse = (response: any) => {
-        // Here you would typically send the credential to your backend for verification.
-        // For this client-side app, we'll just proceed with login.
-        console.log("Encoded JWT ID token: " + response.credential);
-        onLoginSuccess();
+        const decoded = decodeJwtResponse(response.credential);
+        if (decoded) {
+            const userProfile: UserProfile = {
+                name: decoded.name,
+                picture: decoded.picture,
+                email: decoded.email
+            };
+            onLoginSuccess(userProfile);
+        } else {
+            // Handle decode error if necessary
+            console.error("Could not process login.")
+        }
     };
 
     useEffect(() => {
@@ -31,8 +59,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 signInButtonRef.current,
                 { theme: 'outline', size: 'large', type: 'standard', width: '300' } 
             );
-            // Optional: Show one-tap prompt
-            // window.google.accounts.id.prompt(); 
         }
     }, []);
 

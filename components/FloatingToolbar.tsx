@@ -15,7 +15,7 @@ const FONT_SIZES = [
 
 const FONT_FACES = ['Arial', 'Georgia', 'Inter', 'Verdana'];
 
-// FIX: Add `children` to the destructuring of props.
+// FIX: The `children` prop was not destructured in the component's signature, causing an error.
 const ToolbarButton = ({ onClick, children }: { onClick: () => void; children: React.ReactNode }) => (
     <button onClick={onClick} className="p-2 hover:bg-gray-100 rounded-lg flex items-center gap-1.5 text-sm font-medium text-gray-700">
         {children}

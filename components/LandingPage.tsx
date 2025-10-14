@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Icons for the feature section
 const FeatureIcon1 = () => (
@@ -49,6 +49,69 @@ const FaqItem = ({ question, answer }: { question: string; answer: string }) => 
     );
 };
 
+const AppPreviewAnimation = () => {
+    const [phase, setPhase] = useState(0); // 0: typing, 1: secure, 2: ai, 3: modern
+    const [typedText, setTypedText] = useState('');
+    const [showSave, setShowSave] = useState(false);
+    const textToType = "Brainstorming session for the new marketing campaign...\n\n- Key message: 'Simplicity is the ultimate sophistication.'\n- Target audience: Creative professionals, students.\n- Channels: Social media, blog posts, partnerships.";
+    const animatedTexts = ["Save and secure", "AI Powered", "Modern UI"];
+
+    useEffect(() => {
+        if (phase === 0) {
+            const typingInterval = setInterval(() => {
+                setTypedText(prev => {
+                    if (prev.length < textToType.length) {
+                        return textToType.substring(0, prev.length + 1);
+                    }
+                    clearInterval(typingInterval);
+                    setTimeout(() => setShowSave(true), 500);
+                    setTimeout(() => setPhase(1), 2500); // Wait after typing and saving
+                    return prev;
+                });
+            }, 30);
+            return () => clearInterval(typingInterval);
+        }
+        if (phase > 0 && phase <= animatedTexts.length) {
+            const textTimeout = setTimeout(() => {
+                setPhase(p => p + 1);
+            }, 2500); // Each text shows for 2.5s
+            return () => clearTimeout(textTimeout);
+        }
+    }, [phase]);
+
+    return (
+        <section className="py-20 sm:py-24 bg-white">
+            <div className="mx-auto max-w-5xl px-6 lg:px-8">
+                <div className="relative w-full h-96 bg-gray-100 rounded-2xl shadow-xl overflow-hidden flex items-center justify-center p-4">
+                    {/* Notepad UI */}
+                    <div className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${phase > 0 ? 'opacity-0' : 'opacity-100'}`}>
+                        <div className="w-full h-full bg-white rounded-lg flex flex-col">
+                            <div className="flex-shrink-0 h-14 bg-gray-50/80 border-b p-4 flex items-center justify-between">
+                                <p className="font-bold text-lg text-gray-800">New Note</p>
+                                <button className={`px-5 py-1.5 text-sm font-semibold rounded-full transition-colors ${showSave ? 'bg-green-600 text-white' : 'bg-black text-white'}`}>
+                                    {showSave ? 'Saved!' : 'Save'}
+                                </button>
+                            </div>
+                            <div className="flex-grow p-6 font-mono text-gray-700 text-sm overflow-y-auto">
+                                <pre className="whitespace-pre-wrap">{typedText}<span className="blinking-cursor">|</span></pre>
+                            </div>
+                        </div>
+                    </div>
+                    {/* Animated Text */}
+                    <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-1000 ease-in-out ${phase > 0 ? 'opacity-100' : 'opacity-0'}`}>
+                       {animatedTexts.map((text, index) => (
+                           <h2 key={index} className={`text-5xl lg:text-6xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 absolute transition-opacity duration-700 ${phase === index + 1 ? 'opacity-100' : 'opacity-0'}`}>
+                               {text}
+                           </h2>
+                       ))}
+                    </div>
+                </div>
+            </div>
+             <style>{`.blinking-cursor { animation: blink 1s step-end infinite; } @keyframes blink { 50% { opacity: 0; } }`}</style>
+        </section>
+    );
+};
+
 
 const LandingPage: React.FC = () => {
     return (
@@ -83,8 +146,10 @@ const LandingPage: React.FC = () => {
                     </div>
                 </section>
                 
+                <AppPreviewAnimation />
+                
                 {/* Features Section */}
-                <section id="features" className="py-20 sm:py-32">
+                <section id="features" className="py-20 sm:py-32 bg-gray-50">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8">
                         <div className="mx-auto max-w-2xl lg:text-center">
                             <h2 className="text-base font-semibold leading-7 text-indigo-600">Your Creative Hub</h2>
@@ -137,7 +202,7 @@ const LandingPage: React.FC = () => {
                 </section>
 
                 {/* FAQ Section */}
-                <section id="faq" className="bg-gray-50 py-20 sm:py-32">
+                <section id="faq" className="bg-white py-20 sm:py-32">
                     <div className="mx-auto max-w-3xl px-6 lg:px-8">
                         <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl text-center">Frequently Asked Questions</h2>
                         <div className="mt-12">
@@ -162,7 +227,7 @@ const LandingPage: React.FC = () => {
                 </section>
                 
                 {/* CTA Section */}
-                <section className="py-20 sm:py-24">
+                <section className="bg-gray-50 py-20 sm:py-24">
                     <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
                         <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Ready to get started?</h2>
                         <p className="mt-4 text-lg leading-8 text-gray-600">Start organizing your thoughts today. It's free.</p>
