@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { AppLogoIcon } from './icons';
 
 // FIX: Add google to window type to fix TypeScript errors.
 declare global {
@@ -68,7 +69,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             <div className="hidden lg:flex w-1/2 items-center justify-center bg-gray-50 p-12">
                  <div className="text-left max-w-md">
                      <div className="flex items-center mb-4">
-                        <img src="https://i.ibb.co/7J7XQxy/IMG-3995.png" alt="Silo Notes Logo" className="w-12 h-12" />
+                        <AppLogoIcon className="w-12 h-12" />
                         <span className="ml-4 font-bold text-3xl">Silo Notes</span>
                     </div>
                     <h1 className="text-4xl font-bold tracking-tight text-gray-900">

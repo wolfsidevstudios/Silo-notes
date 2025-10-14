@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { AppLogoIcon } from './icons';
 
 // Icons for the feature section
 const FeatureIcon1 = () => (
@@ -206,7 +207,7 @@ const LandingPage: React.FC = () => {
             <header className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
                 <nav className="flex items-center gap-4 bg-white/70 backdrop-blur-xl rounded-full shadow-lg px-6 py-3 border border-white/80">
                     <div className="flex items-center">
-                        <img src="https://i.ibb.co/7J7XQxy/IMG-3995.png" alt="Silo Notes Logo" className="w-6 h-6" />
+                        <AppLogoIcon className="w-6 h-6" />
                         <span className="ml-2 font-bold text-md">Silo Notes</span>
                     </div>
                     <a href="#/login" className="bg-black text-white font-semibold py-2 px-5 rounded-full text-sm hover:bg-gray-800 transition-colors">
