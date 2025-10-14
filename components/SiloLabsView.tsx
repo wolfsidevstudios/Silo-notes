@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View } from '../types';
-import { SiloLabsIcon, SummarizeIcon, RewriteIcon, VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, SiloAiIcon, FlashcardIcon, QuizIcon, YouTubeIcon, ConceptExplainerIcon } from './icons';
+import { SiloLabsIcon, SummarizeIcon, RewriteIcon, VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, SiloAiIcon, FlashcardIcon, QuizIcon, YouTubeIcon, ConceptExplainerIcon, InfographicIcon } from './icons';
 
 interface SiloLabsViewProps {
   onViewChange: (view: View) => void;
@@ -27,6 +27,14 @@ const ToolCard: React.FC<{
   </div>
 );
 
+const SectionHeader: React.FC<{ title: string; description: string }> = ({ title, description }) => (
+    <div className="md:col-span-2 lg:col-span-3 mt-12 first:mt-0">
+        <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+        <p className="text-gray-500 mt-1">{description}</p>
+        <hr className="my-6" />
+    </div>
+);
+
 const SiloLabsView: React.FC<SiloLabsViewProps> = ({ onViewChange }) => {
   const [isGeminiConfigured, setIsGeminiConfigured] = useState(false);
 
@@ -50,7 +58,8 @@ const SiloLabsView: React.FC<SiloLabsViewProps> = ({ onViewChange }) => {
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-         <ToolCard
+        <SectionHeader title="Personal Tools" description="AI companions for your daily creative tasks." />
+        <ToolCard
             icon={<SiloAiIcon />}
             title="Silo Chat"
             description="An intelligent agent to help you create notes, tasks, meetings, and more, just by talking."
@@ -75,6 +84,8 @@ const SiloLabsView: React.FC<SiloLabsViewProps> = ({ onViewChange }) => {
             description="Create high-quality audio from text using a variety of realistic AI voices."
             onClick={() => onViewChange(View.TEXT_TO_SPEECH_TOOL)}
           />
+
+        <SectionHeader title="Study Tools" description="Supercharge your learning and research." />
         {isGeminiConfigured ? (
           <>
             <ToolCard
@@ -113,6 +124,12 @@ const SiloLabsView: React.FC<SiloLabsViewProps> = ({ onViewChange }) => {
               description="Struggling with a complex topic? Paste it here and get a simple, easy-to-understand explanation."
               onClick={() => onViewChange(View.CONCEPT_EXPLAINER_TOOL)}
             />
+            <ToolCard
+              icon={<InfographicIcon />}
+              title="Notes to Infographic"
+              description="Visualize your notes by transforming them into a clear and compelling infographic image."
+              onClick={() => onViewChange(View.NOTES_TO_INFOGRAPHIC_TOOL)}
+            />
           </>
         ) : (
            <div className="md:col-span-2 lg:col-span-3">
@@ -130,6 +147,16 @@ const SiloLabsView: React.FC<SiloLabsViewProps> = ({ onViewChange }) => {
             </div>
            </div>
         )}
+
+        <SectionHeader title="Business Tools" description="Leverage AI for professional productivity." />
+        <div className="md:col-span-2 lg:col-span-3">
+            <div className="text-center p-10 h-full flex flex-col items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed">
+                <h2 className="text-lg font-semibold text-gray-700">Coming Soon</h2>
+                <p className="text-gray-500 text-sm mt-2 max-w-md">
+                    We're building a new suite of tools for business proposals, email drafting, market research, and more. Stay tuned!
+                </p>
+            </div>
+        </div>
       </div>
     </div>
   );

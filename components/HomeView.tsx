@@ -27,15 +27,15 @@ const NoteCard: React.FC<{ note: Note, onEditNote: (note: Note) => void }> = ({ 
         <div 
           onClick={() => onEditNote(note)}
           style={{ backgroundColor: note.color || '#FFF9C4' }}
-          className="p-6 rounded-lg cursor-pointer shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between aspect-square"
+          className="break-inside-avoid p-6 rounded-lg cursor-pointer shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
         >
           <div>
             <h3 className="font-bold text-lg mb-2 text-gray-800 pr-2">{note.title || 'Sticky Note'}</h3>
-             <p className="text-gray-700 text-sm line-clamp-4 font-medium">
+             <p className="text-gray-700 text-sm line-clamp-6 font-medium">
               {contentPreview}
             </p>
           </div>
-           <div className="flex justify-between items-center">
+           <div className="flex justify-between items-center pt-4">
              <p className="text-xs text-gray-600 mt-4">{formattedDate}</p>
              {note.privacy === 'private' && <div className="text-gray-600 flex-shrink-0"><LockIcon /></div>}
            </div>
@@ -45,7 +45,7 @@ const NoteCard: React.FC<{ note: Note, onEditNote: (note: Note) => void }> = ({ 
         return (
              <div 
               onClick={() => onEditNote(note)}
-              className="bg-amber-50 p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border border-amber-200 flex flex-col justify-between"
+              className="break-inside-avoid bg-amber-50 p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border border-amber-200 flex flex-col justify-between"
             >
               <div>
                 <div className="flex justify-between items-start">
@@ -66,7 +66,7 @@ const NoteCard: React.FC<{ note: Note, onEditNote: (note: Note) => void }> = ({ 
         return (
              <div 
               onClick={() => onEditNote(note)}
-              className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border border-indigo-200 flex flex-col justify-between"
+              className="break-inside-avoid bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border border-indigo-200 flex flex-col justify-between"
             >
               <div>
                 <div className="flex justify-between items-start">
@@ -88,7 +88,7 @@ const NoteCard: React.FC<{ note: Note, onEditNote: (note: Note) => void }> = ({ 
         return (
             <div 
               onClick={() => onEditNote(note)}
-              className="bg-gray-50 p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border border-gray-200 flex flex-col justify-between"
+              className="break-inside-avoid bg-gray-50 p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border border-gray-200 flex flex-col justify-between"
             >
               <div>
                 <div className="flex justify-between items-start">
@@ -121,9 +121,9 @@ const HomeView: React.FC<HomeViewProps> = ({ notes, onEditNote }) => {
           </div>
         </div>
       </header>
-
+        
       {notes.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
           {notes.map(note => (
             <NoteCard key={note.id} note={note} onEditNote={onEditNote} />
           ))}
@@ -134,6 +134,11 @@ const HomeView: React.FC<HomeViewProps> = ({ notes, onEditNote }) => {
           <p className="text-gray-500 mt-2">Click "New Note" to get started.</p>
         </div>
       )}
+      <style>{`
+        .break-inside-avoid {
+          break-inside: avoid;
+        }
+      `}</style>
     </div>
   );
 };

@@ -33,6 +33,7 @@ import FlashcardToolView from './components/FlashcardToolView';
 import QuizToolView from './components/QuizToolView';
 import YouTubeToNotesToolView from './components/YouTubeToNotesToolView';
 import ConceptExplainerToolView from './components/ConceptExplainerToolView';
+import NotesToInfographicToolView from './components/NotesToInfographicToolView';
 
 
 import { View, Note, Space, Board, BoardType, Task, Meeting, NoteType, TaskPriority, CalendarEvent } from './types';
@@ -518,6 +519,7 @@ const App: React.FC = () => {
       case View.QUIZ_TOOL: return <QuizToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
       case View.YOUTUBE_TO_NOTES_TOOL: return <YouTubeToNotesToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
       case View.CONCEPT_EXPLAINER_TOOL: return <ConceptExplainerToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.NOTES_TO_INFOGRAPHIC_TOOL: return <NotesToInfographicToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
       default: return <HomeView notes={notes} onEditNote={handleEditNote} />;
     }
   };
