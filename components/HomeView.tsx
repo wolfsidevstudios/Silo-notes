@@ -1,6 +1,6 @@
 import React from 'react';
 import { Note, NoteType } from '../types';
-import { LockIcon, JournalIcon, AppLogoIcon, SiloAiIcon } from './icons';
+import { LockIcon, JournalIcon, AppLogoIcon, SiloAiIcon, FlashcardIcon, QuizIcon, InfographicIcon } from './icons';
 
 interface HomeViewProps {
   notes: Note[];
@@ -81,6 +81,61 @@ const NoteCard: React.FC<{ note: Note, onEditNote: (note: Note) => void }> = ({ 
                 </p>
               </div>
               <p className="text-xs text-gray-500 mt-4">{formattedDate}</p>
+            </div>
+        );
+    case NoteType.FLASHCARDS:
+        const cards = note.content ? JSON.parse(note.content) : [];
+        return (
+            <div 
+            onClick={() => onEditNote(note)}
+            className="break-inside-avoid bg-blue-50 p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border border-blue-200 flex flex-col justify-between"
+            >
+            <div>
+                <div className="flex justify-between items-start">
+                <div className="bg-blue-100 text-blue-700 p-2 rounded-full mb-3"><FlashcardIcon /></div>
+                {note.privacy === 'private' && <div className="text-gray-400 flex-shrink-0"><LockIcon /></div>}
+                </div>
+                <h3 className="font-bold text-lg mb-2 text-gray-800">{note.title || 'Flashcard Set'}</h3>
+                <p className="text-gray-600 text-sm">{cards.length} cards</p>
+            </div>
+            <p className="text-xs text-gray-500 mt-4">{formattedDate}</p>
+            </div>
+        );
+    case NoteType.QUIZ:
+        const questions = note.content ? JSON.parse(note.content) : [];
+        return (
+            <div 
+            onClick={() => onEditNote(note)}
+            className="break-inside-avoid bg-purple-50 p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border border-purple-200 flex flex-col justify-between"
+            >
+            <div>
+                <div className="flex justify-between items-start">
+                <div className="bg-purple-100 text-purple-700 p-2 rounded-full mb-3"><QuizIcon /></div>
+                {note.privacy === 'private' && <div className="text-gray-400 flex-shrink-0"><LockIcon /></div>}
+                </div>
+                <h3 className="font-bold text-lg mb-2 text-gray-800">{note.title || 'Quiz'}</h3>
+                <p className="text-gray-600 text-sm">{questions.length} questions</p>
+            </div>
+            <p className="text-xs text-gray-500 mt-4">{formattedDate}</p>
+            </div>
+        );
+    case NoteType.INFOGRAPHIC:
+        return (
+            <div 
+            onClick={() => onEditNote(note)}
+            className="break-inside-avoid bg-teal-50 p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border border-teal-200 flex flex-col justify-between"
+            >
+            <div>
+                <div className="flex justify-between items-start">
+                    <div className="bg-teal-100 text-teal-700 p-2 rounded-full mb-3"><InfographicIcon /></div>
+                    {note.privacy === 'private' && <div className="text-gray-400 flex-shrink-0"><LockIcon /></div>}
+                </div>
+                <h3 className="font-bold text-lg mb-2 text-gray-800">{note.title || 'Infographic'}</h3>
+                <div className="mt-2 h-24 bg-white rounded-md flex items-center justify-center overflow-hidden">
+                    <img src={note.content} alt="Infographic preview" className="object-cover w-full h-full" />
+                </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-4">{formattedDate}</p>
             </div>
         );
     case NoteType.CLASSIC:

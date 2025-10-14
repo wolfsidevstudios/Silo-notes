@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { BackIcon, CloseIcon } from './icons';
 import { GoogleGenAI } from "@google/genai";
+import { Note } from '../types';
+import SelectNoteModal from './SelectNoteModal';
 
 interface SummarizeToolViewProps {
   onBack: () => void;
+  notes: Note[];
 }
 
-const SummarizeToolView: React.FC<SummarizeToolViewProps> = ({ onBack }) => {
+const SummarizeToolView: React.FC<SummarizeToolViewProps> = ({ onBack, notes }) => {
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
   const [error, setError] = useState('');
   const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
+  const [showSelectNoteModal, setShowSelectNoteModal] = useState(false);
 
   useEffect(() => {
     const key = localStorage.getItem('gemini-api-key');
@@ -59,6 +63,7 @@ const SummarizeToolView: React.FC<SummarizeToolViewProps> = ({ onBack }) => {
 
   return (
     <div className="p-8 lg:p-12 h-full flex flex-col">
+      {showSelectNoteModal && <SelectNoteModal notes={notes} onClose={() => setShowSelectNoteModal(false)} onSelect={(content) => setInputText(content)} />}
       <header className="mb-10 flex-shrink-0">
         <button onClick={onBack} className="flex items-center text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors mb-4">
           <BackIcon />
@@ -69,7 +74,10 @@ const SummarizeToolView: React.FC<SummarizeToolViewProps> = ({ onBack }) => {
 
       <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="flex flex-col">
-          <h2 className="font-semibold mb-2">Your Text</h2>
+            <div className="flex justify-between items-center mb-2">
+                <h2 className="font-semibold">Your Text</h2>
+                <button onClick={() => setShowSelectNoteModal(true)} className="text-sm font-semibold text-gray-600 hover:text-black">Select Note</button>
+            </div>
           <textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}

@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { BackIcon, ConceptExplainerIcon } from './icons';
 import { GoogleGenAI } from "@google/genai";
+import { Note } from '../types';
+import SelectNoteModal from './SelectNoteModal';
+
 
 interface ConceptExplainerToolViewProps {
   onBack: () => void;
+  notes: Note[];
 }
 
-const ConceptExplainerToolView: React.FC<ConceptExplainerToolViewProps> = ({ onBack }) => {
+const ConceptExplainerToolView: React.FC<ConceptExplainerToolViewProps> = ({ onBack, notes }) => {
   const [concept, setConcept] = useState('');
   const [context, setContext] = useState('');
   const [explanation, setExplanation] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
   const [error, setError] = useState('');
   const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
+  const [showSelectNoteModal, setShowSelectNoteModal] = useState(false);
 
   useEffect(() => {
     const key = localStorage.getItem('gemini-api-key');
@@ -63,6 +68,7 @@ const ConceptExplainerToolView: React.FC<ConceptExplainerToolViewProps> = ({ onB
 
   return (
     <div className={commonViewClasses}>
+      {showSelectNoteModal && <SelectNoteModal notes={notes} onClose={() => setShowSelectNoteModal(false)} onSelect={(content) => setContext(content)} />}
       <header className="mb-10 flex-shrink-0">
         <button onClick={onBack} className="flex items-center text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors mb-4">
           <BackIcon />
@@ -85,7 +91,10 @@ const ConceptExplainerToolView: React.FC<ConceptExplainerToolViewProps> = ({ onB
                 />
             </div>
           <div className="flex flex-col flex-grow">
-            <label className="font-semibold mb-2">Context (Optional)</label>
+             <div className="flex justify-between items-center mb-2">
+                <label className="font-semibold">Context (Optional)</label>
+                <button onClick={() => setShowSelectNoteModal(true)} className="text-sm font-semibold text-gray-600 hover:text-black">Select Note</button>
+            </div>
             <textarea
                 value={context}
                 onChange={(e) => setContext(e.target.value)}

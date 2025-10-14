@@ -414,7 +414,23 @@ const App: React.FC = () => {
 
   const handleEditNote = (note: Note) => {
     setCurrentNote(note);
-    const view = note.type === NoteType.AI_NOTE ? View.AI_NOTE_EDITOR : View.CREATE;
+    let view;
+    switch (note.type) {
+        case NoteType.AI_NOTE:
+            view = View.AI_NOTE_EDITOR;
+            break;
+        case NoteType.FLASHCARDS:
+            view = View.FLASHCARD_TOOL;
+            break;
+        case NoteType.QUIZ:
+            view = View.QUIZ_TOOL;
+            break;
+        case NoteType.INFOGRAPHIC:
+            view = View.NOTES_TO_INFOGRAPHIC_TOOL;
+            break;
+        default:
+            view = View.CREATE;
+    }
     handleViewChange(view, { keepCurrentNote: true });
   };
 
@@ -510,16 +526,16 @@ const App: React.FC = () => {
       case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} />;
       case View.SILO_LABS: return <SiloLabsView onViewChange={handleViewChange} />;
       case View.SILO_CHAT: return <SiloChatView geminiApiKey={geminiApiKey} onSaveNote={handleSaveNote} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} />;
-      case View.SUMMARIZE_TOOL: return <SummarizeToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
-      case View.REWRITE_TOOL: return <RewriteToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.SUMMARIZE_TOOL: return <SummarizeToolView onBack={() => handleViewChange(View.SILO_LABS)} notes={notes} />;
+      case View.REWRITE_TOOL: return <RewriteToolView onBack={() => handleViewChange(View.SILO_LABS)} notes={notes} />;
       case View.VOICE_MEMO_TOOL: return <VoiceMemoToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
       case View.SPEECH_TO_TEXT_TOOL: return <SpeechToTextToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
       case View.TEXT_TO_SPEECH_TOOL: return <TextToSpeechToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
-      case View.FLASHCARD_TOOL: return <FlashcardToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
-      case View.QUIZ_TOOL: return <QuizToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
-      case View.YOUTUBE_TO_NOTES_TOOL: return <YouTubeToNotesToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
-      case View.CONCEPT_EXPLAINER_TOOL: return <ConceptExplainerToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
-      case View.NOTES_TO_INFOGRAPHIC_TOOL: return <NotesToInfographicToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.FLASHCARD_TOOL: return <FlashcardToolView onBack={() => handleViewChange(View.SILO_LABS)} currentNote={currentNote} onSave={handleSaveNote} notes={notes} />;
+      case View.QUIZ_TOOL: return <QuizToolView onBack={() => handleViewChange(View.SILO_LABS)} currentNote={currentNote} onSave={handleSaveNote} notes={notes} />;
+      case View.YOUTUBE_TO_NOTES_TOOL: return <YouTubeToNotesToolView onBack={() => handleViewChange(View.SILO_LABS)} onSave={handleSaveNote} />;
+      case View.CONCEPT_EXPLAINER_TOOL: return <ConceptExplainerToolView onBack={() => handleViewChange(View.SILO_LABS)} notes={notes} />;
+      case View.NOTES_TO_INFOGRAPHIC_TOOL: return <NotesToInfographicToolView onBack={() => handleViewChange(View.SILO_LABS)} currentNote={currentNote} onSave={handleSaveNote} notes={notes} />;
       default: return <HomeView notes={notes} onEditNote={handleEditNote} />;
     }
   };

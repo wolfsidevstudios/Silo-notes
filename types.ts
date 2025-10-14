@@ -27,6 +27,9 @@ export enum NoteType {
   STICKY = 'STICKY',
   JOURNAL = 'JOURNAL',
   AI_NOTE = 'AI_NOTE',
+  FLASHCARDS = 'FLASHCARDS',
+  QUIZ = 'QUIZ',
+  INFOGRAPHIC = 'INFOGRAPHIC',
 }
 
 export interface AudioNote {
@@ -37,7 +40,7 @@ export interface AudioNote {
 export interface Note {
   id: string;
   title: string;
-  content: string; // Can contain HTML
+  content: string; // Can contain HTML, JSON string, or data URL
   createdAt: string; // ISO string
   audioNotes?: AudioNote[];
   privacy: 'public' | 'private';

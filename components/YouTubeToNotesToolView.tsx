@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { BackIcon, YouTubeIcon } from './icons';
 import { GoogleGenAI } from "@google/genai";
+import { Note, NoteType } from '../types';
 
 interface YouTubeToNotesToolViewProps {
   onBack: () => void;
+  onSave: (noteData: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => void;
 }
 
-const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack }) => {
-  const [transcript, setTranscript] = useState('');
+const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack, onSave }) => {
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
@@ -20,20 +21,21 @@ const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack 
   }, []);
 
   const handleGenerate = async () => {
-    if (!geminiApiKey || !transcript.trim()) return;
+    if (!geminiApiKey || !youtubeUrl.trim()) return;
 
     setStatus('loading');
     setError('');
     setNotes('');
     try {
         const ai = new GoogleGenAI({ apiKey: geminiApiKey });
-        const prompt = `Please create a well-structured set of notes from the following YouTube video transcript. Organize the key points using headings, subheadings, and bullet points. Make important terms bold.
-        ${youtubeUrl ? `\nVideo URL for context: ${youtubeUrl}\n` : ''}
-        Transcript:\n\n${transcript}`;
+        const prompt = `From the YouTube video at this URL: ${youtubeUrl}, please generate a detailed, well-structured set of notes. Organize the key points using headings, subheadings, and bullet points. Make important terms bold using markdown like **this**.`;
         
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
+            config: {
+                tools: [{googleSearch: {}}],
+            },
         });
         
         const formattedNotes = response.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br />');
@@ -41,8 +43,20 @@ const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack 
         setStatus('success');
     } catch (err) {
         console.error("Gemini API Error:", err);
-        setError("Failed to generate notes. The AI couldn't process the request. Please check the transcript and try again.");
+        setError("Failed to generate notes. This can happen if the video has no transcript or is private. Please try another video.");
         setStatus('error');
+    }
+  };
+
+  const handleSaveNote = () => {
+    const title = prompt("Enter a title for your new note:", `Notes from YouTube`);
+    if (title && notes) {
+        onSave({
+            title,
+            content: notes.replace(/<strong>/g, '<b>').replace(/<\/strong>/g, '</b>'),
+            type: NoteType.CLASSIC,
+            privacy: 'public',
+        });
     }
   };
   
@@ -69,13 +83,13 @@ const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack 
           <span>Back to Silo Labs</span>
         </button>
         <h1 className="text-4xl font-bold text-gray-900">YouTube to Notes</h1>
-        <p className="text-lg text-gray-500 mt-2">Transform video transcripts into structured, easy-to-read notes.</p>
+        <p className="text-lg text-gray-500 mt-2">Transform YouTube videos into structured, easy-to-read notes.</p>
       </header>
 
       <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-8 min-h-0">
         <div className="flex flex-col gap-4">
             <div>
-                <label className="font-semibold mb-2 block">YouTube URL (Optional)</label>
+                <label className="font-semibold mb-2 block">YouTube URL</label>
                 <input
                     type="text"
                     value={youtubeUrl}
@@ -83,16 +97,8 @@ const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack 
                     placeholder="https://www.youtube.com/watch?v=..."
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
                 />
+                 <p className="text-xs text-gray-500 mt-2">This feature uses AI to find and process the video's content. It works best with videos that have captions or a clear transcript.</p>
             </div>
-          <div className="flex flex-col flex-grow">
-            <label className="font-semibold mb-2">Video Transcript</label>
-            <textarea
-                value={transcript}
-                onChange={(e) => setTranscript(e.target.value)}
-                placeholder="Paste the full video transcript here..."
-                className="flex-1 w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black resize-none"
-            />
-          </div>
         </div>
         <div className="flex flex-col">
             <h2 className="font-semibold mb-2">Generated Notes</h2>
@@ -111,10 +117,18 @@ const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack 
         </div>
       </div>
       
-      <div className="flex-shrink-0 mt-8 flex justify-end">
+      <div className="flex-shrink-0 mt-8 flex justify-end gap-4">
+        {status === 'success' && notes && (
+            <button
+                onClick={handleSaveNote}
+                className="bg-white text-black border border-black font-semibold py-3 px-8 rounded-full hover:bg-gray-100 transition-colors"
+            >
+                Save as Note
+            </button>
+        )}
          <button
             onClick={handleGenerate}
-            disabled={status === 'loading' || !transcript.trim()}
+            disabled={status === 'loading' || !youtubeUrl.trim()}
             className="bg-black text-white font-semibold py-3 px-8 rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
         >
             <YouTubeIcon />

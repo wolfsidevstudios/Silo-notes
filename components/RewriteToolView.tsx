@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { BackIcon } from './icons';
 import RewriteModal from './RewriteModal';
+import { Note } from '../types';
+import SelectNoteModal from './SelectNoteModal';
 
 interface RewriteToolViewProps {
   onBack: () => void;
+  notes: Note[];
 }
 
-const RewriteToolView: React.FC<RewriteToolViewProps> = ({ onBack }) => {
+const RewriteToolView: React.FC<RewriteToolViewProps> = ({ onBack, notes }) => {
   const [inputText, setInputText] = useState('');
   const [isRewriteModalOpen, setIsRewriteModalOpen] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
+  const [showSelectNoteModal, setShowSelectNoteModal] = useState(false);
 
   useEffect(() => {
     const key = localStorage.getItem('gemini-api-key');
@@ -50,6 +54,7 @@ const RewriteToolView: React.FC<RewriteToolViewProps> = ({ onBack }) => {
                 onReplace={handleReplaceText}
             />
         )}
+        {showSelectNoteModal && <SelectNoteModal notes={notes} onClose={() => setShowSelectNoteModal(false)} onSelect={(content) => setInputText(content)} />}
       <header className="mb-10 flex-shrink-0">
         <button onClick={onBack} className="flex items-center text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors mb-4">
           <BackIcon />
@@ -59,6 +64,10 @@ const RewriteToolView: React.FC<RewriteToolViewProps> = ({ onBack }) => {
       </header>
 
       <div className="flex-grow flex flex-col">
+        <div className="flex justify-between items-center mb-2">
+            <h2 className="font-semibold">Your Text</h2>
+            <button onClick={() => setShowSelectNoteModal(true)} className="text-sm font-semibold text-gray-600 hover:text-black">Select Note</button>
+        </div>
         <textarea
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
