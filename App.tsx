@@ -384,7 +384,7 @@ const App: React.FC = () => {
         return;
       }
 
-      const clientId = '6949109721415.7001633190291';
+      const clientId = '7938298429665.9726628658528';
       const params = new URLSearchParams();
       params.append('code', code);
       params.append('client_id', clientId);

@@ -55,7 +55,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
             .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
     };
     
-    const clientId = '6949109721415.7001633190291';
+    const clientId = '7938298429665.9726628658528';
     const redirectUri = window.location.origin + window.location.pathname;
 
     const verifier = generateRandomString(128);
