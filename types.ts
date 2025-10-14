@@ -69,7 +69,7 @@ export interface Meeting {
   title: string;
   dateTime: string;
   createdAt: string; // ISO string
-  source?: 'silo' | 'zoom';
+  source?: 'silo';
   joinUrl?: string;
 }
 

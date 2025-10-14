@@ -363,124 +363,119 @@ const App: React.FC = () => {
   const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
   const [activeClock, setActiveClock] = useState<{ type: 'timer' | 'stopwatch'; props: any } | null>(null);
 
-  // Zoom Integration State
-  const [zoomToken, setZoomToken] = useState<string | null>(() => localStorage.getItem('zoom_access_token'));
-  const [zoomUser, setZoomUser] = useState<any | null>(null);
-  const [zoomMeetings, setZoomMeetings] = useState<Meeting[]>([]);
+  // Slack Integration State
+  const [slackToken, setSlackToken] = useState<string | null>(() => localStorage.getItem('slack_access_token'));
+  const [slackUser, setSlackUser] = useState<any | null>(null);
 
-  const handleZoomDisconnect = useCallback(() => {
-    localStorage.removeItem('zoom_access_token');
-    localStorage.removeItem('zoom_refresh_token');
-    setZoomToken(null);
-    setZoomUser(null);
-    setZoomMeetings([]);
+  const handleSlackDisconnect = useCallback(() => {
+    localStorage.removeItem('slack_access_token');
+    setSlackToken(null);
+    setSlackUser(null);
+    // Optionally remove slack tasks from the main tasks list
+    setTasks(prev => prev.filter(task => !(task as any).isFromSlack));
   }, []);
-  
-  // Zoom: Handle OAuth callback for both login and settings connect
+
+  // Slack: Handle OAuth callback
   useEffect(() => {
-    const handleZoomOauth = async (code: string) => {
-        const verifier = sessionStorage.getItem('zoom_code_verifier');
-        if (!verifier) {
-            console.error('Zoom code verifier not found in session storage.');
-            return;
+    const handleSlackOauth = async (code: string) => {
+      const verifier = sessionStorage.getItem('slack_code_verifier');
+      if (!verifier) {
+        console.error('Slack code verifier not found.');
+        return;
+      }
+
+      const clientId = '6949109721415.7001633190291';
+      const params = new URLSearchParams();
+      params.append('code', code);
+      params.append('client_id', clientId);
+      params.append('code_verifier', verifier);
+
+      try {
+        const response = await fetch('https://slack.com/api/oauth.v2.access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params.toString(),
+        });
+
+        const data = await response.json();
+        sessionStorage.removeItem('slack_code_verifier');
+
+        if (!data.ok) {
+          throw new Error(data.error || 'Failed to authenticate with Slack');
         }
-        
-        const clientId = 'qy8KhVTKRZG1Pl4dhQwZSw';
-        const redirectUri = window.location.origin + window.location.pathname;
 
-        const params = new URLSearchParams();
-        params.append('grant_type', 'authorization_code');
-        params.append('code', code);
-        params.append('redirect_uri', redirectUri);
-        params.append('client_id', clientId);
-        params.append('code_verifier', verifier);
-
-        try {
-            const response = await fetch('https://zoom.us/oauth/token', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: params,
-            });
-
-            if (!response.ok) throw new Error('Failed to fetch Zoom token');
-            
-            const data = await response.json();
-            sessionStorage.removeItem('zoom_code_verifier');
-
-            if (isAuthenticated) {
-                // Connecting account from settings
-                localStorage.setItem('zoom_access_token', data.access_token);
-                localStorage.setItem('zoom_refresh_token', data.refresh_token);
-                setZoomToken(data.access_token);
-            } else {
-                // Logging in
-                const userResponse = await fetch('https://api.zoom.us/v2/users/me', {
-                    headers: { 'Authorization': `Bearer ${data.access_token}` }
-                });
-                if (!userResponse.ok) throw new Error('Failed to fetch Zoom user for login');
-                const userData = await userResponse.json();
-                
-                const userProfile: UserProfile = {
-                    name: `${userData.first_name} ${userData.last_name}`,
-                    picture: userData.pic_url,
-                    email: userData.email,
-                };
-
-                handleLoginSuccess(userProfile);
-            }
-        } catch (error) {
-            console.error('Error handling Zoom OAuth:', error);
+        if (data.authed_user && data.authed_user.access_token) { // Full integration
+          localStorage.setItem('slack_access_token', data.authed_user.access_token);
+          setSlackToken(data.authed_user.access_token);
+        } else if (data.id_token) { // Sign In with Slack (OIDC)
+          const decoded = decodeJwtResponse(data.id_token);
+          if (decoded) {
+            const userProfile: UserProfile = {
+              name: decoded.name,
+              picture: decoded.picture,
+              email: decoded.email,
+            };
+            handleLoginSuccess(userProfile);
+          }
         }
+      } catch (error) {
+        console.error('Error handling Slack OAuth:', error);
+      }
     };
-    
+
     const urlParams = new URLSearchParams(window.location.search);
-    const zoomCode = urlParams.get('code');
-    if (zoomCode) {
-        handleZoomOauth(zoomCode);
-        window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+    const slackCode = urlParams.get('code');
+    if (slackCode) {
+      handleSlackOauth(slackCode);
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
     }
-  }, [isAuthenticated, handleLoginSuccess]);
+  }, [handleLoginSuccess]);
 
-
-  // Zoom: Fetch data when token is available
+  // Slack: Fetch data when token is available
   useEffect(() => {
-    const fetchZoomData = async (token: string) => {
-        try {
-            // Fetch User Profile
-            const userResponse = await fetch('https://api.zoom.us/v2/users/me', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!userResponse.ok) throw new Error('Failed to fetch Zoom user');
-            const userData = await userResponse.json();
-            setZoomUser(userData);
+    const fetchSlackData = async (token: string) => {
+      try {
+        // Fetch User Profile
+        const userResponse = await fetch('https://slack.com/api/users.profile.get', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!userResponse.ok) throw new Error('Failed to fetch Slack user profile');
+        const userData = await userResponse.json();
+        if (!userData.ok) throw new Error(userData.error);
+        setSlackUser(userData.profile);
 
-            // Fetch Meetings
-            const meetingsResponse = await fetch('https://api.zoom.us/v2/users/me/meetings?type=upcoming', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!meetingsResponse.ok) throw new Error('Failed to fetch Zoom meetings');
-            const meetingsData = await meetingsResponse.json();
-            
-            const mappedMeetings: Meeting[] = meetingsData.meetings.map((m: any) => ({
-                id: m.uuid,
-                title: m.topic,
-                dateTime: m.start_time,
-                createdAt: m.created_at,
-                source: 'zoom',
-                joinUrl: m.join_url,
-            }));
-            setZoomMeetings(mappedMeetings);
-        } catch (error) {
-            console.error('Error fetching Zoom data:', error);
-            // Handle token refresh logic here in a real app
-            handleZoomDisconnect();
-        }
+        // Fetch Reminders
+        const remindersResponse = await fetch('https://slack.com/api/reminders.list', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!remindersResponse.ok) throw new Error('Failed to fetch Slack reminders');
+        const remindersData = await remindersResponse.json();
+        if (!remindersData.ok) throw new Error(remindersData.error);
+
+        const slackTasks: (Task & {isFromSlack: boolean})[] = remindersData.reminders.map((r: any) => ({
+          id: `slack-${r.id}`,
+          title: `[Slack] ${r.text}`,
+          completed: r.complete_ts ? true : false,
+          createdAt: new Date(r.time * 1000).toISOString(),
+          priority: TaskPriority.MEDIUM,
+          isFromSlack: true,
+        }));
+        
+        setTasks(prev => {
+            const nonSlackTasks = prev.filter(task => !(task as any).isFromSlack);
+            return [...nonSlackTasks, ...slackTasks];
+        });
+
+      } catch (error) {
+        console.error('Error fetching Slack data:', error);
+        handleSlackDisconnect();
+      }
     };
 
-    if (zoomToken) {
-        fetchZoomData(zoomToken);
+    if (slackToken) {
+      fetchSlackData(slackToken);
     }
-  }, [zoomToken, handleZoomDisconnect]);
+  }, [slackToken, handleSlackDisconnect]);
 
   useEffect(() => {
     if (route.startsWith('#/')) {
@@ -538,7 +533,8 @@ const App: React.FC = () => {
       localStorage.setItem('silo-notes', JSON.stringify(notes));
       localStorage.setItem('silo-spaces', JSON.stringify(spaces));
       localStorage.setItem('silo-boards', JSON.stringify(boards));
-      localStorage.setItem('silo-tasks', JSON.stringify(tasks));
+      // Filter out Slack tasks before saving to localStorage to avoid duplication
+      localStorage.setItem('silo-tasks', JSON.stringify(tasks.filter(t => !(t as any).isFromSlack)));
       localStorage.setItem('silo-meetings', JSON.stringify(meetings));
       localStorage.setItem('silo-calendar-events', JSON.stringify(calendarEvents));
       localStorage.setItem('silo-gems', JSON.stringify(gems));
@@ -549,26 +545,19 @@ const App: React.FC = () => {
 
   useEffect(() => {
     // Sync meetings to calendar events
-    const siloMeetingEvents: CalendarEvent[] = meetings.map(m => ({
+    const meetingEvents: CalendarEvent[] = meetings.map(m => ({
       id: `meeting-${m.id}`,
       date: m.dateTime.split('T')[0],
       itemId: m.id,
       itemType: 'meeting',
     }));
-     const zoomMeetingEvents: CalendarEvent[] = zoomMeetings.map(m => ({
-      id: `meeting-${m.id}`,
-      date: m.dateTime.split('T')[0],
-      itemId: m.id,
-      itemType: 'meeting',
-    }));
-
+    
     setCalendarEvents(prev => {
       const otherEvents = prev.filter(e => e.itemType !== 'meeting');
-      const allMeetingEvents = [...siloMeetingEvents, ...zoomMeetingEvents];
-      const uniqueMeetingEvents = allMeetingEvents.filter((event, index, self) => index === self.findIndex(t => t.id === event.id));
+      const uniqueMeetingEvents = meetingEvents.filter((event, index, self) => index === self.findIndex(t => t.id === event.id));
       return [...otherEvents, ...uniqueMeetingEvents];
     });
-  }, [meetings, zoomMeetings]);
+  }, [meetings]);
 
 
   const handleToggleAiChat = useCallback(() => setIsAiChatVisible(prev => !prev), []);
@@ -628,7 +617,7 @@ const App: React.FC = () => {
   };
   
   const handleAddTask = (title: string, priority: TaskPriority) => { setTasks(prev => [{ id: new Date().toISOString(), title, completed: false, createdAt: new Date().toISOString(), priority }, ...prev]); };
-  const handleAddMeeting = (title: string, dateTime: string) => { setMeetings(prev => [{ id: new Date().toISOString(), title, dateTime, createdAt: new Date().toISOString(), source: 'silo' }, ...prev]); };
+  const handleAddMeeting = (title: string, dateTime: string) => { setMeetings(prev => [{ id: new Date().toISOString(), title, dateTime, createdAt: new Date().toISOString() }, ...prev]); };
   const handleToggleTask = (taskId: string) => { setTasks(tasks.map(task => task.id === taskId ? { ...task, completed: !task.completed } : task)); };
   const handleDeleteTask = (taskId: string) => { setTasks(tasks.filter(task => task.id !== taskId)); };
   const handleDeleteMeeting = (meetingId: string) => { setMeetings(meetings.filter(meeting => meeting.id !== meetingId)); };
@@ -663,7 +652,6 @@ const App: React.FC = () => {
 
   const renderMainView = () => {
     const activeSpace = spaces.find(s => s.id === activeSpaceId);
-    const allMeetings = [...meetings, ...zoomMeetings];
     if (activeView === View.BOARD && activeBoard && activeSpace) {
         switch (activeBoard.type) {
             case BoardType.NOTE_BOARD: return <NoteBoardView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
@@ -683,10 +671,10 @@ const App: React.FC = () => {
         if (currentNote?.type === NoteType.STICKY) return <StickyNoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
         if (currentNote?.type === NoteType.AI_NOTE) return <AiNoteEditor currentNote={currentNote} onSave={handleSaveNote} geminiApiKey={geminiApiKey} />;
         return <ClassicNoteEditor currentNote={currentNote} onSave={handleSaveNote} gems={gems} setGems={setGems} />;
-      case View.CALENDAR: return <CalendarView events={calendarEvents} notes={notes} tasks={tasks} meetings={allMeetings} onAddEvents={handleAddCalendarEvents} onDeleteEvent={handleDeleteCalendarEvent} onEditNote={handleEditNote} />;
+      case View.CALENDAR: return <CalendarView events={calendarEvents} notes={notes} tasks={tasks} meetings={meetings} onAddEvents={handleAddCalendarEvents} onDeleteEvent={handleDeleteCalendarEvent} onEditNote={handleEditNote} />;
       case View.GEMS: return <GemsView gems={gems} />;
-      case View.AGENDA: return <AgendaView tasks={tasks} meetings={allMeetings} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onDeleteMeeting={handleDeleteMeeting} />;
-      case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} onViewChange={handleViewChange} zoomUser={zoomUser} onZoomDisconnect={handleZoomDisconnect} />;
+      case View.AGENDA: return <AgendaView tasks={tasks} meetings={meetings} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onDeleteMeeting={handleDeleteMeeting} />;
+      case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} onViewChange={handleViewChange} slackUser={slackUser} onSlackDisconnect={handleSlackDisconnect} />;
       case View.SILO_LABS: return <SiloLabsView onViewChange={handleViewChange} />;
       case View.SILO_CHAT: return <SiloChatView geminiApiKey={geminiApiKey} onSaveNote={handleSaveNote} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} />;
       case View.SUMMARIZE_TOOL: return <SummarizeToolView onBack={() => handleViewChange(View.SILO_LABS)} notes={notes} />;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View } from '../types';
-import { BookOpenIcon, ChevronRightIcon, ZoomIcon } from './icons';
+import { BookOpenIcon, ChevronRightIcon, SlackIcon } from './icons';
 
 interface UserProfile {
     name: string;
@@ -13,11 +13,11 @@ interface SettingsViewProps {
   onKeyUpdate: (key: string) => void;
   onLogout: () => void;
   onViewChange: (view: View) => void;
-  zoomUser: any | null;
-  onZoomDisconnect: () => void;
+  slackUser: any | null;
+  onSlackDisconnect: () => void;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, onLogout, onViewChange, zoomUser, onZoomDisconnect }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, onLogout, onViewChange, slackUser, onSlackDisconnect }) => {
   const [apiKey, setApiKey] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
@@ -38,7 +38,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
     }, 500);
   };
   
-  const handleZoomConnect = async () => {
+  const handleSlackConnect = async () => {
     const generateRandomString = (length: number) => {
         const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         let text = '';
@@ -55,14 +55,15 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
             .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
     };
     
-    const clientId = 'qy8KhVTKRZG1Pl4dhQwZSw';
+    const clientId = '6949109721415.7001633190291';
     const redirectUri = window.location.origin + window.location.pathname;
 
     const verifier = generateRandomString(128);
-    sessionStorage.setItem('zoom_code_verifier', verifier);
+    sessionStorage.setItem('slack_code_verifier', verifier);
     const challenge = await generateCodeChallenge(verifier);
 
-    const authUrl = `https://zoom.us/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256`;
+    const userScope = "reminders:read stars:read users:read";
+    const authUrl = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&user_scope=${userScope}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256&response_type=code`;
     window.location.href = authUrl;
   };
 
@@ -92,27 +93,27 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
         
         <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
             <h2 className="text-2xl font-semibold text-gray-800 mb-6">Third-Party Integrations</h2>
-            {zoomUser ? (
+            {slackUser ? (
                  <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <img src={zoomUser.pic_url} alt="Zoom profile" className="w-12 h-12 rounded-full" />
+                        <img src={slackUser.image_72} alt="Slack profile" className="w-12 h-12 rounded-full" />
                         <div>
-                            <p className="font-semibold text-gray-800">{zoomUser.first_name} {zoomUser.last_name}</p>
-                            <p className="text-sm text-gray-500">{zoomUser.email}</p>
+                            <p className="font-semibold text-gray-800">{slackUser.real_name}</p>
+                            <p className="text-sm text-gray-500">{slackUser.email}</p>
                         </div>
                     </div>
-                    <button onClick={onZoomDisconnect} className="text-sm font-semibold text-red-600 bg-white border rounded-full px-4 py-1.5 hover:bg-red-50">Disconnect</button>
+                    <button onClick={onSlackDisconnect} className="text-sm font-semibold text-red-600 bg-white border rounded-full px-4 py-1.5 hover:bg-red-50">Disconnect</button>
                 </div>
             ) : (
                 <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-full"><ZoomIcon className="w-8 h-8" /></div>
+                        <div className="p-2 rounded-full"><SlackIcon className="w-8 h-8" /></div>
                         <div>
-                            <p className="font-semibold text-gray-800">Zoom</p>
-                            <p className="text-sm text-gray-500">Sync your meetings</p>
+                            <p className="font-semibold text-gray-800">Slack</p>
+                            <p className="text-sm text-gray-500">Sync your reminders and starred items</p>
                         </div>
                     </div>
-                    <button onClick={handleZoomConnect} className="text-sm font-semibold text-blue-600 bg-white border rounded-full px-4 py-1.5 hover:bg-blue-50">Connect</button>
+                    <button onClick={handleSlackConnect} className="text-sm font-semibold text-blue-600 bg-white border rounded-full px-4 py-1.5 hover:bg-blue-50">Connect</button>
                 </div>
             )}
             <div className="text-center mt-6 p-4 bg-gray-100 rounded-lg border-2 border-dashed">

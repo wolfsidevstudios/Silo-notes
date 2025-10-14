@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Task, Meeting, TaskPriority } from '../types';
-import { PlusIcon, ZoomIcon } from './icons';
+import { PlusIcon } from './icons';
 
 interface AgendaViewProps {
   tasks: Task[];
@@ -88,17 +88,14 @@ const AgendaView: React.FC<AgendaViewProps> = ({ tasks, meetings, onAddTask, onA
               <div key={meeting.id} className="bg-gray-50/70 p-4 rounded-lg flex justify-between items-start group">
                 <div>
                     <div className="flex items-center gap-2">
-                        {meeting.source === 'zoom' && <ZoomIcon />}
                         <p className="font-semibold text-gray-800">{meeting.title}</p>
                     </div>
                     <p className="text-sm text-gray-500 mt-1">{new Date(meeting.dateTime).toLocaleString()}</p>
-                    {meeting.source === 'zoom' && meeting.joinUrl && (
+                    {meeting.joinUrl && (
                         <a href={meeting.joinUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-blue-600 hover:underline mt-2 inline-block">Join Meeting</a>
                     )}
                 </div>
-                {meeting.source !== 'zoom' && (
-                    <button onClick={() => onDeleteMeeting(meeting.id)} className="text-gray-400 hover:text-red-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity text-xl">&times;</button>
-                )}
+                <button onClick={() => onDeleteMeeting(meeting.id)} className="text-gray-400 hover:text-red-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity text-xl">&times;</button>
               </div>
             )) : <p className="text-gray-500 text-center pt-10">No upcoming meetings.</p>}
           </div>

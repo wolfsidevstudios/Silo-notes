@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { CalendarEvent, Note, Task, Meeting, NoteType } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, CloseIcon, JournalIcon, ZoomIcon } from './icons';
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, CloseIcon, JournalIcon } from './icons';
 
 const AddItemModal = ({
   onClose,
@@ -21,7 +21,7 @@ const AddItemModal = ({
   const combinedItems = useMemo(() => {
     const allNotes = notes.map(n => ({ ...n, itemType: 'note' as const }));
     const allTasks = tasks.filter(t => !t.completed).map(t => ({ ...t, itemType: 'task' as const }));
-    const allMeetings = meetings.filter(m => m.source === 'silo').map(m => ({...m, itemType: 'meeting' as const}));
+    const allMeetings = meetings.map(m => ({...m, itemType: 'meeting' as const}));
     return [...allNotes, ...allTasks, ...allMeetings]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }, [notes, tasks, meetings]);
@@ -119,7 +119,7 @@ const ItemPreviewModal = ({ item, onClose, onGoToItem }: { item: Note | Task | M
                   {isNote && onGoToItem && (
                     <button onClick={() => onGoToItem(item as Note)} className="bg-gray-100 font-semibold py-2 px-5 rounded-full hover:bg-gray-200 transition-colors">View Full Note</button>
                   )}
-                  {isMeeting && (item as Meeting).source === 'zoom' && (item as Meeting).joinUrl && (
+                  {isMeeting && (item as Meeting).joinUrl && (
                     <a href={(item as Meeting).joinUrl} target="_blank" rel="noopener noreferrer" className="bg-blue-500 text-white font-semibold py-2 px-5 rounded-full hover:bg-blue-600 transition-colors">Join Meeting</a>
                   )}
                 </div>
@@ -212,7 +212,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, notes, tasks, meeti
                         const noteColor = (item as Note).color;
                         const isSticky = (item as Note).type === NoteType.STICKY;
                         const isMeeting = event.itemType === 'meeting';
-                        const isZoomMeeting = isMeeting && (item as Meeting).source === 'zoom';
 
                         let bgColor = '#f3f4f6';
                         if (isSticky) bgColor = noteColor || '#FFF9C4';
@@ -220,7 +219,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, notes, tasks, meeti
 
                         return (
                             <div key={event.id} onClick={() => handlePreviewItem(event)} className="p-1.5 px-2 rounded-full text-xs font-medium cursor-pointer truncate flex items-center gap-1" style={{backgroundColor: bgColor}}>
-                                {isZoomMeeting && <ZoomIcon className="h-3 w-3 flex-shrink-0" />}
                                 <span>{item.title || 'Untitled'}</span>
                             </div>
                         )

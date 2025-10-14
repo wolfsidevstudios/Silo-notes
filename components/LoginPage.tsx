@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { AppLogoIcon, YahooIcon, ZoomIcon } from './icons';
+import { AppLogoIcon, YahooIcon, SlackIcon } from './icons';
 
 // FIX: Add google to window type to fix TypeScript errors.
 declare global {
@@ -61,7 +61,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         window.location.href = authUrl;
     };
 
-    const handleZoomLogin = async () => {
+    const handleSlackLogin = async () => {
         const generateRandomString = (length: number) => {
             const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             let text = '';
@@ -78,14 +78,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
         };
         
-        const clientId = 'qy8KhVTKRZG1Pl4dhQwZSw';
+        const clientId = '6949109721415.7001633190291';
         const redirectUri = window.location.origin + window.location.pathname;
     
         const verifier = generateRandomString(128);
-        sessionStorage.setItem('zoom_code_verifier', verifier);
+        sessionStorage.setItem('slack_code_verifier', verifier);
         const challenge = await generateCodeChallenge(verifier);
     
-        const authUrl = `https://zoom.us/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256`;
+        const scope = "openid profile email";
+        const authUrl = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scope}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256&response_type=code`;
         window.location.href = authUrl;
     };
 
@@ -136,12 +137,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                           <YahooIcon />
                           Sign in with Yahoo
                         </button>
-                        <button
-                          onClick={handleZoomLogin}
-                          className="flex justify-center items-center gap-3 w-[300px] h-[40px] bg-[#2D8CFF] text-white rounded-full shadow-sm text-sm font-bold hover:bg-[#1a7ae0] transition-colors"
+                         <button
+                          onClick={handleSlackLogin}
+                          className="flex justify-center items-center gap-3 w-[300px] h-[40px] bg-[#4A154B] text-white rounded-full shadow-sm text-sm font-bold hover:bg-[#3b113c] transition-colors"
                         >
-                          <ZoomIcon />
-                          Sign in with Zoom
+                          <SlackIcon />
+                          Sign in with Slack
                         </button>
                     </div>
 
