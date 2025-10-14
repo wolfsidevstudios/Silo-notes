@@ -1,6 +1,173 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Note, AudioNote } from '../types';
-import { AIAudioIcon, VoiceMemoIcon } from './icons';
+import { VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon } from './icons';
+
+const ELEVENLABS_API_KEY = 'sk_0c8a39a023d6903e44b64bfe6c751b7d888045d452eb6635';
+
+interface TextToSpeechModalProps {
+  onClose: () => void;
+  onAddAudio: (dataUrl: string) => void;
+}
+
+const voices = {
+  en: [
+    { id: '21m00Tcm4TlvDq8ikWAM', name: 'Rachel' },
+    { id: '29vD33N1CtxCmqQRPO9k', name: 'Drew' },
+    { id: '2EiwWnXFnvU5JabPnv8n', name: 'Clyde' },
+    { id: '5Q0t7uMcjvnagumLfvZi', name: 'Paul' },
+    { id: 'CYw3kZ02Hs0563khs1Fj', name: 'Dave' },
+  ],
+  es: [
+    { id: 'piTKgcLEGmPE4e6mEKli', name: 'Matilde' },
+    { id: 'SOYHLrjzK2X1ezoPC6cr', name: 'Alonso' },
+    { id: 'bVMeCyTHy58xNoL34h3p', name: 'Florencia' },
+    { id: 'g5CIjZEefm0dSOlADwoD', name: 'Elio' },
+    { id: 'LaT52xsmXzWb7k2cjgIR', name: 'Domi' },
+  ],
+};
+
+const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAudio }) => {
+  const [text, setText] = useState('');
+  const [language, setLanguage] = useState<'en' | 'es'>('en');
+  const [selectedVoiceId, setSelectedVoiceId] = useState(voices.en[0].id);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Reset voice selection when language changes
+    setSelectedVoiceId(voices[language][0].id);
+    setAudioUrl(null);
+    setAudioBlob(null);
+    setError(null);
+  }, [language]);
+
+  const handleGenerateAudio = async () => {
+    if (!text.trim()) {
+      setError('Please enter some text to generate audio.');
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    setAudioUrl(null);
+    setAudioBlob(null);
+
+    try {
+      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': ELEVENLABS_API_KEY,
+        },
+        body: JSON.stringify({
+          text: text,
+          model_id: 'eleven_multilingual_v2',
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.75,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail?.message || 'Failed to generate audio.');
+      }
+
+      const blob = await response.blob();
+      setAudioBlob(blob);
+      setAudioUrl(URL.createObjectURL(blob));
+
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'An unexpected error occurred.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const handleAddAudioToNote = () => {
+    if (!audioBlob) return;
+    const reader = new FileReader();
+    reader.readAsDataURL(audioBlob);
+    reader.onloadend = () => {
+      onAddAudio(reader.result as string);
+      onClose();
+    };
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300" aria-modal="true" role="dialog">
+      <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg m-4 transform transition-all duration-300 scale-100 flex flex-col max-h-[90vh]">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">Generate Audio from Text</h2>
+        
+        <div className="flex-grow overflow-y-auto pr-2">
+            <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder="Type or paste your text here..."
+                className="w-full h-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black resize-none mb-6"
+                rows={5}
+            />
+
+            <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                    <button onClick={() => setLanguage('en')} className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${language === 'en' ? 'bg-white shadow' : 'text-gray-600'}`}>English</button>
+                    <button onClick={() => setLanguage('es')} className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${language === 'es' ? 'bg-white shadow' : 'text-gray-600'}`}>Spanish</button>
+                </div>
+            </div>
+
+            <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Voice</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {voices[language].map(voice => (
+                        <button key={voice.id} onClick={() => setSelectedVoiceId(voice.id)} className={`text-left p-3 rounded-lg border-2 transition-colors ${selectedVoiceId === voice.id ? 'border-black bg-gray-50' : 'border-gray-200 hover:border-gray-400'}`}>
+                            <span className="font-semibold text-gray-800">{voice.name}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </div>
+
+        <div className="flex-shrink-0 mt-4">
+            <button
+                onClick={handleGenerateAudio}
+                disabled={isLoading}
+                className="w-full bg-black text-white font-semibold py-3 px-6 rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-400 flex items-center justify-center"
+            >
+                {isLoading ? (
+                    <>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Generating...
+                    </>
+                ) : "Generate Audio"}
+            </button>
+            
+            {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
+
+            {audioUrl && (
+                <div className="mt-6">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Preview</p>
+                    <audio controls src={audioUrl} className="w-full"></audio>
+                    <button
+                        onClick={handleAddAudioToNote}
+                        className="w-full mt-4 bg-black text-white font-semibold py-3 px-6 rounded-full hover:bg-gray-800 transition-colors"
+                    >
+                       Paste to Note
+                    </button>
+                </div>
+            )}
+        </div>
+
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+    </div>
+  );
+};
 
 interface NoteEditorProps {
   currentNote: Note | null;
@@ -27,6 +194,9 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
   const memoRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
+  // State for Text-to-Speech Modal
+  const [isTtsModalOpen, setIsTtsModalOpen] = useState(false);
+
   // Shared stream ref for cleanup
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -43,10 +213,18 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
   }, [currentNote]);
 
   const handleSave = () => {
-    if (isRecording || isVoiceMemoRecording) return; // Prevent saving while recording
+    if (isRecording || isVoiceMemoRecording || isTtsModalOpen) return;
     const finalContent = content + (partialTranscript ? (content.trim() ? ' ' : '') + partialTranscript : '');
     if (title.trim() === '' && finalContent.trim() === '' && audioNotes.length === 0) return;
     onSave({ id: currentNote?.id, title, content: finalContent, audioNotes });
+  };
+  
+  const handleAddTtsAudio = (dataUrl: string) => {
+    const newAudioNote: AudioNote = {
+        id: new Date().toISOString(),
+        dataUrl,
+    };
+    setAudioNotes(prev => [...prev, newAudioNote]);
   };
 
   const stopAiRecording = () => {
@@ -73,7 +251,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
   };
 
   const startAiRecording = async () => {
-    if (isRecording || isVoiceMemoRecording) return;
+    if (isRecording || isVoiceMemoRecording || isTtsModalOpen) return;
     
     try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -141,7 +319,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
   };
 
   const startVoiceMemoRecording = async () => {
-      if (isRecording || isVoiceMemoRecording) return;
+      if (isRecording || isVoiceMemoRecording || isTtsModalOpen) return;
       try {
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
           streamRef.current = stream;
@@ -209,6 +387,8 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
+  const isActionActive = isRecording || isVoiceMemoRecording || isTtsModalOpen;
+  
   return (
     <div className="p-8 lg:p-12 h-full flex flex-col">
       <div className="flex items-center justify-between mb-8">
@@ -216,7 +396,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
         <button
           onClick={handleSave}
           className="bg-black text-white font-semibold py-2 px-6 rounded-full hover:bg-gray-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:bg-gray-400"
-          disabled={isRecording || isVoiceMemoRecording}
+          disabled={isActionActive}
         >
           Save Note
         </button>
@@ -229,7 +409,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Note Title"
           className="text-4xl font-bold placeholder-gray-300 focus:outline-none mb-6 pb-2 border-b border-transparent focus:border-gray-200"
-          readOnly={isRecording || isVoiceMemoRecording}
+          readOnly={isActionActive}
         />
         <textarea
           value={content + (partialTranscript ? (content.trim() ? ' ' : '') + partialTranscript : '')}
@@ -238,7 +418,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
                 setContent(e.target.value);
               }
           }}
-          readOnly={isRecording || isVoiceMemoRecording}
+          readOnly={isActionActive}
           placeholder="Start writing here, or use the AI tool below to dictate..."
           className="flex-1 w-full text-lg leading-relaxed text-gray-700 placeholder-gray-400 focus:outline-none resize-none"
         />
@@ -269,20 +449,22 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
             <div className="flex items-center px-2">
                 <button 
                     onClick={handleToggleAiRecording}
-                    disabled={isVoiceMemoRecording}
+                    disabled={isVoiceMemoRecording || isTtsModalOpen}
                     className={`p-2 rounded-full transition-colors duration-200 ${
                         isRecording ? 'bg-red-500 text-white' : 'bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed'
                     }`}
                     aria-label={isRecording ? 'Stop AI transcription' : 'Start AI transcription'}
                 >
-                  <AIAudioIcon />
+                  <VoiceTypingIcon />
                 </button>
-                <p className="text-xs text-gray-500 ml-2 w-24 truncate">{status}</p>
+                <p className="text-xs text-gray-500 ml-2 w-24 truncate">
+                    {status === 'Idle' && !isRecording ? 'Speech-to-Text' : status}
+                </p>
             </div>
-            <div className="flex items-center pl-3 pr-2">
+            <div className="flex items-center pl-3">
                 <button 
                     onClick={handleToggleVoiceMemoRecording}
-                    disabled={isRecording}
+                    disabled={isRecording || isTtsModalOpen}
                     className={`p-2 rounded-full transition-colors duration-200 ${
                         isVoiceMemoRecording ? 'bg-red-500 text-white' : 'bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed'
                     }`}
@@ -290,7 +472,22 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
                 >
                   <VoiceMemoIcon />
                 </button>
-                <p className="text-xs text-gray-500 ml-2 w-24 truncate">{voiceMemoStatus}</p>
+                <p className="text-xs text-gray-500 ml-2 w-24 truncate">
+                    {voiceMemoStatus === 'Idle' && !isVoiceMemoRecording ? 'Voice Memo' : voiceMemoStatus}
+                </p>
+            </div>
+            <div className="flex items-center pl-3 pr-2">
+                <button 
+                    onClick={() => setIsTtsModalOpen(true)}
+                    disabled={isRecording || isVoiceMemoRecording}
+                    className="p-2 rounded-full transition-colors duration-200 bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+                    aria-label="Generate audio from text"
+                >
+                  <TextToSpeechIcon />
+                </button>
+                <p className="text-xs text-gray-500 ml-2 w-24 truncate">
+                    Text-to-Speech
+                </p>
             </div>
          </div>
          {(isRecording || isVoiceMemoRecording) && (
@@ -303,6 +500,13 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
             </div>
          )}
       </div>
+      
+      {isTtsModalOpen && (
+        <TextToSpeechModal 
+            onClose={() => setIsTtsModalOpen(false)}
+            onAddAudio={handleAddTtsAudio}
+        />
+      )}
 
     </div>
   );
