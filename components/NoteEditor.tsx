@@ -126,14 +126,14 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
 };
 
 
-interface NoteEditorProps {
+interface ClassicNoteEditorProps {
   currentNote: Note | null;
   onSave: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => void;
 }
 
 const ASSEMBLYAI_API_KEY = '49e6f2264b204542b812c42bfb3fcdac';
 
-const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
+const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSave }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [privacy, setPrivacy] = useState<'public' | 'private'>('public');
@@ -230,7 +230,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
   };
 
   const handleSave = () => {
-    onSave({ id: currentNote?.id, title, content, audioNotes, privacy, pin });
+    onSave({ id: currentNote?.id, title, content, audioNotes, privacy, pin, type: currentNote!.type });
   };
   
   const handlePrivacyChange = (newPrivacy: 'public' | 'private') => {
@@ -420,7 +420,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
         }
     } catch (e) {
         // Fallback for non-standard URLs
-        const match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?#]+)/);
+        const match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?#]+)/);
         videoId = match ? match[1] : '';
     }
 
@@ -551,7 +551,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
       {toolbarState.visible && !isLocked && <FloatingToolbar {...toolbarState} onCommand={handleCommand} />}
       
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">{currentNote ? 'Edit Note' : 'Create Note'}</h1>
+        <h1 className="text-2xl font-bold text-gray-800">{currentNote?.title || 'Classic Note'}</h1>
         <div className="flex items-center gap-4">
             <div className="flex items-center bg-gray-200 rounded-full p-1">
                 <button onClick={() => handlePrivacyChange('public')} className={`px-4 py-1 text-sm font-semibold rounded-full ${privacy === 'public' ? 'bg-white shadow' : 'text-gray-600'}`}>Public</button>
@@ -652,4 +652,4 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
   );
 };
 
-export default NoteEditor;
+export default ClassicNoteEditor;

@@ -1,6 +1,6 @@
 import React from 'react';
-import { Note } from '../types';
-import { LockIcon } from './icons';
+import { Note, NoteType } from '../types';
+import { LockIcon, JournalIcon } from './icons';
 
 interface HomeViewProps {
   notes: Note[];
@@ -19,27 +19,73 @@ const NoteCard: React.FC<{ note: Note, onEditNote: (note: Note) => void }> = ({ 
     year: 'numeric'
   });
 
-  return (
-    <div 
-      onClick={() => onEditNote(note)}
-      className="bg-gray-50 p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border border-gray-200 flex flex-col justify-between"
-    >
-      <div>
-        <div className="flex justify-between items-start">
-            <h3 className="font-bold text-lg mb-2 text-gray-800 pr-2">{note.title || 'Untitled Note'}</h3>
-            {note.privacy === 'private' && (
-                <div className="text-gray-400 flex-shrink-0">
-                    <LockIcon />
-                </div>
-            )}
+  const contentPreview = stripHtml(note.content);
+
+  switch (note.type) {
+    case NoteType.STICKY:
+      return (
+        <div 
+          onClick={() => onEditNote(note)}
+          style={{ backgroundColor: note.color || '#FFF9C4' }}
+          className="p-6 rounded-lg cursor-pointer shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between aspect-square"
+        >
+          <div>
+            <h3 className="font-bold text-lg mb-2 text-gray-800 pr-2">{note.title || 'Sticky Note'}</h3>
+             <p className="text-gray-700 text-sm line-clamp-4 font-medium">
+              {contentPreview}
+            </p>
+          </div>
+           <div className="flex justify-between items-center">
+             <p className="text-xs text-gray-600 mt-4">{formattedDate}</p>
+             {note.privacy === 'private' && <div className="text-gray-600 flex-shrink-0"><LockIcon /></div>}
+           </div>
         </div>
-        <p className="text-gray-600 text-sm line-clamp-3">
-          {stripHtml(note.content)}
-        </p>
-      </div>
-      <p className="text-xs text-gray-400 mt-4">{formattedDate}</p>
-    </div>
-  );
+      );
+    case NoteType.JOURNAL:
+        return (
+             <div 
+              onClick={() => onEditNote(note)}
+              className="bg-amber-50 p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border border-amber-200 flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex justify-between items-start">
+                    <div className="bg-amber-100 text-amber-700 p-2 rounded-full mb-3">
+                        <JournalIcon />
+                    </div>
+                    {note.privacy === 'private' && <div className="text-gray-400 flex-shrink-0"><LockIcon /></div>}
+                </div>
+                <h3 className="font-bold text-lg mb-2 text-gray-800">{note.title || 'Journal Entry'}</h3>
+                <p className="text-gray-600 text-sm line-clamp-3 italic">
+                    "{contentPreview}"
+                </p>
+              </div>
+              <p className="text-xs text-gray-500 mt-4">{formattedDate}</p>
+            </div>
+        );
+    case NoteType.CLASSIC:
+    default:
+        return (
+            <div 
+              onClick={() => onEditNote(note)}
+              className="bg-gray-50 p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border border-gray-200 flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex justify-between items-start">
+                    <h3 className="font-bold text-lg mb-2 text-gray-800 pr-2">{note.title || 'Untitled Note'}</h3>
+                    {note.privacy === 'private' && (
+                        <div className="text-gray-400 flex-shrink-0">
+                            <LockIcon />
+                        </div>
+                    )}
+                </div>
+                <p className="text-gray-600 text-sm line-clamp-3">
+                  {contentPreview}
+                </p>
+              </div>
+              <p className="text-xs text-gray-400 mt-4">{formattedDate}</p>
+            </div>
+          );
+  }
 };
 
 const HomeView: React.FC<HomeViewProps> = ({ notes, onEditNote }) => {

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import HomeView from './components/HomeView';
-import NoteEditor from './components/NoteEditor';
+import ClassicNoteEditor from './components/NoteEditor';
+import StickyNoteEditor from './components/StickyNoteEditor';
+import JournalEditor from './components/JournalEditor';
 import ExploreView from './components/ExploreView';
 import IdeasView from './components/IdeasView';
 import AgendaView from './components/AgendaView';
@@ -20,9 +22,10 @@ import MindMapView from './components/MindMapView';
 import WorkflowView from './components/WorkflowView';
 import { GoogleGenAI } from "@google/genai";
 import { ArrowUpIcon, CloseIcon } from './components/icons';
+import NewNoteTypeModal from './components/NewNoteTypeModal';
 
 
-import { View, Note, Space, Board, BoardType, Task, Meeting } from './types';
+import { View, Note, Space, Board, BoardType, Task, Meeting, NoteType } from './types';
 
 // Timer Component
 const TimerComponent = ({ initialSeconds, onClose }: { initialSeconds: number; onClose: () => void }) => {
@@ -170,7 +173,7 @@ const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey, onAddTask, onAddMe
                 const lines = resultText.split('\n');
                 const title = lines[0] || 'AI Generated Note';
                 const content = lines.slice(1).join('<br>');
-                onSaveNote({ title, content, audioNotes: [], privacy: 'public' });
+                onSaveNote({ title, content, audioNotes: [], privacy: 'public', type: NoteType.CLASSIC });
                 onClose();
             } else {
                  onClose();
@@ -234,6 +237,7 @@ const App: React.FC = () => {
   const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
   const [activeBoard, setActiveBoard] = useState<Board | null>(null);
   const [isAiChatVisible, setIsAiChatVisible] = useState(false);
+  const [isNewNoteModalVisible, setIsNewNoteModalVisible] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
 
 
@@ -247,7 +251,14 @@ const App: React.FC = () => {
       const savedMeetings = localStorage.getItem('silo-meetings');
       const savedGeminiKey = localStorage.getItem('gemini-api-key');
 
-      if (savedNotes) setNotes(JSON.parse(savedNotes));
+      if (savedNotes) {
+        // Migration for older notes without a 'type' property
+        const parsedNotes = JSON.parse(savedNotes).map((note: Note) => ({
+            ...note,
+            type: note.type || NoteType.CLASSIC,
+        }));
+        setNotes(parsedNotes);
+      }
       if (savedSpaces) setSpaces(JSON.parse(savedSpaces));
       if (savedBoards) setBoards(JSON.parse(savedBoards));
       if (savedTasks) setTasks(JSON.parse(savedTasks));
@@ -282,11 +293,23 @@ const App: React.FC = () => {
     setActiveBoard(null);
   }, []);
 
-  const handleCreateNewNote = () => {
-    setCurrentNote(null);
+  const handleOpenNewNoteModal = () => setIsNewNoteModalVisible(true);
+  const handleCloseNewNoteModal = () => setIsNewNoteModalVisible(false);
+
+  const handleSelectNoteType = (type: NoteType) => {
+    const newNote: Omit<Note, 'id'> = {
+        title: '',
+        content: '',
+        createdAt: new Date().toISOString(),
+        privacy: 'public',
+        type: type,
+        audioNotes: [],
+    };
+    setCurrentNote(newNote as Note); // Temporarily cast, id will be set on save
     setActiveView(View.CREATE);
     setActiveSpaceId(null);
     setActiveBoard(null);
+    handleCloseNewNoteModal();
   };
 
   const handleEditNote = (note: Note) => {
@@ -310,6 +333,8 @@ const App: React.FC = () => {
         audioNotes: noteData.audioNotes || [],
         privacy: noteData.privacy,
         pin: noteData.pin,
+        type: noteData.type,
+        color: noteData.color,
       };
       setNotes([newNote, ...notes]);
     }
@@ -431,7 +456,13 @@ const App: React.FC = () => {
       case View.HOME:
         return <HomeView notes={notes} onEditNote={handleEditNote} />;
       case View.CREATE:
-        return <NoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
+        if (currentNote?.type === NoteType.JOURNAL) {
+            return <JournalEditor currentNote={currentNote} onSave={handleSaveNote} />;
+        }
+        if (currentNote?.type === NoteType.STICKY) {
+            return <StickyNoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
+        }
+        return <ClassicNoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
       case View.EXPLORE:
         return <ExploreView />;
       case View.IDEAS:
@@ -472,7 +503,7 @@ const App: React.FC = () => {
         onViewChange={handleViewChange}
         spaces={spaces}
         addSpace={handleAddSpace}
-        onCreateNewNote={handleCreateNewNote}
+        onOpenNewNoteModal={handleOpenNewNoteModal}
         activeSpaceId={activeSpaceId}
         onSelectSpace={handleSelectSpace}
         onToggleAiChat={handleToggleAiChat}
@@ -481,6 +512,7 @@ const App: React.FC = () => {
         {renderMainView()}
       </main>
       {isAiChatVisible && <AiChatComponent onClose={handleToggleAiChat} onSaveNote={handleSaveNote} geminiApiKey={geminiApiKey} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} />}
+      {isNewNoteModalVisible && <NewNoteTypeModal onSelect={handleSelectNoteType} onClose={handleCloseNewNoteModal} />}
     </div>
   );
 };

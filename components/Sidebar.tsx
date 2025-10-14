@@ -8,7 +8,7 @@ interface SidebarProps {
   onViewChange: (view: View) => void;
   spaces: Space[];
   addSpace: (name: string) => void;
-  onCreateNewNote: () => void;
+  onOpenNewNoteModal: () => void;
   activeSpaceId: string | null;
   onSelectSpace: (spaceId: string) => void;
   onToggleAiChat: () => void;
@@ -19,7 +19,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   onViewChange, 
   spaces, 
   addSpace, 
-  onCreateNewNote,
+  onOpenNewNoteModal,
   activeSpaceId,
   onSelectSpace,
   onToggleAiChat
@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="flex-1">
         <nav className="space-y-2">
           <NavItem icon={<HomeIcon />} label="Home" isActive={isNavActive(View.HOME)} onClick={() => onViewChange(View.HOME)} />
-          <NavItem icon={<CreateIcon />} label="Create" isActive={isNavActive(View.CREATE)} onClick={onCreateNewNote} />
+          <NavItem icon={<CreateIcon />} label="Create" isActive={isNavActive(View.CREATE)} onClick={onOpenNewNoteModal} />
           <NavItem icon={<ExploreIcon />} label="Explore" isActive={isNavActive(View.EXPLORE)} onClick={() => onViewChange(View.EXPLORE)} />
           <NavItem icon={<IdeasIcon />} label="Ideas" isActive={isNavActive(View.IDEAS)} onClick={() => onViewChange(View.IDEAS)} />
           <NavItem icon={<AgendaIcon />} label="Agenda" isActive={isNavActive(View.AGENDA)} onClick={() => onViewChange(View.AGENDA)} />
@@ -105,7 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       <div className="mt-4 flex items-center gap-2">
         <button 
-          onClick={onCreateNewNote}
+          onClick={onOpenNewNoteModal}
           className="flex-1 bg-black text-white font-semibold py-3 px-4 rounded-full hover:bg-gray-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
         >
           New Note

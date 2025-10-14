@@ -15,6 +15,12 @@ export enum View {
   TEXT_TO_SPEECH_TOOL = 'TEXT_TO_SPEECH_TOOL',
 }
 
+export enum NoteType {
+  CLASSIC = 'CLASSIC',
+  STICKY = 'STICKY',
+  JOURNAL = 'JOURNAL',
+}
+
 export interface AudioNote {
   id: string;
   dataUrl: string; // base64 data URL
@@ -28,6 +34,8 @@ export interface Note {
   audioNotes?: AudioNote[];
   privacy: 'public' | 'private';
   pin?: string;
+  type: NoteType;
+  color?: string; // For sticky notes
 }
 
 export interface Task {

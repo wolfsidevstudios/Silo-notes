@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import { ListIcon, NumberListIcon } from './icons';
 
 interface FloatingToolbarProps {
   top: number;
