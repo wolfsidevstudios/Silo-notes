@@ -62,7 +62,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
     sessionStorage.setItem('slack_code_verifier', verifier);
     const challenge = await generateCodeChallenge(verifier);
 
-    const userScope = "reminders:read stars:read users:read";
+    const userScope = "reminders:read users.profile:read";
     const authUrl = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&user_scope=${userScope}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256&response_type=code`;
     window.location.href = authUrl;
   };

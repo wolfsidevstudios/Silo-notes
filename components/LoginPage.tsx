@@ -86,7 +86,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         const challenge = await generateCodeChallenge(verifier);
     
         const scope = "openid profile email";
-        const authUrl = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scope}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256&response_type=code`;
+        const authUrl = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&user_scope=${scope}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256&response_type=code`;
         window.location.href = authUrl;
     };
 
