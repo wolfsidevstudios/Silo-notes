@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View } from '../types';
-import { SiloLabsIcon, SummarizeIcon, RewriteIcon, SettingsIcon, VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon } from './icons';
+import { SiloLabsIcon, SummarizeIcon, RewriteIcon, SettingsIcon, VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, SiloAiIcon } from './icons';
 
 interface SiloLabsViewProps {
   onViewChange: (view: View) => void;
@@ -11,12 +11,15 @@ const ToolCard: React.FC<{
   title: string;
   description: string;
   onClick: () => void;
-}> = ({ icon, title, description, onClick }) => (
+  isFeatured?: boolean;
+}> = ({ icon, title, description, onClick, isFeatured }) => (
   <div
     onClick={onClick}
-    className="bg-gray-50 p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border border-gray-200"
+    className={`p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border ${
+        isFeatured ? 'bg-indigo-50 border-indigo-200 md:col-span-2' : 'bg-gray-50 border-gray-200'
+    }`}
   >
-    <div className="flex items-center justify-center h-12 w-12 rounded-full bg-gray-200 mb-4">
+    <div className={`flex items-center justify-center h-12 w-12 rounded-full mb-4 ${isFeatured ? 'bg-indigo-100' : 'bg-gray-200'}`}>
       {icon}
     </div>
     <h3 className="font-bold text-lg mb-2 text-gray-800">{title}</h3>
@@ -47,6 +50,13 @@ const SiloLabsView: React.FC<SiloLabsViewProps> = ({ onViewChange }) => {
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+         <ToolCard
+            icon={<SiloAiIcon />}
+            title="Silo Chat"
+            description="An intelligent agent to help you create notes, tasks, meetings, and more, just by talking."
+            onClick={() => onViewChange(View.SILO_CHAT)}
+            isFeatured={true}
+          />
          <ToolCard
             icon={<VoiceTypingIcon />}
             title="Speech-to-Text"

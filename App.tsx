@@ -13,6 +13,7 @@ import DiagramView from './components/DiagramView';
 import JamBoardView from './components/JamBoardView';
 import SettingsView from './components/SettingsView';
 import SiloLabsView from './components/SiloLabsView';
+import SiloChatView from './components/SiloChatView';
 import SummarizeToolView from './components/SummarizeToolView';
 import RewriteToolView from './components/RewriteToolView';
 import VoiceMemoToolView from './components/VoiceMemoToolView';
@@ -471,6 +472,7 @@ const App: React.FC = () => {
       case View.AGENDA: return <AgendaView tasks={tasks} meetings={meetings} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onDeleteMeeting={handleDeleteMeeting} />;
       case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} />;
       case View.SILO_LABS: return <SiloLabsView onViewChange={handleViewChange} />;
+      case View.SILO_CHAT: return <SiloChatView geminiApiKey={geminiApiKey} onSaveNote={handleSaveNote} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} />;
       case View.SUMMARIZE_TOOL: return <SummarizeToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
       case View.REWRITE_TOOL: return <RewriteToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
       case View.VOICE_MEMO_TOOL: return <VoiceMemoToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
