@@ -256,3 +256,9 @@ export const FullWidthIcon = () => (
 export const NormalWidthIcon = () => (
     <span className="material-symbols-rounded" style={{ fontSize: '20px' }}>width_normal</span>
 );
+export const PanelOpenIcon = () => (
+    <span className="material-symbols-rounded" style={{ fontSize: '20px' }}>panel_open</span>
+);
+export const PanelCloseIcon = () => (
+    <span className="material-symbols-rounded" style={{ fontSize: '20px' }}>panel_close</span>
+);

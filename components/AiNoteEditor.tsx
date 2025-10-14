@@ -3,7 +3,7 @@ import { Note, NoteType } from '../types';
 import { GoogleGenAI } from "@google/genai";
 import FloatingToolbar from './FloatingToolbar';
 import SlashCommandMenu, { Command } from './SlashCommandMenu';
-import { ArrowUpIcon, SiloAiIcon, FullWidthIcon, NormalWidthIcon } from './icons';
+import { ArrowUpIcon, SiloAiIcon, FullWidthIcon, NormalWidthIcon, PanelOpenIcon, PanelCloseIcon } from './icons';
 
 interface AiNoteEditorProps {
   currentNote: Note | null;
@@ -28,6 +28,7 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isChatCollapsed, setIsChatCollapsed] = useState(false);
 
   // Editor refs and state
   const contentEditableRef = useRef<HTMLDivElement>(null);
@@ -149,46 +150,36 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
   const executeCommand = useCallback((command: Command) => {
     if (!commandRef.current || !contentEditableRef.current) return;
     
-    // Restore focus to the editor before manipulating the DOM or selection
     contentEditableRef.current.focus();
 
     const { range } = commandRef.current;
     
-    // Restore the selection to where the command was initiated
     const selection = window.getSelection();
     if (selection) {
         selection.removeAllRanges();
         selection.addRange(range);
     }
     
-    // Select the text node that contains the command (e.g., the "/h1" text)
-    // and delete it to make way for the new block.
     range.selectNodeContents(range.startContainer);
     range.deleteContents();
     
-    // Execute the appropriate command to create the new block
     if (command.tag === 'ul') {
         document.execCommand('insertUnorderedList');
     } else if (command.tag === 'ol') {
         document.execCommand('insertOrderedList');
     } else {
-        // FIX: The 'formatBlock' command expects just the tag name (e.g., 'h1')
-        // not the full HTML tag (e.g., '<h1>').
         document.execCommand('formatBlock', false, command.tag);
     }
 
-    // Clean up state
     setIsCommandMenuOpen(false);
     commandRef.current = null;
     
-    // Sync React state with the DOM and ensure the editor remains focused for a seamless user experience.
     setContent(contentEditableRef.current.innerHTML || '');
     contentEditableRef.current.focus();
   }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' && !isCommandMenuOpen) {
-        // Simple block creation on Enter
         e.preventDefault();
         document.execCommand('insertHTML', false, '<div><br></div>');
     }
@@ -254,21 +245,23 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
 
 
   return (
-    <div className="h-full font-sans bg-white relative">
+    <div className="h-full font-sans bg-white flex overflow-hidden">
       {/* Main Editor Panel */}
-      <div className="h-full flex flex-col relative overflow-hidden">
+      <div className="flex-1 h-full flex flex-col relative overflow-y-auto">
         <div className="flex items-center justify-between flex-shrink-0 p-8 lg:px-12 pt-8 pb-4">
-            <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                <SiloAiIcon /> Silo AI Note
-                <span className="bg-gray-200 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">Beta</span>
-            </h1>
+            <div className="flex items-center gap-4">
+                 <button onClick={handleSave} className="bg-black text-white font-semibold py-2 px-6 rounded-full hover:bg-gray-800 transition-colors">
+                    Save Note
+                </button>
+                <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <SiloAiIcon /> Silo AI Note
+                    <span className="bg-gray-200 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">Beta</span>
+                </h1>
+            </div>
             <div className="flex items-center gap-4">
                  <button onClick={() => setIsFullWidth(p => !p)} className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors" title={isFullWidth ? "Normal width" : "Full width"}>
                     {isFullWidth ? <NormalWidthIcon /> : <FullWidthIcon />}
                  </button>
-                <button onClick={handleSave} className="bg-black text-white font-semibold py-2 px-6 rounded-full hover:bg-gray-800 transition-colors">
-                    Save Note
-                </button>
             </div>
         </div>
         <div className="flex-grow px-8 lg:px-12 pb-8 overflow-y-auto relative">
@@ -305,53 +298,61 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
         </div>
       </div>
       
-      {/* Floating AI Chat Panel */}
-      <div className="absolute top-6 right-6 bottom-6 w-[400px] flex-shrink-0 border border-gray-200 bg-white/50 backdrop-blur-lg rounded-2xl shadow-xl flex flex-col z-10">
-        <div className="p-4 border-b border-black/10 text-center flex-shrink-0">
-          <h2 className="font-semibold text-gray-800">AI Assistant</h2>
+      {/* Collapsible AI Chat Panel */}
+      <div className={`flex-shrink-0 border-l border-gray-200 bg-gray-50/50 flex flex-col transition-all duration-300 ${isChatCollapsed ? 'w-20' : 'w-[400px]'}`}>
+        <div className="p-4 border-b border-black/10 flex items-center justify-between flex-shrink-0">
+            {!isChatCollapsed && <h2 className="font-semibold text-gray-800">AI Assistant</h2>}
+            <button onClick={() => setIsChatCollapsed(p => !p)} title={isChatCollapsed ? 'Open Panel' : 'Collapse Panel'} className={`p-2 hover:bg-gray-200 rounded-full text-gray-600 ${isChatCollapsed ? 'mx-auto' : ''}`}>
+                {isChatCollapsed ? <PanelOpenIcon /> : <PanelCloseIcon />}
+            </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {chatMessages.map(msg => (
-                <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                    <div className={`max-w-sm rounded-lg p-3 px-4 ${msg.role === 'user' ? 'bg-black text-white' : 'bg-white text-black border'}`}>
-                       <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
-                    </div>
-                     {msg.role === 'model' && !msg.text.startsWith("Sorry") && (
-                        <div className="mt-2 flex gap-2">
-                           <button onClick={() => insertAiText(msg.text)} className="text-xs font-semibold bg-white border rounded-full px-3 py-1 hover:bg-gray-100">Insert</button>
-                           {selectionRef.current && <button onClick={() => replaceSelectionWithAiText(msg.text)} className="text-xs font-semibold bg-white border rounded-full px-3 py-1 hover:bg-gray-100">Replace</button>}
+        
+        {!isChatCollapsed && (
+            <>
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {chatMessages.map(msg => (
+                        <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                            <div className={`max-w-sm rounded-lg p-3 px-4 ${msg.role === 'user' ? 'bg-black text-white' : 'bg-white text-black border'}`}>
+                            <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                            </div>
+                            {msg.role === 'model' && !msg.text.startsWith("Sorry") && (
+                                <div className="mt-2 flex gap-2">
+                                <button onClick={() => insertAiText(msg.text)} className="text-xs font-semibold bg-white border rounded-full px-3 py-1 hover:bg-gray-100">Insert</button>
+                                {selectionRef.current && <button onClick={() => replaceSelectionWithAiText(msg.text)} className="text-xs font-semibold bg-white border rounded-full px-3 py-1 hover:bg-gray-100">Replace</button>}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                    {isAiLoading && (
+                        <div className="flex items-start">
+                            <div className="max-w-sm rounded-lg p-3 px-4 bg-white text-black border">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{animationDelay: '0s'}}></div>
+                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                                </div>
+                            </div>
                         </div>
                     )}
+                <div ref={chatEndRef}></div>
                 </div>
-            ))}
-             {isAiLoading && (
-                <div className="flex items-start">
-                    <div className="max-w-sm rounded-lg p-3 px-4 bg-white text-black border">
-                        <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{animationDelay: '0s'}}></div>
-                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
-                        </div>
-                    </div>
+                <div className="p-4 border-t border-black/10 flex-shrink-0">
+                <form onSubmit={handleChatSend} className="flex items-center gap-2">
+                    <input
+                        type="text"
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        placeholder="Ask AI to write, edit, etc..."
+                        className="flex-1 w-full bg-white px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
+                        disabled={isAiLoading || !geminiApiKey}
+                    />
+                    <button type="submit" className="w-10 h-10 bg-black text-white rounded-lg flex items-center justify-center flex-shrink-0 disabled:bg-gray-400">
+                        <ArrowUpIcon />
+                    </button>
+                </form>
                 </div>
-            )}
-          <div ref={chatEndRef}></div>
-        </div>
-        <div className="p-4 border-t border-black/10 flex-shrink-0">
-          <form onSubmit={handleChatSend} className="flex items-center gap-2">
-            <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                placeholder="Ask AI to write, edit, etc..."
-                className="flex-1 w-full bg-white px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black"
-                disabled={isAiLoading || !geminiApiKey}
-            />
-            <button type="submit" className="w-10 h-10 bg-black text-white rounded-lg flex items-center justify-center flex-shrink-0 disabled:bg-gray-400">
-                <ArrowUpIcon />
-            </button>
-          </form>
-        </div>
+            </>
+        )}
       </div>
        <style>{`
         .prose > :first-child { margin-top: 0; }
