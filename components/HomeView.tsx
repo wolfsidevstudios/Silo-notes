@@ -1,6 +1,6 @@
 import React from 'react';
 import { Note, NoteType } from '../types';
-import { LockIcon, JournalIcon } from './icons';
+import { LockIcon, JournalIcon, AppLogoIcon } from './icons';
 
 interface HomeViewProps {
   notes: Note[];
@@ -92,8 +92,13 @@ const HomeView: React.FC<HomeViewProps> = ({ notes, onEditNote }) => {
   return (
     <div className="p-8 lg:p-12">
       <header className="mb-10">
-        <h1 className="text-4xl font-bold text-gray-900">Welcome Back</h1>
-        <p className="text-lg text-gray-500 mt-2">Here are your recent notes.</p>
+        <div className="flex items-center gap-4">
+          <AppLogoIcon className="w-10 h-10" />
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900">Welcome Back</h1>
+            <p className="text-lg text-gray-500 mt-1">Here are your recent notes.</p>
+          </div>
+        </div>
       </header>
 
       {notes.length > 0 ? (

@@ -311,6 +311,7 @@ const App: React.FC = () => {
   const [activeBoard, setActiveBoard] = useState<Board | null>(null);
   const [isAiChatVisible, setIsAiChatVisible] = useState(false);
   const [isNewNoteModalVisible, setIsNewNoteModalVisible] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
   const [activeClock, setActiveClock] = useState<{ type: 'timer' | 'stopwatch'; props: any } | null>(null);
 
@@ -379,6 +380,7 @@ const App: React.FC = () => {
   const handleToggleAiChat = useCallback(() => setIsAiChatVisible(prev => !prev), []);
   const handleSetTimer = useCallback((props: { initialSeconds: number }) => setActiveClock({ type: 'timer', props }), []);
   const handleSetStopwatch = useCallback(() => setActiveClock({ type: 'stopwatch', props: {} }), []);
+  const handleToggleSidebar = useCallback(() => setIsSidebarCollapsed(prev => !prev), []);
   const handleCloseClock = useCallback(() => setActiveClock(null), []);
 
   const handleViewChange = useCallback((view: View, options?: { keepCurrentNote?: boolean }) => {
@@ -527,6 +529,8 @@ const App: React.FC = () => {
         activeSpaceId={activeSpaceId}
         onSelectSpace={handleSelectSpace}
         onToggleAiChat={handleToggleAiChat}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={handleToggleSidebar}
       />
       <main className="flex-1 overflow-y-auto">
         {renderMainView()}
