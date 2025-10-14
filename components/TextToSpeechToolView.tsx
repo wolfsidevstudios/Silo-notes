@@ -22,9 +22,11 @@ const voices = {
 
 interface TextToSpeechToolViewProps {
   onBack: () => void;
+  gems: number;
+  setGems: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const TextToSpeechToolView: React.FC<TextToSpeechToolViewProps> = ({ onBack }) => {
+const TextToSpeechToolView: React.FC<TextToSpeechToolViewProps> = ({ onBack, gems, setGems }) => {
   const [text, setText] = useState('');
   const [language, setLanguage] = useState<'en' | 'es'>('en');
   const [selectedVoiceId, setSelectedVoiceId] = useState(voices.en[0].id);
@@ -43,10 +45,15 @@ const TextToSpeechToolView: React.FC<TextToSpeechToolViewProps> = ({ onBack }) =
       setError('Please enter some text to generate audio.');
       return;
     }
+    if (gems < 5) {
+      setError('Not enough gems. You need 5 gems to use this tool.');
+      return;
+    }
     setIsLoading(true);
     setError(null);
     setAudioUrl(null);
     try {
+      setGems(prev => prev - 5);
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
         method: 'POST',
         headers: {
@@ -60,12 +67,14 @@ const TextToSpeechToolView: React.FC<TextToSpeechToolViewProps> = ({ onBack }) =
         }),
       });
       if (!response.ok) {
+        setGems(prev => prev + 5); // Refund gems on failure
         const errorData = await response.json();
         throw new Error(errorData.detail?.message || 'Failed to generate audio.');
       }
       const blob = await response.blob();
       setAudioUrl(URL.createObjectURL(blob));
     } catch (err: any) {
+      setGems(prev => prev + 5); // Refund gems on failure
       console.error(err);
       setError(err.message || 'An unexpected error occurred.');
     } finally {
@@ -128,7 +137,7 @@ const TextToSpeechToolView: React.FC<TextToSpeechToolViewProps> = ({ onBack }) =
                 </svg>
                 Generating...
               </>
-            ) : "Generate Audio"}
+            ) : "Generate Audio (5 Gems)"}
           </button>
         </div>
 

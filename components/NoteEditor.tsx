@@ -14,6 +14,8 @@ const ELEVENLABS_API_KEY = 'sk_0c8a39a023d6903e44b64bfe6c751b7d888045d452eb6635'
 interface TextToSpeechModalProps {
   onClose: () => void;
   onAddAudio: (dataUrl: string) => void;
+  gems: number;
+  setGems: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const voices = {
@@ -33,7 +35,7 @@ const voices = {
   ],
 };
 
-const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAudio }) => {
+const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAudio, gems, setGems }) => {
   const [text, setText] = useState('');
   const [language, setLanguage] = useState<'en' | 'es'>('en');
   const [selectedVoiceId, setSelectedVoiceId] = useState(voices.en[0].id);
@@ -49,8 +51,13 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
 
   const handleGenerateAudio = async () => {
     if (!text.trim()) { setError('Please enter some text.'); return; }
+    if (gems < 5) {
+        setError('Not enough gems. You need 5 gems to use this feature.');
+        return;
+    }
     setIsLoading(true); setError(null); setAudioUrl(null); setAudioBlob(null);
     try {
+      setGems(prev => prev - 5);
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'xi-api-key': ELEVENLABS_API_KEY },
@@ -60,6 +67,7 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
         }),
       });
       if (!response.ok) {
+        setGems(prev => prev + 5); // Refund gems on failure
         const errorData = await response.json();
         throw new Error(errorData.detail?.message || 'Failed to generate audio.');
       }
@@ -67,6 +75,7 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
       setAudioBlob(blob); setAudioUrl(URL.createObjectURL(blob));
     } catch (err: any) {
       console.error(err);
+      setGems(prev => prev + 5); // Refund gems on failure
       setError(err.message || 'An unexpected error occurred.');
     } finally { setIsLoading(false); }
   };
@@ -107,7 +116,7 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
         </div>
         <div className="flex-shrink-0 mt-4">
             <button onClick={handleGenerateAudio} disabled={isLoading} className="w-full bg-black text-white font-semibold py-3 px-6 rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-400 flex items-center justify-center">
-                {isLoading ? (<> <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating... </>) : "Generate Audio"}
+                {isLoading ? (<> <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating... </>) : "Generate Audio (5 Gems)"}
             </button>
             {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
             {audioUrl && (
@@ -130,11 +139,13 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
 interface ClassicNoteEditorProps {
   currentNote: Note | null;
   onSave: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string; type: NoteType; }) => void;
+  gems: number;
+  setGems: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const ASSEMBLYAI_API_KEY = '49e6f2264b204542b812c42bfb3fcdac';
 
-const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSave }) => {
+const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSave, gems, setGems }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [privacy, setPrivacy] = useState<'public' | 'private'>('public');
@@ -681,7 +692,7 @@ const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSa
         )}
       </div>
       
-      {isTtsModalOpen && <TextToSpeechModal onClose={() => setIsTtsModalOpen(false)} onAddAudio={handleAddTtsAudio} />}
+      {isTtsModalOpen && <TextToSpeechModal onClose={() => setIsTtsModalOpen(false)} onAddAudio={handleAddTtsAudio} gems={gems} setGems={setGems} />}
       {isYouTubeModalOpen && <YouTubeModal onClose={() => setIsYouTubeModalOpen(false)} onSubmit={handleYouTubeSubmit} />}
       {isComingSoonModalOpen && <ComingSoonModal onClose={() => setIsComingSoonModalOpen(false)} />}
       {isRewriteModalOpen && <RewriteModal geminiApiKey={geminiApiKey} textToProcess={textToRewrite} onClose={() => setIsRewriteModalOpen(false)} onReplace={handleReplaceText} />}

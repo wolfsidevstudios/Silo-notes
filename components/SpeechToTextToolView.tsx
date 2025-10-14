@@ -5,9 +5,11 @@ const ASSEMBLYAI_API_KEY = '49e6f2264b204542b812c42bfb3fcdac';
 
 interface SpeechToTextToolViewProps {
   onBack: () => void;
+  gems: number;
+  setGems: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const SpeechToTextToolView: React.FC<SpeechToTextToolViewProps> = ({ onBack }) => {
+const SpeechToTextToolView: React.FC<SpeechToTextToolViewProps> = ({ onBack, gems, setGems }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [status, setStatus] = useState('Click the icon to start transcribing');
   const [transcript, setTranscript] = useState('');
@@ -33,7 +35,12 @@ const SpeechToTextToolView: React.FC<SpeechToTextToolViewProps> = ({ onBack }) =
 
   const startRecording = async () => {
     if (isRecording) return;
+    if (gems < 5) {
+        setStatus('Not enough gems. You need 5 gems to use this tool.');
+        return;
+    }
     try {
+      setGems(prev => prev - 5);
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
       const recorder = new MediaRecorder(stream);
@@ -42,7 +49,7 @@ const SpeechToTextToolView: React.FC<SpeechToTextToolViewProps> = ({ onBack }) =
       socketRef.current = socket;
 
       socket.onopen = () => {
-        setStatus('Transcribing...');
+        setStatus('Transcribing... (5 Gems)');
         setIsRecording(true);
         socket.send(JSON.stringify({ authorization: ASSEMBLYAI_API_KEY }));
         recorder.start(1000);
@@ -55,7 +62,7 @@ const SpeechToTextToolView: React.FC<SpeechToTextToolViewProps> = ({ onBack }) =
           setPartialTranscript('');
         }
       };
-      socket.onerror = () => { setStatus('Error. Please try again.'); stopRecording(); };
+      socket.onerror = () => { setStatus('Error. Please try again.'); stopRecording(); setGems(prev => prev + 5) }; // Refund on error
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0 && socket.readyState === WebSocket.OPEN) {
           const reader = new FileReader();
@@ -65,6 +72,7 @@ const SpeechToTextToolView: React.FC<SpeechToTextToolViewProps> = ({ onBack }) =
       };
       setStatus('Connecting...');
     } catch (error) {
+      setGems(prev => prev + 5); // Refund on error
       setStatus('Microphone access denied.');
     }
   };

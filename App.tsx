@@ -5,7 +5,7 @@ import ClassicNoteEditor from './components/NoteEditor';
 import StickyNoteEditor from './components/StickyNoteEditor';
 import JournalEditor from './components/JournalEditor';
 import CalendarView from './components/CalendarView';
-import IdeasView from './components/IdeasView';
+import GemsView from './components/IdeasView';
 import AgendaView from './components/AgendaView';
 import SpaceView from './components/SpaceView';
 import NoteBoardView from './components/NoteBoardView';
@@ -312,6 +312,7 @@ const App: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [gems, setGems] = useState<number>(0);
 
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
   const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
@@ -343,6 +344,7 @@ const App: React.FC = () => {
       const savedMeetings = localStorage.getItem('silo-meetings');
       const savedCalendarEvents = localStorage.getItem('silo-calendar-events');
       const savedGeminiKey = localStorage.getItem('gemini-api-key');
+      const savedGems = localStorage.getItem('silo-gems');
 
       if (savedNotes) {
         const parsedNotes = JSON.parse(savedNotes).map((note: Note) => ({
@@ -365,6 +367,11 @@ const App: React.FC = () => {
       if (savedMeetings) setMeetings(JSON.parse(savedMeetings));
       if (savedCalendarEvents) setCalendarEvents(JSON.parse(savedCalendarEvents));
       if (savedGeminiKey) setGeminiApiKey(savedGeminiKey);
+      if (savedGems) {
+        setGems(JSON.parse(savedGems));
+      } else {
+        setGems(15); // Starting pack
+      }
 
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
@@ -379,10 +386,11 @@ const App: React.FC = () => {
       localStorage.setItem('silo-tasks', JSON.stringify(tasks));
       localStorage.setItem('silo-meetings', JSON.stringify(meetings));
       localStorage.setItem('silo-calendar-events', JSON.stringify(calendarEvents));
+      localStorage.setItem('silo-gems', JSON.stringify(gems));
     } catch (error) {
       console.error("Failed to save data to localStorage", error);
     }
-  }, [notes, spaces, boards, tasks, meetings, calendarEvents]);
+  }, [notes, spaces, boards, tasks, meetings, calendarEvents, gems]);
 
   const handleToggleAiChat = useCallback(() => setIsAiChatVisible(prev => !prev), []);
   const handleSetTimer = useCallback((props: { initialSeconds: number }) => setActiveClock({ type: 'timer', props }), []);
@@ -444,6 +452,7 @@ const App: React.FC = () => {
         audioNotes: noteData.audioNotes || [], privacy: noteData.privacy, pin: noteData.pin, type: noteData.type, color: noteData.color,
       };
       setNotes([newNote, ...notes]);
+      setGems(prevGems => prevGems + 1); // Award gem for new note
     }
     handleViewChange(View.HOME);
   };
@@ -520,9 +529,9 @@ const App: React.FC = () => {
         if (currentNote?.type === NoteType.JOURNAL) return <JournalEditor currentNote={currentNote} onSave={handleSaveNote} />;
         if (currentNote?.type === NoteType.STICKY) return <StickyNoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
         if (currentNote?.type === NoteType.AI_NOTE) return <AiNoteEditor currentNote={currentNote} onSave={handleSaveNote} geminiApiKey={geminiApiKey} />;
-        return <ClassicNoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
+        return <ClassicNoteEditor currentNote={currentNote} onSave={handleSaveNote} gems={gems} setGems={setGems} />;
       case View.CALENDAR: return <CalendarView events={calendarEvents} notes={notes} tasks={tasks} onAddEvents={handleAddCalendarEvents} onDeleteEvent={handleDeleteCalendarEvent} onEditNote={handleEditNote} />;
-      case View.IDEAS: return <IdeasView />;
+      case View.GEMS: return <GemsView gems={gems} />;
       case View.AGENDA: return <AgendaView tasks={tasks} meetings={meetings} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onDeleteMeeting={handleDeleteMeeting} />;
       case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} onViewChange={handleViewChange} />;
       case View.SILO_LABS: return <SiloLabsView onViewChange={handleViewChange} />;
@@ -530,8 +539,8 @@ const App: React.FC = () => {
       case View.SUMMARIZE_TOOL: return <SummarizeToolView onBack={() => handleViewChange(View.SILO_LABS)} notes={notes} />;
       case View.REWRITE_TOOL: return <RewriteToolView onBack={() => handleViewChange(View.SILO_LABS)} notes={notes} />;
       case View.VOICE_MEMO_TOOL: return <VoiceMemoToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
-      case View.SPEECH_TO_TEXT_TOOL: return <SpeechToTextToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
-      case View.TEXT_TO_SPEECH_TOOL: return <TextToSpeechToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.SPEECH_TO_TEXT_TOOL: return <SpeechToTextToolView onBack={() => handleViewChange(View.SILO_LABS)} gems={gems} setGems={setGems} />;
+      case View.TEXT_TO_SPEECH_TOOL: return <TextToSpeechToolView onBack={() => handleViewChange(View.SILO_LABS)} gems={gems} setGems={setGems} />;
       case View.FLASHCARD_TOOL: return <FlashcardToolView onBack={() => handleViewChange(View.SILO_LABS)} currentNote={currentNote} onSave={handleSaveNote} notes={notes} />;
       case View.QUIZ_TOOL: return <QuizToolView onBack={() => handleViewChange(View.SILO_LABS)} currentNote={currentNote} onSave={handleSaveNote} notes={notes} />;
       case View.YOUTUBE_TO_NOTES_TOOL: return <YouTubeToNotesToolView onBack={() => handleViewChange(View.SILO_LABS)} onSave={handleSaveNote} />;
@@ -564,6 +573,7 @@ const App: React.FC = () => {
         onToggleAiChat={handleToggleAiChat}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={handleToggleSidebar}
+        gems={gems}
       />
       <main className="flex-1 overflow-y-auto">
         {renderMainView()}

@@ -2,7 +2,7 @@ export enum View {
   HOME = 'HOME',
   CREATE = 'CREATE',
   CALENDAR = 'CALENDAR',
-  IDEAS = 'IDEAS',
+  GEMS = 'GEMS',
   AGENDA = 'AGENDA',
   SPACE = 'SPACE',
   BOARD = 'BOARD',

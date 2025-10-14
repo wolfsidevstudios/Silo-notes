@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Space } from '../types';
-import { HomeIcon, CreateIcon, CalendarIcon, IdeasIcon, PlusIcon, HashtagIcon, SettingsIcon, SiloLabsIcon, SiloAiIcon, AgendaIcon, AppLogoIcon, CollapseSidebarIcon } from './icons';
+import { HomeIcon, CreateIcon, CalendarIcon, GemIcon, PlusIcon, HashtagIcon, SettingsIcon, SiloLabsIcon, SiloAiIcon, AgendaIcon, AppLogoIcon, CollapseSidebarIcon } from './icons';
 
 interface SidebarProps {
   activeView: View;
@@ -13,6 +13,7 @@ interface SidebarProps {
   onToggleAiChat: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  gems: number;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -25,7 +26,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onSelectSpace,
   onToggleAiChat,
   isCollapsed,
-  onToggleCollapse
+  onToggleCollapse,
+  gems
 }) => {
   const [newSpaceName, setNewSpaceName] = useState('');
 
@@ -49,7 +51,8 @@ const Sidebar: React.FC<SidebarProps> = ({
       }`}
     >
       {icon}
-      {!isCollapsed && <span className="ml-3">{label}</span>}
+      {!isCollapsed && <span className="ml-3 flex-1 text-left">{label}</span>}
+      {!isCollapsed && label === 'Gems' && <span className="font-mono text-sm bg-gray-200 text-gray-700 rounded-full px-2 py-0.5">{gems}</span>}
     </button>
   );
 
@@ -67,7 +70,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <NavItem icon={<HomeIcon />} label="Home" isActive={isNavActive(View.HOME)} onClick={() => onViewChange(View.HOME)} />
           <NavItem icon={<CreateIcon />} label="Create" isActive={isNavActive(View.CREATE)} onClick={onOpenNewNoteModal} />
           <NavItem icon={<CalendarIcon />} label="Calendar" isActive={isNavActive(View.CALENDAR)} onClick={() => onViewChange(View.CALENDAR)} />
-          <NavItem icon={<IdeasIcon />} label="Ideas" isActive={isNavActive(View.IDEAS)} onClick={() => onViewChange(View.IDEAS)} />
+          <NavItem icon={<GemIcon />} label="Gems" isActive={isNavActive(View.GEMS)} onClick={() => onViewChange(View.GEMS)} />
           <NavItem icon={<AgendaIcon />} label="Agenda" isActive={isNavActive(View.AGENDA)} onClick={() => onViewChange(View.AGENDA)} />
           <NavItem icon={<SiloLabsIcon />} label="Silo Labs" isActive={isNavActive(View.SILO_LABS)} onClick={() => onViewChange(View.SILO_LABS)} />
         </nav>
