@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import HomeView from './components/HomeView';
@@ -15,6 +14,7 @@ import SummarizeToolView from './components/SummarizeToolView';
 import RewriteToolView from './components/RewriteToolView';
 import VoiceMemoToolView from './components/VoiceMemoToolView';
 import SpeechToTextToolView from './components/SpeechToTextToolView';
+import MindMapView from './components/MindMapView';
 import { GoogleGenAI } from "@google/genai";
 import { ArrowUpIcon, CloseIcon } from './components/icons';
 
@@ -350,6 +350,8 @@ const App: React.FC = () => {
                 return <DiagramView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
             case BoardType.JAM_BOARD:
                 return <JamBoardView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
+            case BoardType.MIND_MAP:
+                return <MindMapView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
             default:
                 return <HomeView notes={notes} onEditNote={handleEditNote} />;
         }

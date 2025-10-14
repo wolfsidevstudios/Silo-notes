@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Space, Board, BoardType } from '../types';
-import { PlusIcon, NoteBoardIcon, DiagramIcon, JamBoardIcon, HashtagIcon } from './icons';
+import { PlusIcon, NoteBoardIcon, DiagramIcon, JamBoardIcon, HashtagIcon, MindMapIcon } from './icons';
 
 interface SpaceViewProps {
   space: Space;
@@ -15,7 +15,7 @@ const BoardTypeOption: React.FC<{type: BoardType, selectedType: BoardType, setTy
     <button
       type="button"
       onClick={() => setType(type)}
-      className={`flex-1 text-center px-4 py-3 rounded-lg border-2 transition-colors duration-200 ${
+      className={`text-center px-4 py-3 rounded-lg border-2 transition-colors duration-200 ${
         isSelected ? 'bg-gray-100 border-gray-300' : 'bg-white border-gray-200 hover:border-gray-300'
       }`}
     >
@@ -30,6 +30,7 @@ const BoardCard: React.FC<{ board: Board, onSelectBoard: (board: Board) => void 
       case BoardType.NOTE_BOARD: return <NoteBoardIcon />;
       case BoardType.DIAGRAM: return <DiagramIcon />;
       case BoardType.JAM_BOARD: return <JamBoardIcon />;
+      case BoardType.MIND_MAP: return <MindMapIcon />;
       default: return null;
     }
   }
@@ -113,8 +114,9 @@ const SpaceView: React.FC<SpaceViewProps> = ({ space, boards, addBoard, onSelect
               </div>
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Board Type</label>
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <BoardTypeOption type={BoardType.NOTE_BOARD} selectedType={newBoardType} setType={setNewBoardType} />
+                  <BoardTypeOption type={BoardType.MIND_MAP} selectedType={newBoardType} setType={setNewBoardType} />
                   <BoardTypeOption type={BoardType.DIAGRAM} selectedType={newBoardType} setType={setNewBoardType} />
                   <BoardTypeOption type={BoardType.JAM_BOARD} selectedType={newBoardType} setType={setNewBoardType} />
                 </div>

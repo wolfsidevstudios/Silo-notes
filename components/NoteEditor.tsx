@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Note, AudioNote } from '../types';
 import { VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, StopIcon, RewriteIcon, SummarizeIcon } from './icons';
@@ -185,17 +184,26 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
   useEffect(() => {
     if (currentNote) {
       setTitle(currentNote.title);
-      setContent(currentNote.content);
+      const newContent = currentNote.content || '';
+      setContent(newContent);
+      if (contentEditableRef.current) {
+        contentEditableRef.current.innerHTML = newContent;
+      }
       setAudioNotes(currentNote.audioNotes || []);
       setPrivacy(currentNote.privacy);
       setPin(currentNote.pin);
       if (currentNote.privacy === 'private') {
         setIsLocked(true);
         setShowPinModal('enter');
+      } else {
+        setIsLocked(false);
       }
     } else {
       setTitle('');
       setContent('');
+      if (contentEditableRef.current) {
+        contentEditableRef.current.innerHTML = '';
+      }
       setAudioNotes([]);
       setPrivacy('public');
       setPin(undefined);
@@ -510,7 +518,6 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
           onInput={(e) => setContent(e.currentTarget.innerHTML)}
           data-placeholder="Start writing here, or use the AI tool below to dictate..."
           className="flex-1 w-full text-lg leading-relaxed text-gray-700 focus:outline-none resize-none [&:empty]:before:content-[attr(data-placeholder)] [&:empty]:before:text-gray-400"
-          dangerouslySetInnerHTML={{ __html: content }}
         />
 
         {audioNotes.length > 0 && (
