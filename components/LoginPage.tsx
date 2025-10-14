@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { AppLogoIcon, YahooIcon } from './icons';
+import { AppLogoIcon, YahooIcon, ZoomIcon } from './icons';
 
 // FIX: Add google to window type to fix TypeScript errors.
 declare global {
@@ -61,6 +61,35 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         window.location.href = authUrl;
     };
 
+    const handleZoomLogin = async () => {
+        const generateRandomString = (length: number) => {
+            const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let text = '';
+            for (let i = 0; i < length; i++) {
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+            }
+            return text;
+        };
+        const generateCodeChallenge = async (verifier: string) => {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(verifier);
+            const digest = await window.crypto.subtle.digest('SHA-256', data);
+            return btoa(String.fromCharCode(...new Uint8Array(digest)))
+                .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        };
+        
+        const clientId = 'qy8KhVTKRZG1Pl4dhQwZSw';
+        const redirectUri = window.location.origin + window.location.pathname;
+        const scope = 'user:read';
+    
+        const verifier = generateRandomString(128);
+        sessionStorage.setItem('zoom_code_verifier', verifier);
+        const challenge = await generateCodeChallenge(verifier);
+    
+        const authUrl = `https://zoom.us/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256&scope=${encodeURIComponent(scope)}`;
+        window.location.href = authUrl;
+    };
+
 
     useEffect(() => {
         if (window.google && signInButtonRef.current) {
@@ -107,6 +136,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                         >
                           <YahooIcon />
                           Sign in with Yahoo
+                        </button>
+                        <button
+                          onClick={handleZoomLogin}
+                          className="flex justify-center items-center gap-3 w-[300px] h-[40px] bg-[#2D8CFF] text-white rounded-full shadow-sm text-sm font-bold hover:bg-[#1a7ae0] transition-colors"
+                        >
+                          <ZoomIcon />
+                          Sign in with Zoom
                         </button>
                     </div>
 

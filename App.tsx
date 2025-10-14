@@ -302,21 +302,21 @@ const App: React.FC = () => {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
-  const handleLoginSuccess = (profile: UserProfile) => {
+  const handleLoginSuccess = useCallback((profile: UserProfile) => {
     localStorage.setItem('silo-authenticated', 'true');
     localStorage.setItem('silo-user-profile', JSON.stringify(profile));
     setIsAuthenticated(true);
     setUserProfile(profile);
     window.location.hash = '#/home';
-  };
+  }, []);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     localStorage.removeItem('silo-authenticated');
     localStorage.removeItem('silo-user-profile');
     setIsAuthenticated(false);
     setUserProfile(null);
     window.location.hash = '#/';
-  };
+  }, []);
   
   // Handle Yahoo Login Redirect
   useEffect(() => {
@@ -342,7 +342,7 @@ const App: React.FC = () => {
             }
         }
     }
-  }, []); // Run only once on initial load
+  }, [handleLoginSuccess]);
 
   // State management
   const [activeView, setActiveView] = useState<View>(View.HOME);
@@ -368,51 +368,79 @@ const App: React.FC = () => {
   const [zoomUser, setZoomUser] = useState<any | null>(null);
   const [zoomMeetings, setZoomMeetings] = useState<Meeting[]>([]);
 
-  // Zoom: Handle OAuth callback
+  const handleZoomDisconnect = useCallback(() => {
+    localStorage.removeItem('zoom_access_token');
+    localStorage.removeItem('zoom_refresh_token');
+    setZoomToken(null);
+    setZoomUser(null);
+    setZoomMeetings([]);
+  }, []);
+  
+  // Zoom: Handle OAuth callback for both login and settings connect
   useEffect(() => {
-    const handleZoomCallback = async (code: string) => {
-      const verifier = sessionStorage.getItem('zoom_code_verifier');
-      if (!verifier) {
-        console.error('Zoom code verifier not found in session storage.');
-        return;
-      }
-      
-      const clientId = 'qy8KhVTKRZG1Pl4dhQwZSw';
-      const redirectUri = window.location.origin + window.location.pathname;
-
-      const params = new URLSearchParams();
-      params.append('grant_type', 'authorization_code');
-      params.append('code', code);
-      params.append('redirect_uri', redirectUri);
-      params.append('client_id', clientId);
-      params.append('code_verifier', verifier);
-
-      try {
-        const response = await fetch('https://zoom.us/oauth/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: params,
-        });
-
-        if (!response.ok) throw new Error('Failed to fetch Zoom token');
+    const handleZoomOauth = async (code: string) => {
+        const verifier = sessionStorage.getItem('zoom_code_verifier');
+        if (!verifier) {
+            console.error('Zoom code verifier not found in session storage.');
+            return;
+        }
         
-        const data = await response.json();
-        localStorage.setItem('zoom_access_token', data.access_token);
-        localStorage.setItem('zoom_refresh_token', data.refresh_token);
-        setZoomToken(data.access_token);
-        sessionStorage.removeItem('zoom_code_verifier');
-      } catch (error) {
-        console.error('Error exchanging Zoom code for token:', error);
-      }
-    };
+        const clientId = 'qy8KhVTKRZG1Pl4dhQwZSw';
+        const redirectUri = window.location.origin + window.location.pathname;
 
+        const params = new URLSearchParams();
+        params.append('grant_type', 'authorization_code');
+        params.append('code', code);
+        params.append('redirect_uri', redirectUri);
+        params.append('client_id', clientId);
+        params.append('code_verifier', verifier);
+
+        try {
+            const response = await fetch('https://zoom.us/oauth/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: params,
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch Zoom token');
+            
+            const data = await response.json();
+            sessionStorage.removeItem('zoom_code_verifier');
+
+            if (isAuthenticated) {
+                // Connecting account from settings
+                localStorage.setItem('zoom_access_token', data.access_token);
+                localStorage.setItem('zoom_refresh_token', data.refresh_token);
+                setZoomToken(data.access_token);
+            } else {
+                // Logging in
+                const userResponse = await fetch('https://api.zoom.us/v2/users/me', {
+                    headers: { 'Authorization': `Bearer ${data.access_token}` }
+                });
+                if (!userResponse.ok) throw new Error('Failed to fetch Zoom user for login');
+                const userData = await userResponse.json();
+                
+                const userProfile: UserProfile = {
+                    name: `${userData.first_name} ${userData.last_name}`,
+                    picture: userData.pic_url,
+                    email: userData.email,
+                };
+
+                handleLoginSuccess(userProfile);
+            }
+        } catch (error) {
+            console.error('Error handling Zoom OAuth:', error);
+        }
+    };
+    
     const urlParams = new URLSearchParams(window.location.search);
     const zoomCode = urlParams.get('code');
     if (zoomCode) {
-      handleZoomCallback(zoomCode);
-      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+        handleZoomOauth(zoomCode);
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
     }
-  }, []);
+  }, [isAuthenticated, handleLoginSuccess]);
+
 
   // Zoom: Fetch data when token is available
   useEffect(() => {
@@ -452,15 +480,7 @@ const App: React.FC = () => {
     if (zoomToken) {
         fetchZoomData(zoomToken);
     }
-  }, [zoomToken]);
-
-  const handleZoomDisconnect = () => {
-    localStorage.removeItem('zoom_access_token');
-    localStorage.removeItem('zoom_refresh_token');
-    setZoomToken(null);
-    setZoomUser(null);
-    setZoomMeetings([]);
-  };
+  }, [zoomToken, handleZoomDisconnect]);
 
   useEffect(() => {
     if (route.startsWith('#/')) {
