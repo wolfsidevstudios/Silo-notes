@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Space } from '../types';
-import { HomeIcon, CreateIcon, ExploreIcon, IdeasIcon, PlusIcon, HashtagIcon } from './icons';
+import { HomeIcon, CreateIcon, ExploreIcon, IdeasIcon, PlusIcon, HashtagIcon, SettingsIcon } from './icons';
 
 interface SidebarProps {
   activeView: View;
@@ -94,7 +94,11 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
       
-      <div className="mt-auto">
+      <div className="border-t border-gray-200 pt-4">
+         <NavItem icon={<SettingsIcon />} label="Settings" isActive={isNavActive(View.SETTINGS)} onClick={() => onViewChange(View.SETTINGS)} />
+      </div>
+
+      <div className="mt-4">
         <button 
           onClick={onCreateNewNote}
           className="w-full bg-black text-white font-semibold py-3 px-4 rounded-full hover:bg-gray-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"

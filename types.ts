@@ -5,6 +5,7 @@ export enum View {
   IDEAS = 'IDEAS',
   SPACE = 'SPACE',
   BOARD = 'BOARD',
+  SETTINGS = 'SETTINGS',
 }
 
 export interface AudioNote {

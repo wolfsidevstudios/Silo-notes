@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Note, AudioNote } from '../types';
-import { VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon } from './icons';
+import { VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, StopIcon, RewriteIcon, SummarizeIcon } from './icons';
+import { GoogleGenAI } from "@google/genai";
 
 const ELEVENLABS_API_KEY = 'sk_0c8a39a023d6903e44b64bfe6c751b7d888045d452eb6635';
 
@@ -139,7 +140,7 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
             >
                 {isLoading ? (
                     <>
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                         Generating...
                     </>
                 ) : "Generate Audio"}
@@ -196,6 +197,12 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
 
   // State for Text-to-Speech Modal
   const [isTtsModalOpen, setIsTtsModalOpen] = useState(false);
+  
+  // State for Gemini Writing Tools
+  const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
+  const [isGeminiConfigured, setIsGeminiConfigured] = useState(false);
+  const [writingToolStatus, setWritingToolStatus] = useState('Idle');
+
 
   // Shared stream ref for cleanup
   const streamRef = useRef<MediaStream | null>(null);
@@ -211,6 +218,14 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
       setAudioNotes([]);
     }
   }, [currentNote]);
+
+  useEffect(() => {
+    const key = localStorage.getItem('gemini-api-key');
+    if (key) {
+      setGeminiApiKey(key);
+      setIsGeminiConfigured(true);
+    }
+  }, []);
 
   const handleSave = () => {
     if (isRecording || isVoiceMemoRecording || isTtsModalOpen) return;
@@ -378,6 +393,27 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
     setAudioNotes(prev => prev.filter(note => note.id !== id));
   };
   
+  const handleWritingTool = async (prompt: string, status: string) => {
+    if (!geminiApiKey || !content.trim()) return;
+
+    setWritingToolStatus(status);
+    try {
+        const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+        const fullPrompt = `${prompt}:\n\n${content}`;
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: fullPrompt,
+        });
+        setContent(response.text);
+    } catch (error) {
+        console.error("Gemini API Error:", error);
+        setWritingToolStatus("Error");
+        // Optionally, show a more user-friendly error message
+    } finally {
+        setWritingToolStatus('Idle');
+    }
+  };
+
   // Cleanup effect
   useEffect(() => {
     return () => {
@@ -387,7 +423,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
-  const isActionActive = isRecording || isVoiceMemoRecording || isTtsModalOpen;
+  const isActionActive = isRecording || isVoiceMemoRecording || isTtsModalOpen || writingToolStatus !== 'Idle';
   
   return (
     <div className="p-8 lg:p-12 h-full flex flex-col">
@@ -449,13 +485,13 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
             <div className="flex items-center px-2">
                 <button 
                     onClick={handleToggleAiRecording}
-                    disabled={isVoiceMemoRecording || isTtsModalOpen}
+                    disabled={isVoiceMemoRecording || isTtsModalOpen || writingToolStatus !== 'Idle'}
                     className={`p-2 rounded-full transition-colors duration-200 ${
                         isRecording ? 'bg-red-500 text-white' : 'bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed'
                     }`}
                     aria-label={isRecording ? 'Stop AI transcription' : 'Start AI transcription'}
                 >
-                  <VoiceTypingIcon />
+                  {isRecording ? <StopIcon /> : <VoiceTypingIcon />}
                 </button>
                 <p className="text-xs text-gray-500 ml-2 w-24 truncate">
                     {status === 'Idle' && !isRecording ? 'Speech-to-Text' : status}
@@ -464,13 +500,13 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
             <div className="flex items-center pl-3">
                 <button 
                     onClick={handleToggleVoiceMemoRecording}
-                    disabled={isRecording || isTtsModalOpen}
+                    disabled={isRecording || isTtsModalOpen || writingToolStatus !== 'Idle'}
                     className={`p-2 rounded-full transition-colors duration-200 ${
                         isVoiceMemoRecording ? 'bg-red-500 text-white' : 'bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed'
                     }`}
                     aria-label={isVoiceMemoRecording ? 'Stop recording memo' : 'Start recording memo'}
                 >
-                  <VoiceMemoIcon />
+                  {isVoiceMemoRecording ? <StopIcon /> : <VoiceMemoIcon />}
                 </button>
                 <p className="text-xs text-gray-500 ml-2 w-24 truncate">
                     {voiceMemoStatus === 'Idle' && !isVoiceMemoRecording ? 'Voice Memo' : voiceMemoStatus}
@@ -479,7 +515,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
             <div className="flex items-center pl-3 pr-2">
                 <button 
                     onClick={() => setIsTtsModalOpen(true)}
-                    disabled={isRecording || isVoiceMemoRecording}
+                    disabled={isActionActive}
                     className="p-2 rounded-full transition-colors duration-200 bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
                     aria-label="Generate audio from text"
                 >
@@ -489,6 +525,32 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
                     Text-to-Speech
                 </p>
             </div>
+             {isGeminiConfigured && (
+                <div className="flex items-center pl-3 pr-2 divide-x divide-gray-200">
+                    <div className="flex items-center pr-3">
+                        <button
+                            onClick={() => handleWritingTool('Rewrite the following text', 'Rewriting...')}
+                            disabled={isActionActive || !content.trim()}
+                            className="p-2 rounded-full transition-colors duration-200 bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+                            aria-label="Rewrite text"
+                        >
+                            <RewriteIcon />
+                        </button>
+                        <p className="text-xs text-gray-500 ml-2 w-20 truncate">{writingToolStatus === 'Rewriting...' ? 'Rewriting...' : 'Rewrite'}</p>
+                    </div>
+                    <div className="flex items-center pl-3">
+                        <button
+                            onClick={() => handleWritingTool('Summarize the following text', 'Summarizing...')}
+                            disabled={isActionActive || !content.trim()}
+                            className="p-2 rounded-full transition-colors duration-200 bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
+                            aria-label="Summarize text"
+                        >
+                            <SummarizeIcon />
+                        </button>
+                        <p className="text-xs text-gray-500 ml-2 w-20 truncate">{writingToolStatus === 'Summarizing...' ? 'Summarizing...' : 'Summarize'}</p>
+                    </div>
+                </div>
+            )}
          </div>
          {(isRecording || isVoiceMemoRecording) && (
             <div className="flex items-center pr-3">

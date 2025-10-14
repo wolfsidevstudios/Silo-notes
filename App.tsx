@@ -9,6 +9,7 @@ import SpaceView from './components/SpaceView';
 import NoteBoardView from './components/NoteBoardView';
 import DiagramView from './components/DiagramView';
 import JamBoardView from './components/JamBoardView';
+import SettingsView from './components/SettingsView';
 
 import { View, Note, Space, Board, BoardType, AudioNote } from './types';
 
@@ -185,6 +186,8 @@ const App: React.FC = () => {
         return <ExploreView />;
       case View.IDEAS:
         return <IdeasView />;
+      case View.SETTINGS:
+        return <SettingsView />;
       default:
         // Fix: Fallback to home view. The useEffect above will correct the state if it's invalid.
         // This removes the line causing the TypeScript error and the state update during render.
