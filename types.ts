@@ -3,6 +3,7 @@ export enum View {
   CREATE = 'CREATE',
   EXPLORE = 'EXPLORE',
   IDEAS = 'IDEAS',
+  AGENDA = 'AGENDA',
   SPACE = 'SPACE',
   BOARD = 'BOARD',
   SETTINGS = 'SETTINGS',
@@ -27,6 +28,20 @@ export interface Note {
   audioNotes?: AudioNote[];
   privacy: 'public' | 'private';
   pin?: string;
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  completed: boolean;
+  createdAt: string; // ISO string
+}
+
+export interface Meeting {
+  id: string;
+  title: string;
+  dateTime: string;
+  createdAt: string; // ISO string
 }
 
 export interface Space {

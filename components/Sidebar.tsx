@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { View, Space } from '../types';
-import { HomeIcon, CreateIcon, ExploreIcon, IdeasIcon, PlusIcon, HashtagIcon, SettingsIcon, SiloLabsIcon, SiloAiIcon } from './icons';
+import { HomeIcon, CreateIcon, ExploreIcon, IdeasIcon, PlusIcon, HashtagIcon, SettingsIcon, SiloLabsIcon, SiloAiIcon, AgendaIcon } from './icons';
 
 interface SidebarProps {
   activeView: View;
@@ -64,6 +64,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <NavItem icon={<CreateIcon />} label="Create" isActive={isNavActive(View.CREATE)} onClick={onCreateNewNote} />
           <NavItem icon={<ExploreIcon />} label="Explore" isActive={isNavActive(View.EXPLORE)} onClick={() => onViewChange(View.EXPLORE)} />
           <NavItem icon={<IdeasIcon />} label="Ideas" isActive={isNavActive(View.IDEAS)} onClick={() => onViewChange(View.IDEAS)} />
+          <NavItem icon={<AgendaIcon />} label="Agenda" isActive={isNavActive(View.AGENDA)} onClick={() => onViewChange(View.AGENDA)} />
           <NavItem icon={<SiloLabsIcon />} label="Silo Labs" isActive={isNavActive(View.SILO_LABS)} onClick={() => onViewChange(View.SILO_LABS)} />
         </nav>
         

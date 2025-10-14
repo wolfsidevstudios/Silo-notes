@@ -4,6 +4,8 @@ import { VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, StopIcon, RewriteIcon
 import { GoogleGenAI } from "@google/genai";
 import FloatingToolbar from './FloatingToolbar';
 import PinModal from './PinModal';
+import YouTubeModal from './YouTubeModal';
+import ComingSoonModal from './ComingSoonModal';
 
 const ELEVENLABS_API_KEY = 'sk_0c8a39a023d6903e44b64bfe6c751b7d888045d452eb6635';
 
@@ -104,7 +106,7 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
         </div>
         <div className="flex-shrink-0 mt-4">
             <button onClick={handleGenerateAudio} disabled={isLoading} className="w-full bg-black text-white font-semibold py-3 px-6 rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-400 flex items-center justify-center">
-                {isLoading ? (<> <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating... </>) : "Generate Audio"}
+                {isLoading ? (<> <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating... </>) : "Generate Audio"}
             </button>
             {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
             {audioUrl && (
@@ -152,6 +154,8 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
   const audioChunksRef = useRef<Blob[]>([]);
 
   const [isTtsModalOpen, setIsTtsModalOpen] = useState(false);
+  const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState(false);
+  const [isComingSoonModalOpen, setIsComingSoonModalOpen] = useState(false);
   
   const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
   const [isGeminiConfigured, setIsGeminiConfigured] = useState(false);
@@ -399,7 +403,10 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
   const handleDeleteAudioNote = (id: string) => { setAudioNotes(prev => prev.filter(note => note.id !== id)); };
   
   const handleAddYouTubeVideo = () => {
-    const url = prompt("Enter YouTube video URL:");
+    setIsYouTubeModalOpen(true);
+  };
+
+  const handleYouTubeSubmit = (url: string) => {
     if (!url) return;
 
     let videoId = '';
@@ -425,7 +432,9 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
     } else {
         alert("Could not find a valid YouTube Video ID in the URL.");
     }
+    setIsYouTubeModalOpen(false);
   };
+
 
   const handleAddImage = () => {
     const input = document.createElement('input');
@@ -503,7 +512,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
     }
   };
 
-  const isActionActive = isRecording || isVoiceMemoRecording || isTtsModalOpen || writingToolStatus !== 'Idle' || isLocked;
+  const isActionActive = isRecording || isVoiceMemoRecording || isTtsModalOpen || writingToolStatus !== 'Idle' || isLocked || isYouTubeModalOpen || isComingSoonModalOpen;
 
   const ToolButton: React.FC<{
     onClick: () => void;
@@ -612,10 +621,10 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
         <ToolButton onClick={handleAddYouTubeVideo} disabled={isActionActive} label="YouTube" aria-label="Add YouTube Video">
             <YouTubeIcon />
         </ToolButton>
-        <ToolButton onClick={() => alert('Coming soon!')} disabled={isActionActive} label="PDF" aria-label="Add PDF">
+        <ToolButton onClick={() => setIsComingSoonModalOpen(true)} disabled={isActionActive} label="PDF" aria-label="Add PDF">
             <PdfIcon />
         </ToolButton>
-        <ToolButton onClick={() => alert('Coming soon!')} disabled={isActionActive} label="File" aria-label="Add File">
+        <ToolButton onClick={() => setIsComingSoonModalOpen(true)} disabled={isActionActive} label="File" aria-label="Add File">
             <FileIcon />
         </ToolButton>
 
@@ -636,6 +645,8 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
       </div>
       
       {isTtsModalOpen && <TextToSpeechModal onClose={() => setIsTtsModalOpen(false)} onAddAudio={handleAddTtsAudio} />}
+      {isYouTubeModalOpen && <YouTubeModal onClose={() => setIsYouTubeModalOpen(false)} onSubmit={handleYouTubeSubmit} />}
+      {isComingSoonModalOpen && <ComingSoonModal onClose={() => setIsComingSoonModalOpen(false)} />}
 
     </div>
   );

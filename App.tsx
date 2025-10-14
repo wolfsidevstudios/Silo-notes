@@ -4,6 +4,7 @@ import HomeView from './components/HomeView';
 import NoteEditor from './components/NoteEditor';
 import ExploreView from './components/ExploreView';
 import IdeasView from './components/IdeasView';
+import AgendaView from './components/AgendaView';
 import SpaceView from './components/SpaceView';
 import NoteBoardView from './components/NoteBoardView';
 import DiagramView from './components/DiagramView';
@@ -21,7 +22,7 @@ import { GoogleGenAI } from "@google/genai";
 import { ArrowUpIcon, CloseIcon } from './components/icons';
 
 
-import { View, Note, Space, Board, BoardType } from './types';
+import { View, Note, Space, Board, BoardType, Task, Meeting } from './types';
 
 // Timer Component
 const TimerComponent = ({ initialSeconds, onClose }: { initialSeconds: number; onClose: () => void }) => {
@@ -107,7 +108,7 @@ const StopwatchComponent = ({ onClose }: { onClose: () => void }) => {
 
 
 // AI Chat Component
-const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey }: { onClose: () => void; onSaveNote: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => void; geminiApiKey: string | null }) => {
+const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey, onAddTask, onAddMeeting }: { onClose: () => void; onSaveNote: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => void; geminiApiKey: string | null; onAddTask: (title: string) => void; onAddMeeting: (title: string, dateTime: string) => void; }) => {
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [activeTool, setActiveTool] = useState<'none' | 'timer' | 'stopwatch'>('none');
@@ -135,10 +136,12 @@ const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey }: { onClose: () =>
                 model: 'gemini-2.5-flash',
                 contents: prompt,
                 config: {
-                    systemInstruction: `You are a helpful assistant in a note-taking app. Your main tasks are creating notes, timers, and stopwatches.
+                    systemInstruction: `You are a helpful assistant in a note-taking app. Your main tasks are creating notes, timers, stopwatches, tasks, and meetings.
 - If the user asks for a timer, respond ONLY in this format: TIMER::[duration_in_seconds]. Example: "set a 5 minute timer" should respond "TIMER::300".
 - If the user asks for a stopwatch, respond ONLY with this exact word: STOPWATCH.
-- If the user asks you to create or write a note, respond with the full content of the note. The first line will be the title.
+- If the user asks to create or write a note, respond with the full content of the note. The first line will be the title.
+- If the user asks to create a task, respond ONLY in this format: TASK::[task_title]. Example: "remind me to buy milk" should respond "TASK::Buy milk".
+- If the user asks to create a meeting, respond ONLY in this format: MEETING::[meeting_title]::[date_and_time]. Example: "schedule a project sync for tomorrow at 3pm" should respond "MEETING::Project Sync::Tomorrow at 3pm".
 - For any other request, provide a helpful but concise text response.`
                 }
             });
@@ -153,6 +156,16 @@ const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey }: { onClose: () =>
                 }
             } else if (resultText === 'STOPWATCH') {
                 setActiveTool('stopwatch');
+            } else if (resultText.startsWith('TASK::')) {
+                const title = resultText.split('::')[1];
+                if (title) onAddTask(title);
+                onClose();
+            } else if (resultText.startsWith('MEETING::')) {
+                const parts = resultText.split('::');
+                const title = parts[1];
+                const dateTime = parts[2];
+                if (title && dateTime) onAddMeeting(title, dateTime);
+                onClose();
             } else if (prompt.toLowerCase().includes('create a note') || prompt.toLowerCase().includes('write a note')) {
                 const lines = resultText.split('\n');
                 const title = lines[0] || 'AI Generated Note';
@@ -214,6 +227,8 @@ const App: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [spaces, setSpaces] = useState<Space[]>([]);
   const [boards, setBoards] = useState<Board[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
 
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
   const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
@@ -228,11 +243,15 @@ const App: React.FC = () => {
       const savedNotes = localStorage.getItem('silo-notes');
       const savedSpaces = localStorage.getItem('silo-spaces');
       const savedBoards = localStorage.getItem('silo-boards');
+      const savedTasks = localStorage.getItem('silo-tasks');
+      const savedMeetings = localStorage.getItem('silo-meetings');
       const savedGeminiKey = localStorage.getItem('gemini-api-key');
 
       if (savedNotes) setNotes(JSON.parse(savedNotes));
       if (savedSpaces) setSpaces(JSON.parse(savedSpaces));
       if (savedBoards) setBoards(JSON.parse(savedBoards));
+      if (savedTasks) setTasks(JSON.parse(savedTasks));
+      if (savedMeetings) setMeetings(JSON.parse(savedMeetings));
       if (savedGeminiKey) setGeminiApiKey(savedGeminiKey);
 
     } catch (error) {
@@ -245,10 +264,12 @@ const App: React.FC = () => {
       localStorage.setItem('silo-notes', JSON.stringify(notes));
       localStorage.setItem('silo-spaces', JSON.stringify(spaces));
       localStorage.setItem('silo-boards', JSON.stringify(boards));
+      localStorage.setItem('silo-tasks', JSON.stringify(tasks));
+      localStorage.setItem('silo-meetings', JSON.stringify(meetings));
     } catch (error) {
       console.error("Failed to save data to localStorage", error);
     }
-  }, [notes, spaces, boards]);
+  }, [notes, spaces, boards, tasks, meetings]);
 
   const handleToggleAiChat = useCallback(() => {
     setIsAiChatVisible(prev => !prev);
@@ -295,6 +316,41 @@ const App: React.FC = () => {
     handleViewChange(View.HOME);
   };
   
+  // Task and Meeting Handlers
+  const handleAddTask = (title: string) => {
+    const newTask: Task = {
+      id: new Date().toISOString(),
+      title,
+      completed: false,
+      createdAt: new Date().toISOString(),
+    };
+    setTasks(prev => [newTask, ...prev]);
+  };
+
+  const handleAddMeeting = (title: string, dateTime: string) => {
+    const newMeeting: Meeting = {
+      id: new Date().toISOString(),
+      title,
+      dateTime,
+      createdAt: new Date().toISOString(),
+    };
+    setMeetings(prev => [newMeeting, ...prev]);
+  };
+
+  const handleToggleTask = (taskId: string) => {
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, completed: !task.completed } : task
+    ));
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    setTasks(tasks.filter(task => task.id !== taskId));
+  };
+  
+  const handleDeleteMeeting = (meetingId: string) => {
+    setMeetings(meetings.filter(meeting => meeting.id !== meetingId));
+  };
+
   const handleAddSpace = (name: string) => {
     if (name.trim() === '') return;
     const newSpace: Space = {
@@ -380,6 +436,16 @@ const App: React.FC = () => {
         return <ExploreView />;
       case View.IDEAS:
         return <IdeasView />;
+      case View.AGENDA:
+        return <AgendaView 
+            tasks={tasks} 
+            meetings={meetings} 
+            onAddTask={handleAddTask}
+            onAddMeeting={handleAddMeeting}
+            onToggleTask={handleToggleTask}
+            onDeleteTask={handleDeleteTask}
+            onDeleteMeeting={handleDeleteMeeting}
+        />;
       case View.SETTINGS:
         return <SettingsView onKeyUpdate={setGeminiApiKey} />;
       case View.SILO_LABS:
@@ -414,7 +480,7 @@ const App: React.FC = () => {
       <main className="flex-1 overflow-y-auto">
         {renderMainView()}
       </main>
-      {isAiChatVisible && <AiChatComponent onClose={handleToggleAiChat} onSaveNote={handleSaveNote} geminiApiKey={geminiApiKey} />}
+      {isAiChatVisible && <AiChatComponent onClose={handleToggleAiChat} onSaveNote={handleSaveNote} geminiApiKey={geminiApiKey} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} />}
     </div>
   );
 };
