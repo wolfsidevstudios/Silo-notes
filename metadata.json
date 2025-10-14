@@ -1,5 +1,5 @@
 {
-  "name": "Gemini Notes",
+  "name": "Silo Notes",
   "description": "A modern, minimalist note-taking application designed for creative individuals. Organize your thoughts into spaces, create detailed notes, and explore new ideas seamlessly.",
   "requestFramePermissions": [
     "microphone"

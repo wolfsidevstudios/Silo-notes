@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Space } from '../types';
-import { HomeIcon, CreateIcon, ExploreIcon, IdeasIcon, PlusIcon, HashtagIcon, SettingsIcon } from './icons';
+import { HomeIcon, CreateIcon, ExploreIcon, IdeasIcon, PlusIcon, HashtagIcon, SettingsIcon, SiloLabsIcon } from './icons';
 
 interface SidebarProps {
   activeView: View;
@@ -52,7 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     <aside className="w-64 flex-shrink-0 border-r border-gray-200 bg-white p-4 flex flex-col">
       <div className="flex items-center mb-8">
         <div className="w-8 h-8 bg-black rounded-full"></div>
-        <span className="ml-3 font-bold text-lg">Gemini Notes</span>
+        <span className="ml-3 font-bold text-lg">Silo Notes</span>
       </div>
       
       <div className="flex-1">
@@ -61,6 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <NavItem icon={<CreateIcon />} label="Create" isActive={isNavActive(View.CREATE)} onClick={onCreateNewNote} />
           <NavItem icon={<ExploreIcon />} label="Explore" isActive={isNavActive(View.EXPLORE)} onClick={() => onViewChange(View.EXPLORE)} />
           <NavItem icon={<IdeasIcon />} label="Ideas" isActive={isNavActive(View.IDEAS)} onClick={() => onViewChange(View.IDEAS)} />
+          <NavItem icon={<SiloLabsIcon />} label="Silo Labs" isActive={isNavActive(View.SILO_LABS)} onClick={() => onViewChange(View.SILO_LABS)} />
         </nav>
         
         <div className="mt-10">

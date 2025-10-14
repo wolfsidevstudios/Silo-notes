@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Note, AudioNote } from '../types';
 import { VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, StopIcon, RewriteIcon, SummarizeIcon } from './icons';
 import { GoogleGenAI } from "@google/genai";
+import FloatingToolbar from './FloatingToolbar';
+import PinModal from './PinModal';
 
 const ELEVENLABS_API_KEY = 'sk_0c8a39a023d6903e44b64bfe6c751b7d888045d452eb6635';
 
+// ... (TextToSpeechModal component remains the same)
 interface TextToSpeechModalProps {
   onClose: () => void;
   onAddAudio: (dataUrl: string) => void;
@@ -37,55 +40,32 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Reset voice selection when language changes
     setSelectedVoiceId(voices[language][0].id);
-    setAudioUrl(null);
-    setAudioBlob(null);
-    setError(null);
+    setAudioUrl(null); setAudioBlob(null); setError(null);
   }, [language]);
 
   const handleGenerateAudio = async () => {
-    if (!text.trim()) {
-      setError('Please enter some text to generate audio.');
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-    setAudioUrl(null);
-    setAudioBlob(null);
-
+    if (!text.trim()) { setError('Please enter some text.'); return; }
+    setIsLoading(true); setError(null); setAudioUrl(null); setAudioBlob(null);
     try {
       const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${selectedVoiceId}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'xi-api-key': ELEVENLABS_API_KEY,
-        },
+        headers: { 'Content-Type': 'application/json', 'xi-api-key': ELEVENLABS_API_KEY },
         body: JSON.stringify({
-          text: text,
-          model_id: 'eleven_multilingual_v2',
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-          },
+          text: text, model_id: 'eleven_multilingual_v2',
+          voice_settings: { stability: 0.5, similarity_boost: 0.75 },
         }),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail?.message || 'Failed to generate audio.');
       }
-
       const blob = await response.blob();
-      setAudioBlob(blob);
-      setAudioUrl(URL.createObjectURL(blob));
-
+      setAudioBlob(blob); setAudioUrl(URL.createObjectURL(blob));
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'An unexpected error occurred.');
-    } finally {
-      setIsLoading(false);
-    }
+    } finally { setIsLoading(false); }
   };
   
   const handleAddAudioToNote = () => {
@@ -102,16 +82,8 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300" aria-modal="true" role="dialog">
       <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg m-4 transform transition-all duration-300 scale-100 flex flex-col max-h-[90vh]">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">Generate Audio from Text</h2>
-        
         <div className="flex-grow overflow-y-auto pr-2">
-            <textarea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder="Type or paste your text here..."
-                className="w-full h-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black resize-none mb-6"
-                rows={5}
-            />
-
+            <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Type or paste your text here..." className="w-full h-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-black resize-none mb-6" rows={5} />
             <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Language</label>
                 <div className="flex bg-gray-100 rounded-lg p-1">
@@ -119,7 +91,6 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
                     <button onClick={() => setLanguage('es')} className={`flex-1 py-2 text-sm font-semibold rounded-md transition-colors ${language === 'es' ? 'bg-white shadow' : 'text-gray-600'}`}>Spanish</button>
                 </div>
             </div>
-
             <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Voice</label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -131,37 +102,19 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
                 </div>
             </div>
         </div>
-
         <div className="flex-shrink-0 mt-4">
-            <button
-                onClick={handleGenerateAudio}
-                disabled={isLoading}
-                className="w-full bg-black text-white font-semibold py-3 px-6 rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-400 flex items-center justify-center"
-            >
-                {isLoading ? (
-                    <>
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        Generating...
-                    </>
-                ) : "Generate Audio"}
+            <button onClick={handleGenerateAudio} disabled={isLoading} className="w-full bg-black text-white font-semibold py-3 px-6 rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-400 flex items-center justify-center">
+                {isLoading ? (<> <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating... </>) : "Generate Audio"}
             </button>
-            
             {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
-
             {audioUrl && (
                 <div className="mt-6">
                     <p className="text-sm font-medium text-gray-700 mb-2">Preview</p>
                     <audio controls src={audioUrl} className="w-full"></audio>
-                    <button
-                        onClick={handleAddAudioToNote}
-                        className="w-full mt-4 bg-black text-white font-semibold py-3 px-6 rounded-full hover:bg-gray-800 transition-colors"
-                    >
-                       Paste to Note
-                    </button>
+                    <button onClick={handleAddAudioToNote} className="w-full mt-4 bg-black text-white font-semibold py-3 px-6 rounded-full hover:bg-gray-800 transition-colors">Paste to Note</button>
                 </div>
             )}
         </div>
-
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
         </button>
@@ -170,9 +123,10 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
   );
 };
 
+
 interface NoteEditorProps {
   currentNote: Note | null;
-  onSave: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string; audioNotes?: AudioNote[] }) => void;
+  onSave: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => void;
 }
 
 const ASSEMBLYAI_API_KEY = '49e6f2264b204542b812c42bfb3fcdac';
@@ -180,42 +134,72 @@ const ASSEMBLYAI_API_KEY = '49e6f2264b204542b812c42bfb3fcdac';
 const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [privacy, setPrivacy] = useState<'public' | 'private'>('public');
+  const [pin, setPin] = useState<string | undefined>(undefined);
+  const [isLocked, setIsLocked] = useState(false);
+  const [showPinModal, setShowPinModal] = useState<'set' | 'enter' | null>(null);
+  const [pinError, setPinError] = useState('');
   
-  // State for AI audio transcription
   const [isRecording, setIsRecording] = useState(false);
   const [status, setStatus] = useState('Idle');
   const [partialTranscript, setPartialTranscript] = useState('');
   const socketRef = useRef<WebSocket | null>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   
-  // State for Voice Memo
   const [audioNotes, setAudioNotes] = useState<AudioNote[]>([]);
   const [isVoiceMemoRecording, setIsVoiceMemoRecording] = useState(false);
   const [voiceMemoStatus, setVoiceMemoStatus] = useState('Idle');
   const memoRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
-  // State for Text-to-Speech Modal
   const [isTtsModalOpen, setIsTtsModalOpen] = useState(false);
   
-  // State for Gemini Writing Tools
   const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
   const [isGeminiConfigured, setIsGeminiConfigured] = useState(false);
   const [writingToolStatus, setWritingToolStatus] = useState('Idle');
-
-
-  // Shared stream ref for cleanup
   const streamRef = useRef<MediaStream | null>(null);
+  
+  const contentEditableRef = useRef<HTMLDivElement>(null);
+  const [toolbarState, setToolbarState] = useState<{ top: number; left: number; visible: boolean }>({ top: 0, left: 0, visible: false });
+
+  const handleSelectionChange = useCallback(() => {
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed && contentEditableRef.current?.contains(selection.anchorNode)) {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      setToolbarState({
+        top: rect.top + window.scrollY,
+        left: rect.left + window.scrollX + rect.width / 2,
+        visible: true,
+      });
+    } else {
+      setToolbarState(prev => ({ ...prev, visible: false }));
+    }
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => document.removeEventListener('selectionchange', handleSelectionChange);
+  }, [handleSelectionChange]);
 
   useEffect(() => {
     if (currentNote) {
       setTitle(currentNote.title);
       setContent(currentNote.content);
       setAudioNotes(currentNote.audioNotes || []);
+      setPrivacy(currentNote.privacy);
+      setPin(currentNote.pin);
+      if (currentNote.privacy === 'private') {
+        setIsLocked(true);
+        setShowPinModal('enter');
+      }
     } else {
       setTitle('');
       setContent('');
       setAudioNotes([]);
+      setPrivacy('public');
+      setPin(undefined);
+      setIsLocked(false);
     }
   }, [currentNote]);
 
@@ -226,30 +210,47 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
       setIsGeminiConfigured(true);
     }
   }, []);
+  
+  const handleCommand = (command: string, value?: string) => {
+    document.execCommand(command, false, value);
+    contentEditableRef.current?.focus();
+    setContent(contentEditableRef.current?.innerHTML || '');
+  };
 
   const handleSave = () => {
-    if (isRecording || isVoiceMemoRecording || isTtsModalOpen) return;
-    const finalContent = content + (partialTranscript ? (content.trim() ? ' ' : '') + partialTranscript : '');
-    if (title.trim() === '' && finalContent.trim() === '' && audioNotes.length === 0) return;
-    onSave({ id: currentNote?.id, title, content: finalContent, audioNotes });
+    onSave({ id: currentNote?.id, title, content, audioNotes, privacy, pin });
   };
   
-  const handleAddTtsAudio = (dataUrl: string) => {
-    const newAudioNote: AudioNote = {
-        id: new Date().toISOString(),
-        dataUrl,
-    };
-    setAudioNotes(prev => [...prev, newAudioNote]);
+  const handlePrivacyChange = (newPrivacy: 'public' | 'private') => {
+    if (newPrivacy === 'private' && !pin) {
+        setShowPinModal('set');
+    } else {
+        setPrivacy(newPrivacy);
+    }
   };
 
-  const stopAiRecording = () => {
-    if (recorderRef.current && recorderRef.current.state === 'recording') {
-        recorderRef.current.stop();
-    }
-    if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
-    }
+  const handleSetPin = (newPin: string) => {
+      setPin(newPin);
+      setPrivacy('private');
+      setShowPinModal(null);
+  };
+  
+  const handleUnlockPin = (enteredPin: string) => {
+      if (enteredPin === pin) {
+          setIsLocked(false);
+          setShowPinModal(null);
+          setPinError('');
+      } else {
+          setPinError('Incorrect PIN. Please try again.');
+      }
+  };
+
+  const handleAddTtsAudio = (dataUrl: string) => { setAudioNotes(prev => [...prev, { id: new Date().toISOString(), dataUrl }]); };
+
+  const stopAiRecording = useCallback(() => {
+    if (recorderRef.current?.state === 'recording') recorderRef.current.stop();
+    streamRef.current?.getTracks().forEach(track => track.stop());
+    streamRef.current = null;
     if (socketRef.current) {
         if (socketRef.current.readyState === WebSocket.OPEN) {
             socketRef.current.send(JSON.stringify({ terminate_session: true }));
@@ -257,185 +258,222 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
         socketRef.current.close();
         socketRef.current = null;
     }
-    
-    setContent(prev => prev + (partialTranscript ? (prev.trim() ? ' ' : '') + partialTranscript : ''));
+
+    if (contentEditableRef.current && partialTranscript) {
+        const selection = window.getSelection();
+        const range = selection?.getRangeAt(0);
+        if (range) {
+            range.deleteContents();
+            const textNode = document.createTextNode((contentEditableRef.current.innerHTML.trim().length > 0 ? ' ' : '') + partialTranscript);
+            range.insertNode(textNode);
+            range.setStartAfter(textNode);
+            range.setEndAfter(textNode);
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+        }
+        setContent(contentEditableRef.current.innerHTML);
+    }
+
     setPartialTranscript('');
-    
     setIsRecording(false);
     setStatus('Idle');
-  };
+  }, [partialTranscript]);
 
   const startAiRecording = async () => {
-    if (isRecording || isVoiceMemoRecording || isTtsModalOpen) return;
-    
+    if (isRecording) return;
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        streamRef.current = stream;
-        
-        const recorder = new MediaRecorder(stream);
-        recorderRef.current = recorder;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      const recorder = new MediaRecorder(stream);
+      recorderRef.current = recorder;
+      const socket = new WebSocket(`wss://api.assemblyai.com/v2/realtime/ws?sample_rate=16000`);
+      socketRef.current = socket;
 
-        const socket = new WebSocket(`wss://api.assemblyai.com/v2/realtime/ws?sample_rate=16000`);
-        socketRef.current = socket;
-
-        socket.onopen = () => {
-            setStatus('Recording...');
-            setIsRecording(true);
-            socket.send(JSON.stringify({ authorization: ASSEMBLYAI_API_KEY }));
-            recorder.start(1000);
-        };
-
-        socket.onmessage = (event) => {
-            const message = JSON.parse(event.data);
-            if (message.message_type === 'PartialTranscript') {
-                setPartialTranscript(message.text);
-            } else if (message.message_type === 'FinalTranscript' && message.text) {
-                setContent(prevContent => (prevContent.trim() ? prevContent + ' ' : '') + message.text);
-                setPartialTranscript('');
+      socket.onopen = () => {
+        setStatus('Transcribing...');
+        setIsRecording(true);
+        socket.send(JSON.stringify({ authorization: ASSEMBLYAI_API_KEY }));
+        recorder.start(1000);
+      };
+      
+      socket.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.message_type === 'PartialTranscript') {
+            setPartialTranscript(msg.text);
+        } else if (msg.message_type === 'FinalTranscript' && msg.text) {
+          if (contentEditableRef.current) {
+            const selection = window.getSelection();
+            const range = selection?.getRangeAt(0);
+            if (range) {
+                range.deleteContents();
+                const textNode = document.createTextNode((contentEditableRef.current.innerHTML.trim().length > 0 ? ' ' : '') + msg.text);
+                range.insertNode(textNode);
+                range.setStartAfter(textNode);
+                range.setEndAfter(textNode);
+                selection?.removeAllRanges();
+                selection?.addRange(range);
             }
-        };
-
-        socket.onerror = (error) => {
-            console.error('WebSocket Error:', error);
-            setStatus('Error. Please try again.');
-            stopAiRecording();
-        };
-
-        recorder.ondataavailable = (event) => {
-            if (event.data.size > 0 && socket.readyState === WebSocket.OPEN) {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    const base64data = (reader.result as string).split(',')[1];
-                    socket.send(JSON.stringify({ audio_data: base64data }));
-                };
-                reader.readAsDataURL(event.data);
-            }
-        };
-        setStatus('Connecting...');
+            setContent(contentEditableRef.current.innerHTML);
+          }
+          setPartialTranscript('');
+        }
+      };
+      
+      socket.onerror = () => { setStatus('Error'); stopAiRecording(); };
+      socket.onclose = () => { stopAiRecording(); };
+      
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0 && socket.readyState === WebSocket.OPEN) {
+          const reader = new FileReader();
+          reader.onload = () => socket.send(JSON.stringify({ audio_data: (reader.result as string).split(',')[1] }));
+          reader.readAsDataURL(e.data);
+        }
+      };
+      
+      setStatus('Connecting...');
     } catch (error) {
-        console.error('Error accessing microphone:', error);
-        setStatus('Microphone access denied.');
+      console.error('Mic error:', error);
+      setStatus('Mic access denied');
     }
   };
-  
+
   const handleToggleAiRecording = () => {
-      if (isRecording) {
-          stopAiRecording();
-      } else {
-          startAiRecording();
-      }
+    isRecording ? stopAiRecording() : startAiRecording();
   };
 
-  // --- Voice Memo Functions ---
   const stopVoiceMemoRecording = () => {
     if (memoRecorderRef.current && memoRecorderRef.current.state === 'recording') {
-        memoRecorderRef.current.stop();
+      memoRecorderRef.current.stop();
     }
   };
 
   const startVoiceMemoRecording = async () => {
-      if (isRecording || isVoiceMemoRecording || isTtsModalOpen) return;
-      try {
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          streamRef.current = stream;
-          
-          const recorder = new MediaRecorder(stream);
-          memoRecorderRef.current = recorder;
-          audioChunksRef.current = [];
-
-          recorder.ondataavailable = (event) => {
-              if (event.data.size > 0) {
-                  audioChunksRef.current.push(event.data);
-              }
-          };
-
-          recorder.onstop = () => {
-              const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-              const reader = new FileReader();
-              reader.readAsDataURL(audioBlob);
-              reader.onloadend = () => {
-                  const base64data = reader.result as string;
-                  const newAudioNote: AudioNote = {
-                      id: new Date().toISOString(),
-                      dataUrl: base64data,
-                  };
-                  setAudioNotes(prev => [...prev, newAudioNote]);
-              };
-              
-              if (streamRef.current) {
-                  streamRef.current.getTracks().forEach(track => track.stop());
-                  streamRef.current = null;
-              }
-              
-              setIsVoiceMemoRecording(false);
-              setVoiceMemoStatus('Idle');
-          };
-
-          recorder.start();
-          setIsVoiceMemoRecording(true);
-          setVoiceMemoStatus('Recording...');
-
-      } catch (error) {
-          console.error('Error accessing microphone for voice memo:', error);
-          setVoiceMemoStatus('Microphone access denied.');
-      }
-  };
-
-  const handleToggleVoiceMemoRecording = () => {
-      if (isVoiceMemoRecording) {
-          stopVoiceMemoRecording();
-      } else {
-          startVoiceMemoRecording();
-      }
-  };
-
-  const handleDeleteAudioNote = (id: string) => {
-    setAudioNotes(prev => prev.filter(note => note.id !== id));
-  };
-  
-  const handleWritingTool = async (prompt: string, status: string) => {
-    if (!geminiApiKey || !content.trim()) return;
-
-    setWritingToolStatus(status);
+    if (isVoiceMemoRecording) return;
     try {
-        const ai = new GoogleGenAI({ apiKey: geminiApiKey });
-        const fullPrompt = `${prompt}:\n\n${content}`;
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: fullPrompt,
-        });
-        setContent(response.text);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+
+      const recorder = new MediaRecorder(stream);
+      memoRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunksRef.current.push(event.data);
+      };
+
+      recorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = () => {
+          const newAudioNote: AudioNote = {
+            id: new Date().toISOString(),
+            dataUrl: reader.result as string,
+          };
+          setAudioNotes(prev => [...prev, newAudioNote]);
+        };
+        streamRef.current?.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+        setIsVoiceMemoRecording(false);
+        setVoiceMemoStatus('Idle');
+      };
+
+      recorder.start();
+      setIsVoiceMemoRecording(true);
+      setVoiceMemoStatus('Recording memo...');
     } catch (error) {
-        console.error("Gemini API Error:", error);
-        setWritingToolStatus("Error");
-        // Optionally, show a more user-friendly error message
-    } finally {
-        setWritingToolStatus('Idle');
+      console.error('Error accessing microphone:', error);
+      setVoiceMemoStatus('Mic access denied');
     }
   };
 
-  // Cleanup effect
-  useEffect(() => {
-    return () => {
-      if (isRecording) stopAiRecording();
-      if (isVoiceMemoRecording) stopVoiceMemoRecording();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const handleToggleVoiceMemoRecording = () => {
+    isVoiceMemoRecording ? stopVoiceMemoRecording() : startVoiceMemoRecording();
+  };
+
+  const handleDeleteAudioNote = (id: string) => { setAudioNotes(prev => prev.filter(note => note.id !== id)); };
   
-  const isActionActive = isRecording || isVoiceMemoRecording || isTtsModalOpen || writingToolStatus !== 'Idle';
+  const handleWritingTool = async (action: 'rewrite' | 'summarize', statusText: string) => {
+    if (!geminiApiKey) return;
+
+    const selection = window.getSelection();
+    let textToProcess = '';
+    let isSelection = false;
+
+    if (selection && !selection.isCollapsed && contentEditableRef.current?.contains(selection.getRangeAt(0).commonAncestorContainer)) {
+        textToProcess = selection.toString();
+        isSelection = true;
+    } else {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = content;
+        textToProcess = tempDiv.textContent || tempDiv.innerText || '';
+    }
+
+    if (!textToProcess.trim()) {
+      setWritingToolStatus('No text to process');
+      setTimeout(() => setWritingToolStatus('Idle'), 2000);
+      return;
+    }
+
+    setWritingToolStatus(statusText);
+    try {
+      const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+      const prompt = action === 'rewrite'
+        ? `Rewrite the following text:\n\n"${textToProcess}"`
+        : `Summarize the following text concisely:\n\n"${textToProcess}"`;
+      
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+      const resultText = response.text;
+
+      if (isSelection && selection) {
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(document.createTextNode(resultText));
+      } else {
+          if (contentEditableRef.current) {
+              contentEditableRef.current.innerHTML = resultText.replace(/\n/g, '<br>');
+          }
+      }
+      setContent(contentEditableRef.current?.innerHTML || '');
+      setWritingToolStatus('Done!');
+    } catch (err) {
+      console.error("Gemini API Error:", err);
+      setWritingToolStatus('Error');
+    } finally {
+      setTimeout(() => setWritingToolStatus('Idle'), 2000);
+    }
+  };
+
+  const isActionActive = isRecording || isVoiceMemoRecording || isTtsModalOpen || writingToolStatus !== 'Idle' || isLocked;
   
   return (
-    <div className="p-8 lg:p-12 h-full flex flex-col">
+    <div className="p-8 lg:p-12 h-full flex flex-col relative">
+       {isLocked && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-20"></div>}
+       {showPinModal && (
+            <PinModal 
+                mode={showPinModal}
+                onSubmit={showPinModal === 'set' ? handleSetPin : handleUnlockPin}
+                onClose={() => setShowPinModal(null)}
+                error={pinError}
+            />
+        )}
+      
+      {toolbarState.visible && !isLocked && <FloatingToolbar {...toolbarState} onCommand={handleCommand} />}
+      
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-800">{currentNote ? 'Edit Note' : 'Create Note'}</h1>
-        <button
-          onClick={handleSave}
-          className="bg-black text-white font-semibold py-2 px-6 rounded-full hover:bg-gray-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:bg-gray-400"
-          disabled={isActionActive}
-        >
-          Save Note
-        </button>
+        <div className="flex items-center gap-4">
+            <div className="flex items-center bg-gray-200 rounded-full p-1">
+                <button onClick={() => handlePrivacyChange('public')} className={`px-4 py-1 text-sm font-semibold rounded-full ${privacy === 'public' ? 'bg-white shadow' : 'text-gray-600'}`}>Public</button>
+                <button onClick={() => handlePrivacyChange('private')} className={`px-4 py-1 text-sm font-semibold rounded-full ${privacy === 'private' ? 'bg-white shadow' : 'text-gray-600'}`}>Private</button>
+            </div>
+            <button onClick={handleSave} className="bg-black text-white font-semibold py-2 px-6 rounded-full hover:bg-gray-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:bg-gray-400" disabled={isActionActive}>
+              Save Note
+            </button>
+        </div>
       </div>
 
       <div className="flex-grow flex flex-col">
@@ -444,32 +482,30 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Note Title"
-          className="text-4xl font-bold placeholder-gray-300 focus:outline-none mb-6 pb-2 border-b border-transparent focus:border-gray-200"
+          className="text-4xl font-bold placeholder-gray-300 focus:outline-none mb-6 pb-2 border-b border-transparent focus:border-gray-200 bg-transparent"
           readOnly={isActionActive}
         />
-        <textarea
-          value={content + (partialTranscript ? (content.trim() ? ' ' : '') + partialTranscript : '')}
-          onChange={(e) => {
-              if (!isRecording) {
-                setContent(e.target.value);
-              }
-          }}
-          readOnly={isActionActive}
-          placeholder="Start writing here, or use the AI tool below to dictate..."
-          className="flex-1 w-full text-lg leading-relaxed text-gray-700 placeholder-gray-400 focus:outline-none resize-none"
+        <div
+          ref={contentEditableRef}
+          contentEditable={!isActionActive}
+          onInput={(e) => setContent(e.currentTarget.innerHTML)}
+          data-placeholder="Start writing here, or use the AI tool below to dictate..."
+          className="flex-1 w-full text-lg leading-relaxed text-gray-700 focus:outline-none resize-none [&:empty]:before:content-[attr(data-placeholder)] [&:empty]:before:text-gray-400"
+          dangerouslySetInnerHTML={{ __html: content }}
         />
 
         {audioNotes.length > 0 && (
           <div className="mt-6 flex-shrink-0">
-            <h3 className="text-sm font-semibold text-gray-600 mb-3">Voice Memos</h3>
-            <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
+            <h3 className="text-sm font-semibold text-gray-600 mb-2">Voice Memos</h3>
+            <div className="space-y-3">
               {audioNotes.map(audio => (
                 <div key={audio.id} className="flex items-center gap-2 bg-gray-100 p-2 rounded-lg">
                   <audio controls src={audio.dataUrl} className="w-full h-10"></audio>
                   <button 
                     onClick={() => handleDeleteAudioNote(audio.id)} 
-                    className="p-2 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-100 transition-colors" 
+                    className="p-2 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-100 transition-colors"
                     aria-label="Delete voice memo"
+                    disabled={isActionActive}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
@@ -481,94 +517,41 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
       </div>
 
       <div className="flex-shrink-0 mt-4 p-2 bg-gray-100 rounded-full shadow-sm flex items-center justify-between">
-         <div className="flex items-center divide-x divide-gray-200">
-            <div className="flex items-center px-2">
-                <button 
-                    onClick={handleToggleAiRecording}
-                    disabled={isVoiceMemoRecording || isTtsModalOpen || writingToolStatus !== 'Idle'}
-                    className={`p-2 rounded-full transition-colors duration-200 ${
-                        isRecording ? 'bg-red-500 text-white' : 'bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed'
-                    }`}
-                    aria-label={isRecording ? 'Stop AI transcription' : 'Start AI transcription'}
-                >
-                  {isRecording ? <StopIcon /> : <VoiceTypingIcon />}
-                </button>
-                <p className="text-xs text-gray-500 ml-2 w-24 truncate">
-                    {status === 'Idle' && !isRecording ? 'Speech-to-Text' : status}
-                </p>
-            </div>
-            <div className="flex items-center pl-3">
-                <button 
-                    onClick={handleToggleVoiceMemoRecording}
-                    disabled={isRecording || isTtsModalOpen || writingToolStatus !== 'Idle'}
-                    className={`p-2 rounded-full transition-colors duration-200 ${
-                        isVoiceMemoRecording ? 'bg-red-500 text-white' : 'bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed'
-                    }`}
-                    aria-label={isVoiceMemoRecording ? 'Stop recording memo' : 'Start recording memo'}
-                >
-                  {isVoiceMemoRecording ? <StopIcon /> : <VoiceMemoIcon />}
-                </button>
-                <p className="text-xs text-gray-500 ml-2 w-24 truncate">
-                    {voiceMemoStatus === 'Idle' && !isVoiceMemoRecording ? 'Voice Memo' : voiceMemoStatus}
-                </p>
-            </div>
-            <div className="flex items-center pl-3 pr-2">
-                <button 
-                    onClick={() => setIsTtsModalOpen(true)}
-                    disabled={isActionActive}
-                    className="p-2 rounded-full transition-colors duration-200 bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-                    aria-label="Generate audio from text"
-                >
-                  <TextToSpeechIcon />
-                </button>
-                <p className="text-xs text-gray-500 ml-2 w-24 truncate">
-                    Text-to-Speech
-                </p>
-            </div>
-             {isGeminiConfigured && (
-                <div className="flex items-center pl-3 pr-2 divide-x divide-gray-200">
-                    <div className="flex items-center pr-3">
-                        <button
-                            onClick={() => handleWritingTool('Rewrite the following text', 'Rewriting...')}
-                            disabled={isActionActive || !content.trim()}
-                            className="p-2 rounded-full transition-colors duration-200 bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-                            aria-label="Rewrite text"
-                        >
-                            <RewriteIcon />
-                        </button>
-                        <p className="text-xs text-gray-500 ml-2 w-20 truncate">{writingToolStatus === 'Rewriting...' ? 'Rewriting...' : 'Rewrite'}</p>
-                    </div>
-                    <div className="flex items-center pl-3">
-                        <button
-                            onClick={() => handleWritingTool('Summarize the following text', 'Summarizing...')}
-                            disabled={isActionActive || !content.trim()}
-                            className="p-2 rounded-full transition-colors duration-200 bg-gray-200 text-black hover:bg-gray-300 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed"
-                            aria-label="Summarize text"
-                        >
-                            <SummarizeIcon />
-                        </button>
-                        <p className="text-xs text-gray-500 ml-2 w-20 truncate">{writingToolStatus === 'Summarizing...' ? 'Summarizing...' : 'Summarize'}</p>
-                    </div>
-                </div>
+        <div className="flex items-center gap-2">
+            <button onClick={handleToggleAiRecording} disabled={isVoiceMemoRecording || writingToolStatus !== 'Idle' || isLocked} className="p-2 hover:bg-gray-200 rounded-full disabled:text-gray-400 disabled:hover:bg-transparent" aria-label={isRecording ? 'Stop Voice Typing' : 'Start Voice Typing'}>
+                {isRecording ? <StopIcon /> : <VoiceTypingIcon />}
+            </button>
+            <button onClick={handleToggleVoiceMemoRecording} disabled={isRecording || writingToolStatus !== 'Idle' || isLocked} className="p-2 hover:bg-gray-200 rounded-full disabled:text-gray-400 disabled:hover:bg-transparent" aria-label={isVoiceMemoRecording ? 'Stop Voice Memo' : 'Start Voice Memo'}>
+                {isVoiceMemoRecording ? <StopIcon /> : <VoiceMemoIcon />}
+            </button>
+            <button onClick={() => setIsTtsModalOpen(true)} disabled={isRecording || isVoiceMemoRecording || writingToolStatus !== 'Idle' || isLocked} className="p-2 hover:bg-gray-200 rounded-full disabled:text-gray-400 disabled:hover:bg-transparent" aria-label="Text to Speech">
+                <TextToSpeechIcon />
+            </button>
+        </div>
+        <div className="text-sm text-gray-500 min-w-[120px] text-center truncate px-2">
+            {isRecording && partialTranscript ? partialTranscript 
+                : status !== 'Idle' ? status 
+                : voiceMemoStatus !== 'Idle' ? voiceMemoStatus 
+                : writingToolStatus !== 'Idle' ? writingToolStatus
+                : ''}
+        </div>
+        <div className="flex items-center gap-2">
+            {isGeminiConfigured ? (
+                <>
+                    <button onClick={() => handleWritingTool('rewrite', 'Rewriting...')} disabled={isRecording || isVoiceMemoRecording || writingToolStatus !== 'Idle' || isLocked || !content.trim()} className="p-2 hover:bg-gray-200 rounded-full disabled:text-gray-400 disabled:hover:bg-transparent" aria-label="Rewrite Text">
+                        <RewriteIcon />
+                    </button>
+                    <button onClick={() => handleWritingTool('summarize', 'Summarizing...')} disabled={isRecording || isVoiceMemoRecording || writingToolStatus !== 'Idle' || isLocked || !content.trim()} className="p-2 hover:bg-gray-200 rounded-full disabled:text-gray-400 disabled:hover:bg-transparent" aria-label="Summarize Text">
+                        <SummarizeIcon />
+                    </button>
+                </>
+            ) : (
+                <p className="text-xs text-gray-500 pr-2">Add Gemini Key for AI tools</p>
             )}
-         </div>
-         {(isRecording || isVoiceMemoRecording) && (
-            <div className="flex items-center pr-3">
-                <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                </span>
-                <span className="ml-2 text-xs text-red-600 font-semibold">Live</span>
-            </div>
-         )}
+        </div>
       </div>
       
-      {isTtsModalOpen && (
-        <TextToSpeechModal 
-            onClose={() => setIsTtsModalOpen(false)}
-            onAddAudio={handleAddTtsAudio}
-        />
-      )}
+      {isTtsModalOpen && <TextToSpeechModal onClose={() => setIsTtsModalOpen(false)} onAddAudio={handleAddTtsAudio} />}
 
     </div>
   );

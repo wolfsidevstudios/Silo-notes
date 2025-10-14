@@ -10,8 +10,14 @@ import NoteBoardView from './components/NoteBoardView';
 import DiagramView from './components/DiagramView';
 import JamBoardView from './components/JamBoardView';
 import SettingsView from './components/SettingsView';
+import SiloLabsView from './components/SiloLabsView';
+import SummarizeToolView from './components/SummarizeToolView';
+import RewriteToolView from './components/RewriteToolView';
+import VoiceMemoToolView from './components/VoiceMemoToolView';
+import SpeechToTextToolView from './components/SpeechToTextToolView';
 
-import { View, Note, Space, Board, BoardType, AudioNote } from './types';
+
+import { View, Note, Space, Board, BoardType } from './types';
 
 const App: React.FC = () => {
   // State management
@@ -27,9 +33,9 @@ const App: React.FC = () => {
   // Load data from localStorage on mount
   useEffect(() => {
     try {
-      const savedNotes = localStorage.getItem('gemini-notes');
-      const savedSpaces = localStorage.getItem('gemini-spaces');
-      const savedBoards = localStorage.getItem('gemini-boards');
+      const savedNotes = localStorage.getItem('silo-notes');
+      const savedSpaces = localStorage.getItem('silo-spaces');
+      const savedBoards = localStorage.getItem('silo-boards');
       if (savedNotes) setNotes(JSON.parse(savedNotes));
       if (savedSpaces) setSpaces(JSON.parse(savedSpaces));
       if (savedBoards) setBoards(JSON.parse(savedBoards));
@@ -38,33 +44,17 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // Save data to localStorage whenever it changes
   useEffect(() => {
     try {
-      localStorage.setItem('gemini-notes', JSON.stringify(notes));
+      localStorage.setItem('silo-notes', JSON.stringify(notes));
+      localStorage.setItem('silo-spaces', JSON.stringify(spaces));
+      localStorage.setItem('silo-boards', JSON.stringify(boards));
+    // Fix: Added braces to the catch block to fix syntax error. This was causing all subsequent errors.
     } catch (error) {
-      console.error("Failed to save notes to localStorage", error);
+      console.error("Failed to save data to localStorage", error);
     }
-  }, [notes]);
+  }, [notes, spaces, boards]);
 
-  useEffect(() => {
-    try {
-        localStorage.setItem('gemini-spaces', JSON.stringify(spaces));
-    } catch (error) {
-      console.error("Failed to save spaces to localStorage", error);
-    }
-  }, [spaces]);
-  
-  useEffect(() => {
-    try {
-        localStorage.setItem('gemini-boards', JSON.stringify(boards));
-    } catch (error) {
-      console.error("Failed to save boards to localStorage", error);
-    }
-  }, [boards]);
-
-  // Handlers
-  // Fix: Wrap handleViewChange in useCallback to stabilize its identity for use in useEffect.
   const handleViewChange = useCallback((view: View) => {
     setActiveView(view);
     setCurrentNote(null);
@@ -86,7 +76,7 @@ const App: React.FC = () => {
     setActiveBoard(null);
   };
 
-  const handleSaveNote = (noteData: Omit<Note, 'id' | 'createdAt'> & { id?: string; audioNotes?: AudioNote[] }) => {
+  const handleSaveNote = (noteData: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => {
     if (noteData.id) {
       // Update existing note
       setNotes(notes.map(n => n.id === noteData.id ? { ...n, ...noteData, id: noteData.id } : n));
@@ -98,6 +88,8 @@ const App: React.FC = () => {
         title: noteData.title,
         content: noteData.content,
         audioNotes: noteData.audioNotes || [],
+        privacy: noteData.privacy,
+        pin: noteData.pin,
       };
       setNotes([newNote, ...notes]);
     }
@@ -141,7 +133,6 @@ const App: React.FC = () => {
     setActiveBoard(null);
   };
 
-  // Fix: Add a useEffect to handle invalid view states side-effects, preventing state updates during render.
   useEffect(() => {
     const activeSpace = spaces.find(s => s.id === activeSpaceId);
     const isInvalidSpaceView = activeView === View.SPACE && !activeSpace;
@@ -188,9 +179,17 @@ const App: React.FC = () => {
         return <IdeasView />;
       case View.SETTINGS:
         return <SettingsView />;
+      case View.SILO_LABS:
+        return <SiloLabsView onViewChange={handleViewChange} />;
+      case View.SUMMARIZE_TOOL:
+        return <SummarizeToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.REWRITE_TOOL:
+        return <RewriteToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.VOICE_MEMO_TOOL:
+        return <VoiceMemoToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.SPEECH_TO_TEXT_TOOL:
+        return <SpeechToTextToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
       default:
-        // Fix: Fallback to home view. The useEffect above will correct the state if it's invalid.
-        // This removes the line causing the TypeScript error and the state update during render.
         return <HomeView notes={notes} onEditNote={handleEditNote} />;
     }
   };

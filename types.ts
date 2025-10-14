@@ -6,6 +6,11 @@ export enum View {
   SPACE = 'SPACE',
   BOARD = 'BOARD',
   SETTINGS = 'SETTINGS',
+  SILO_LABS = 'SILO_LABS',
+  SUMMARIZE_TOOL = 'SUMMARIZE_TOOL',
+  REWRITE_TOOL = 'REWRITE_TOOL',
+  VOICE_MEMO_TOOL = 'VOICE_MEMO_TOOL',
+  SPEECH_TO_TEXT_TOOL = 'SPEECH_TO_TEXT_TOOL',
 }
 
 export interface AudioNote {
@@ -16,9 +21,11 @@ export interface AudioNote {
 export interface Note {
   id: string;
   title: string;
-  content: string;
+  content: string; // Can contain HTML
   createdAt: string; // ISO string
   audioNotes?: AudioNote[];
+  privacy: 'public' | 'private';
+  pin?: string;
 }
 
 export interface Space {
