@@ -148,7 +148,7 @@ const SiloLabsView: React.FC<SiloLabsViewProps> = ({ onViewChange }) => {
            </div>
         )}
 
-        <SectionHeader title="Business Tools" description="Leverage AI for professional productivity." />
+        <SectionHeader title="Business Tools" description="Leverage AI for professional productivity. We're developing powerful new tools for proposals, market research, and tailored resources for entrepreneurs, including women in business." />
         <div className="md:col-span-2 lg:col-span-3">
             <div className="text-center p-10 h-full flex flex-col items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed">
                 <h2 className="text-lg font-semibold text-gray-700">Coming Soon</h2>

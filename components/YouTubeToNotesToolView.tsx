@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { BackIcon, YouTubeIcon } from './icons';
+import { BackIcon, YouTubeIcon, FullScreenIcon, CloseIcon } from './icons';
 import { GoogleGenAI } from "@google/genai";
 import { Note, NoteType } from '../types';
+
+const FullScreenReader: React.FC<{ title: string; content: string; onClose: () => void }> = ({ title, content, onClose }) => {
+  return (
+    <div className="fixed inset-0 bg-white z-50 flex flex-col" onClick={onClose}>
+        <header className="p-6 border-b flex justify-between items-center flex-shrink-0">
+            <h2 className="text-xl font-bold text-gray-800 truncate pr-4">{title}</h2>
+            <button onClick={onClose} className="text-gray-500 hover:text-black"><CloseIcon /></button>
+        </header>
+        <div className="p-8 lg:p-12 flex-grow overflow-y-auto">
+            <div className="prose max-w-3xl mx-auto" dangerouslySetInnerHTML={{ __html: content }}></div>
+        </div>
+    </div>
+  );
+};
 
 interface YouTubeToNotesToolViewProps {
   onBack: () => void;
@@ -11,9 +25,11 @@ interface YouTubeToNotesToolViewProps {
 const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack, onSave }) => {
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [notes, setNotes] = useState('');
+  const [noteTitle, setNoteTitle] = useState('Notes from YouTube');
   const [status, setStatus] = useState<'idle' | 'loading' | 'error' | 'success'>('idle');
   const [error, setError] = useState('');
   const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
+  const [isFullScreen, setIsFullScreen] = useState(false);
 
   useEffect(() => {
     const key = localStorage.getItem('gemini-api-key');
@@ -26,9 +42,10 @@ const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack,
     setStatus('loading');
     setError('');
     setNotes('');
+    setNoteTitle('Notes from YouTube');
     try {
         const ai = new GoogleGenAI({ apiKey: geminiApiKey });
-        const prompt = `From the YouTube video at this URL: ${youtubeUrl}, please generate a detailed, well-structured set of notes. Organize the key points using headings, subheadings, and bullet points. Make important terms bold using markdown like **this**.`;
+        const prompt = `From the YouTube video at this URL: ${youtubeUrl}, please generate a detailed, well-structured set of notes. The very first line of your response should be a suitable title for these notes, starting with "Title: ". Then, organize the key points using headings, subheadings, and bullet points. Make important terms bold using markdown like **this**.`;
         
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
@@ -38,7 +55,16 @@ const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack,
             },
         });
         
-        const formattedNotes = response.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br />');
+        let rawText = response.text;
+        let title = "Notes from YouTube";
+        if (rawText.startsWith("Title: ")) {
+            const parts = rawText.split('\n');
+            title = parts[0].replace("Title: ", "").trim();
+            rawText = parts.slice(1).join('\n');
+        }
+
+        setNoteTitle(title);
+        const formattedNotes = rawText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br />');
         setNotes(formattedNotes);
         setStatus('success');
     } catch (err) {
@@ -49,7 +75,7 @@ const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack,
   };
 
   const handleSaveNote = () => {
-    const title = prompt("Enter a title for your new note:", `Notes from YouTube`);
+    const title = prompt("Enter a title for your new note:", noteTitle);
     if (title && notes) {
         onSave({
             title,
@@ -60,7 +86,7 @@ const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack,
     }
   };
   
-  const commonViewClasses = "p-8 lg:p-12 h-full flex flex-col";
+  const commonViewClasses = "p-8 lg:p-12 h-full flex flex-col bg-gray-50/50";
 
   if (!geminiApiKey) {
     return (
@@ -77,6 +103,7 @@ const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack,
 
   return (
     <div className={commonViewClasses}>
+      {isFullScreen && <FullScreenReader title={noteTitle} content={notes} onClose={() => setIsFullScreen(false)} />}
       <header className="mb-10 flex-shrink-0">
         <button onClick={onBack} className="flex items-center text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors mb-4">
           <BackIcon />
@@ -87,9 +114,9 @@ const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack,
       </header>
 
       <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-8 min-h-0">
-        <div className="flex flex-col gap-4">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border flex flex-col gap-4">
             <div>
-                <label className="font-semibold mb-2 block">YouTube URL</label>
+                <label className="font-semibold mb-2 block text-gray-800">YouTube URL</label>
                 <input
                     type="text"
                     value={youtubeUrl}
@@ -100,19 +127,22 @@ const YouTubeToNotesToolView: React.FC<YouTubeToNotesToolViewProps> = ({ onBack,
                  <p className="text-xs text-gray-500 mt-2">This feature uses AI to find and process the video's content. It works best with videos that have captions or a clear transcript.</p>
             </div>
         </div>
-        <div className="flex flex-col">
-            <h2 className="font-semibold mb-2">Generated Notes</h2>
-            <div className="flex-1 w-full p-4 border border-gray-300 rounded-lg bg-gray-50 relative overflow-y-auto">
+        <div className="bg-white p-6 rounded-2xl shadow-sm border flex flex-col">
+            <div className="flex justify-between items-center mb-2">
+                <h2 className="font-semibold text-gray-800">Generated Notes</h2>
+                {status === 'success' && notes && <button onClick={() => setIsFullScreen(true)} className="p-2 hover:bg-gray-100 rounded-full"><FullScreenIcon /></button>}
+            </div>
+            <div className="flex-1 w-full p-4 border border-gray-200 rounded-lg bg-gray-50/50 relative overflow-y-auto">
               {status === 'loading' && (
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
                 </div>
               )}
-              {status === 'error' && <p className="text-red-500">{error}</p>}
+              {status === 'error' && <p className="text-red-500 p-4">{error}</p>}
               {status === 'success' && notes && (
                 <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: notes }}></div>
               )}
-              {status === 'idle' && <p className="text-gray-500 text-center pt-10">Your notes will appear here.</p>}
+              {status !== 'loading' && !notes && <p className="text-gray-500 text-center pt-10">Your notes will appear here.</p>}
             </div>
         </div>
       </div>

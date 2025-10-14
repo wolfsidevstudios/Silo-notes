@@ -34,6 +34,7 @@ import QuizToolView from './components/QuizToolView';
 import YouTubeToNotesToolView from './components/YouTubeToNotesToolView';
 import ConceptExplainerToolView from './components/ConceptExplainerToolView';
 import NotesToInfographicToolView from './components/NotesToInfographicToolView';
+import DocumentationView from './components/DocumentationView';
 
 
 import { View, Note, Space, Board, BoardType, Task, Meeting, NoteType, TaskPriority, CalendarEvent } from './types';
@@ -523,7 +524,7 @@ const App: React.FC = () => {
       case View.CALENDAR: return <CalendarView events={calendarEvents} notes={notes} tasks={tasks} onAddEvents={handleAddCalendarEvents} onDeleteEvent={handleDeleteCalendarEvent} onEditNote={handleEditNote} />;
       case View.IDEAS: return <IdeasView />;
       case View.AGENDA: return <AgendaView tasks={tasks} meetings={meetings} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onDeleteMeeting={handleDeleteMeeting} />;
-      case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} />;
+      case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} onViewChange={handleViewChange} />;
       case View.SILO_LABS: return <SiloLabsView onViewChange={handleViewChange} />;
       case View.SILO_CHAT: return <SiloChatView geminiApiKey={geminiApiKey} onSaveNote={handleSaveNote} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} />;
       case View.SUMMARIZE_TOOL: return <SummarizeToolView onBack={() => handleViewChange(View.SILO_LABS)} notes={notes} />;
@@ -536,6 +537,7 @@ const App: React.FC = () => {
       case View.YOUTUBE_TO_NOTES_TOOL: return <YouTubeToNotesToolView onBack={() => handleViewChange(View.SILO_LABS)} onSave={handleSaveNote} />;
       case View.CONCEPT_EXPLAINER_TOOL: return <ConceptExplainerToolView onBack={() => handleViewChange(View.SILO_LABS)} notes={notes} />;
       case View.NOTES_TO_INFOGRAPHIC_TOOL: return <NotesToInfographicToolView onBack={() => handleViewChange(View.SILO_LABS)} currentNote={currentNote} onSave={handleSaveNote} notes={notes} />;
+      case View.DOCUMENTATION: return <DocumentationView onBack={() => handleViewChange(View.SETTINGS)} />;
       default: return <HomeView notes={notes} onEditNote={handleEditNote} />;
     }
   };

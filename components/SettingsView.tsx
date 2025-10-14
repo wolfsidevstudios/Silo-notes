@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { View } from '../types';
+import { BookOpenIcon, ChevronRightIcon } from './icons';
 
 interface UserProfile {
     name: string;
@@ -10,9 +12,10 @@ interface SettingsViewProps {
   userProfile: UserProfile | null;
   onKeyUpdate: (key: string) => void;
   onLogout: () => void;
+  onViewChange: (view: View) => void;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, onLogout }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, onLogout, onViewChange }) => {
   const [apiKey, setApiKey] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
@@ -90,6 +93,26 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
                 {saveStatus === 'saved' && 'Saved!'}
             </button>
             </div>
+        </div>
+
+        <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">About Silo Notes</h2>
+            
+            <button
+                onClick={() => onViewChange(View.DOCUMENTATION)}
+                className="w-full flex items-center justify-between p-6 rounded-lg bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors"
+            >
+                <div className="flex items-center gap-4">
+                    <div className="bg-gray-200 p-3 rounded-full">
+                        <BookOpenIcon />
+                    </div>
+                    <div>
+                        <h3 className="font-semibold text-lg text-gray-800 text-left">Documentation</h3>
+                        <p className="text-sm text-gray-600 text-left">Explore how our tools work and our third-party integrations.</p>
+                    </div>
+                </div>
+                <ChevronRightIcon />
+            </button>
         </div>
       </div>
     </div>
