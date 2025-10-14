@@ -237,3 +237,22 @@ export const CollapseSidebarIcon = ({ className }: { className?: string }) => (
       <path d="m15 10 -2 2 2 2" strokeWidth="1.5"></path>
     </svg>
 );
+
+export const Heading1Icon = () => (
+    <span className="material-symbols-rounded" style={{ fontSize: '20px' }}>format_h1</span>
+);
+export const Heading2Icon = () => (
+    <span className="material-symbols-rounded" style={{ fontSize: '20px' }}>format_h2</span>
+);
+export const QuoteIcon = () => (
+    <span className="material-symbols-rounded" style={{ fontSize: '20px' }}>format_quote</span>
+);
+export const CodeIcon = () => (
+    <span className="material-symbols-rounded" style={{ fontSize: '20px' }}>code</span>
+);
+export const FullWidthIcon = () => (
+    <span className="material-symbols-rounded" style={{ fontSize: '20px' }}>width_full</span>
+);
+export const NormalWidthIcon = () => (
+    <span className="material-symbols-rounded" style={{ fontSize: '20px' }}>width_normal</span>
+);

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Note, NoteType } from '../types';
 import { GoogleGenAI } from "@google/genai";
 import FloatingToolbar from './FloatingToolbar';
-import { ArrowUpIcon, SiloAiIcon } from './icons';
+import SlashCommandMenu, { Command } from './SlashCommandMenu';
+import { ArrowUpIcon, SiloAiIcon, FullWidthIcon, NormalWidthIcon } from './icons';
 
 interface AiNoteEditorProps {
   currentNote: Note | null;
@@ -20,7 +21,7 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
   // Note state
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [privacy, setPrivacy] = useState<'public' | 'private'>('public');
+  const [isFullWidth, setIsFullWidth] = useState(false);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -33,14 +34,20 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
   const [toolbarState, setToolbarState] = useState<{ top: number; left: number; visible: boolean }>({ top: 0, left: 0, visible: false });
   const selectionRef = useRef<Range | null>(null);
 
+  // Slash Command Menu State
+  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
+  const [commandMenuPosition, setCommandMenuPosition] = useState({ top: 0, left: 0 });
+  const [commandQuery, setCommandQuery] = useState('');
+  const commandRef = useRef<{ range: Range } | null>(null);
+
   // Effect to load note data and drafts
   useEffect(() => {
     if (currentNote) {
       const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
       const savedDraftJSON = localStorage.getItem(draftKey);
 
-      let initialTitle = currentNote.title;
-      let initialContent = currentNote.content || '';
+      let initialTitle = currentNote.title || '';
+      let initialContent = currentNote.content || '<div><br></div>';
 
       if (savedDraftJSON) {
         try {
@@ -55,7 +62,6 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
       if (contentEditableRef.current) {
         contentEditableRef.current.innerHTML = initialContent;
       }
-      setPrivacy(currentNote.privacy);
     }
   }, [currentNote]);
 
@@ -80,11 +86,15 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
       selectionRef.current = selection.getRangeAt(0).cloneRange();
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      setToolbarState({
-        top: rect.top + window.scrollY,
-        left: rect.left + window.scrollX + rect.width / 2,
-        visible: true,
-      });
+      const editorPane = contentEditableRef.current.parentElement;
+      if (editorPane) {
+         const editorRect = editorPane.getBoundingClientRect();
+         setToolbarState({
+            top: rect.top - editorRect.top,
+            left: rect.left - editorRect.left + rect.width / 2,
+            visible: true,
+         });
+      }
     } else {
       selectionRef.current = null;
       setToolbarState(prev => ({ ...prev, visible: false }));
@@ -96,45 +106,80 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
     return () => document.removeEventListener('selectionchange', handleSelectionChange);
   }, [handleSelectionChange]);
 
-  // Save note handler
   const handleSave = () => {
     if (currentNote) {
       const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
       localStorage.removeItem(draftKey);
     }
-    onSave({ id: currentNote?.id, title, content, privacy, type: NoteType.AI_NOTE });
+    onSave({ id: currentNote?.id, title, content, privacy: 'public', type: NoteType.AI_NOTE });
   };
   
-  // Editor command handler
   const handleCommand = (command: string, value?: string) => {
     document.execCommand(command, false, value);
     contentEditableRef.current?.focus();
     setContent(contentEditableRef.current?.innerHTML || '');
   };
 
+  const handleInput = useCallback((e: React.FormEvent<HTMLDivElement>) => {
+    const selection = window.getSelection();
+    if (!selection || !selection.rangeCount) return;
+    
+    const range = selection.getRangeAt(0);
+    const node = range.startContainer;
+    
+    if (!contentEditableRef.current?.contains(node)) return;
+
+    if (node.textContent && node.textContent.startsWith('/')) {
+        const rect = range.getBoundingClientRect();
+        const editorRect = contentEditableRef.current.parentElement!.getBoundingClientRect();
+        setCommandMenuPosition({ top: rect.bottom - editorRect.top + 5, left: rect.left - editorRect.left });
+        setCommandQuery(node.textContent.substring(1));
+        setIsCommandMenuOpen(true);
+        commandRef.current = { range };
+    } else {
+        setIsCommandMenuOpen(false);
+    }
+
+    setContent(e.currentTarget.innerHTML);
+  }, []);
+
+  const executeCommand = useCallback((command: Command) => {
+    if (!commandRef.current || !contentEditableRef.current) return;
+    
+    const { range } = commandRef.current;
+    range.selectNodeContents(range.startContainer);
+    range.deleteContents();
+    
+    if (command.tag === 'ul') {
+        document.execCommand('insertUnorderedList');
+    } else if (command.tag === 'ol') {
+        document.execCommand('insertOrderedList');
+    } else {
+        document.execCommand('formatBlock', false, `<${command.tag}>`);
+    }
+
+    setIsCommandMenuOpen(false);
+    commandRef.current = null;
+    setContent(contentEditableRef.current.innerHTML || '');
+    contentEditableRef.current.focus();
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter' && !isCommandMenuOpen) {
+        // Simple block creation on Enter
+        e.preventDefault();
+        document.execCommand('insertHTML', false, '<div><br></div>');
+    }
+  }, [isCommandMenuOpen]);
+
+  // AI Chat Handlers
   const insertAiText = (textToInsert: string) => {
     if (!contentEditableRef.current) return;
     contentEditableRef.current.focus();
-    
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        range.deleteContents();
-        // To preserve line breaks from AI response
-        const lines = textToInsert.split('\n');
-        lines.forEach((line, index) => {
-            range.insertNode(document.createTextNode(line));
-            if(index < lines.length -1) {
-                range.insertNode(document.createElement('br'));
-            }
-        });
-        range.collapse(false); // Move cursor to end
-    } else {
-        document.execCommand('insertHTML', false, textToInsert.replace(/\n/g, '<br>'));
-    }
+    document.execCommand('insertHTML', false, textToInsert.replace(/\n/g, '<br>'));
     setContent(contentEditableRef.current.innerHTML);
   };
-
+  
   const replaceSelectionWithAiText = (textToInsert: string) => {
       if (!contentEditableRef.current) return;
       contentEditableRef.current.focus();
@@ -148,11 +193,9 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
       } else {
           insertAiText(textToInsert);
       }
-      setContent(contentEditableRef.current.innerHTML);
+      setContent(contentEditableRef.current?.innerHTML || '');
   };
 
-
-  // AI Chat send handler
   const handleChatSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim() || isAiLoading || !geminiApiKey) return;
@@ -178,7 +221,6 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
               systemInstruction: "You are an AI writing assistant in a note editor. Your goal is to help the user write and edit their note. Provide clear, concise, and helpful text responses that can be directly inserted or used to replace existing text. Respond only with the generated text, without conversational fluff unless the user is just chatting."
             }
         });
-
         setChatMessages(prev => [...prev, { role: 'model', text: response.text, id: (Date.now() + 1).toString() }]);
     } catch (err) {
         console.error("AI Editor Error:", err);
@@ -188,36 +230,57 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
     }
   };
 
+
   return (
     <div className="flex h-full font-sans bg-white">
       {/* Main Editor Panel (Left) */}
-      <div className="flex-grow flex flex-col relative">
-        <div className="flex items-center justify-between mb-8 flex-shrink-0 p-8 lg:px-12 pt-8">
+      <div className="flex-grow flex flex-col relative overflow-hidden">
+        <div className="flex items-center justify-between flex-shrink-0 p-8 lg:px-12 pt-8 pb-4">
             <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                 <SiloAiIcon /> Silo AI Note
                 <span className="bg-gray-200 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">Beta</span>
             </h1>
-            <button onClick={handleSave} className="bg-black text-white font-semibold py-2 px-6 rounded-full hover:bg-gray-800 transition-colors">
-                Save Note
-            </button>
+            <div className="flex items-center gap-4">
+                 <button onClick={() => setIsFullWidth(p => !p)} className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors" title={isFullWidth ? "Normal width" : "Full width"}>
+                    {isFullWidth ? <NormalWidthIcon /> : <FullWidthIcon />}
+                 </button>
+                <button onClick={handleSave} className="bg-black text-white font-semibold py-2 px-6 rounded-full hover:bg-gray-800 transition-colors">
+                    Save Note
+                </button>
+            </div>
         </div>
-        <div className="flex-grow flex flex-col px-8 lg:px-12 pb-8 overflow-y-auto">
-            <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Note Title"
-                className="text-4xl font-bold placeholder-gray-300 focus:outline-none mb-6 pb-2 border-b border-transparent focus:border-gray-200 bg-transparent flex-shrink-0"
-            />
-            <div
-                ref={contentEditableRef}
-                contentEditable
-                onInput={(e) => setContent(e.currentTarget.innerHTML)}
-                data-placeholder="Start writing, or ask the AI for help..."
-                className="flex-1 w-full text-lg leading-relaxed text-gray-700 focus:outline-none resize-none [&:empty]:before:content-[attr(data-placeholder)] [&:empty]:before:text-gray-400"
-            />
+        <div className="flex-grow px-8 lg:px-12 pb-8 overflow-y-auto relative">
+            <div className={`mx-auto transition-all duration-300 ${isFullWidth ? 'max-w-none' : 'max-w-3xl'}`}>
+                <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Untitled Note"
+                    className="w-full text-5xl font-bold placeholder-gray-300 focus:outline-none mb-6 bg-transparent"
+                />
+                <div
+                    ref={contentEditableRef}
+                    contentEditable
+                    onInput={handleInput}
+                    onKeyDown={handleKeyDown}
+                    data-placeholder="Type '/' for commands..."
+                    className="w-full text-lg text-gray-800 focus:outline-none prose max-w-none prose-h1:font-bold prose-h2:font-bold prose-h1:text-4xl prose-h2:text-3xl prose-blockquote:border-l-4 prose-blockquote:border-gray-300 prose-blockquote:pl-4 prose-blockquote:italic prose-pre:bg-gray-100 prose-pre:p-4 prose-pre:rounded-lg"
+                />
+            </div>
+            {isCommandMenuOpen && (
+                <SlashCommandMenu 
+                    position={commandMenuPosition} 
+                    onSelect={executeCommand} 
+                    onClose={() => setIsCommandMenuOpen(false)}
+                    query={commandQuery}
+                />
+            )}
+            {toolbarState.visible && (
+                <div className="absolute" style={{ top: toolbarState.top, left: toolbarState.left }}>
+                    <FloatingToolbar onCommand={handleCommand} top={0} left={0} />
+                </div>
+            )}
         </div>
-        {toolbarState.visible && <FloatingToolbar {...toolbarState} onCommand={handleCommand} />}
       </div>
       
       {/* AI Chat Panel (Right) */}
@@ -268,6 +331,20 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
           </form>
         </div>
       </div>
+       <style>{`
+        .prose > :first-child { margin-top: 0; }
+        .prose > :last-child { margin-bottom: 0; }
+        [contenteditable] > * {
+            margin-top: 0.25em;
+            margin-bottom: 0.25em;
+        }
+        [contenteditable]:empty:before {
+            content: attr(data-placeholder);
+            color: #d1d5db;
+            cursor: text;
+            position: absolute;
+        }
+       `}</style>
     </div>
   );
 };
