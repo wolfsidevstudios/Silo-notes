@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BackIcon } from './icons';
+import { BackIcon, CloseIcon } from './icons';
 import { GoogleGenAI } from "@google/genai";
 
 interface SummarizeToolViewProps {
@@ -79,10 +79,15 @@ const SummarizeToolView: React.FC<SummarizeToolViewProps> = ({ onBack }) => {
         </div>
         <div className="flex flex-col">
             <div className="flex justify-between items-center mb-2">
-              <h2 className="font-semibold">Summary</h2>
-              {status === 'success' && (
-                 <button onClick={handleCopy} className="text-sm font-semibold text-gray-600 hover:text-black">Copy</button>
-              )}
+              <h2 className="font-semibold">AI Summary</h2>
+              <div>
+                {outputText && (
+                  <>
+                    <button onClick={handleCopy} className="text-sm font-semibold text-gray-600 hover:text-black mr-4">Copy</button>
+                    <button onClick={() => setOutputText('')} className="text-gray-400 hover:text-gray-800"><CloseIcon /></button>
+                  </>
+                )}
+              </div>
             </div>
             <div className="flex-1 w-full p-4 border border-gray-300 rounded-lg bg-gray-50 relative">
               {status === 'loading' && (

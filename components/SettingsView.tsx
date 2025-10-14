@@ -3,9 +3,10 @@ import { SettingsIcon } from './icons';
 
 interface SettingsViewProps {
   onKeyUpdate: (key: string) => void;
+  onLogout: () => void;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ onKeyUpdate }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ onKeyUpdate, onLogout }) => {
   const [apiKey, setApiKey] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
@@ -54,7 +55,13 @@ const SettingsView: React.FC<SettingsViewProps> = ({ onKeyUpdate }) => {
           />
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+            <button
+                onClick={onLogout}
+                className="text-sm font-semibold text-red-600 hover:text-red-800 transition-colors"
+            >
+                Logout
+            </button>
           <button
             onClick={handleSave}
             className={`bg-black text-white font-semibold py-2 px-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black ${

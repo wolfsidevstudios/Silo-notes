@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Note, AudioNote } from '../types';
-import { VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, StopIcon, RewriteIcon, SummarizeIcon, YouTubeIcon, ImageIcon, PdfIcon, FileIcon } from './icons';
+import { VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, StopIcon, RewriteIcon, SummarizeIcon, YouTubeIcon, ImageIcon, PdfIcon, FileIcon, CloseIcon } from './icons';
 import { GoogleGenAI } from "@google/genai";
 import FloatingToolbar from './FloatingToolbar';
 import PinModal from './PinModal';
 import YouTubeModal from './YouTubeModal';
 import ComingSoonModal from './ComingSoonModal';
+import RewriteModal from './RewriteModal';
 
 const ELEVENLABS_API_KEY = 'sk_0c8a39a023d6903e44b64bfe6c751b7d888045d452eb6635';
 
@@ -156,6 +157,10 @@ const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSa
   const [isTtsModalOpen, setIsTtsModalOpen] = useState(false);
   const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState(false);
   const [isComingSoonModalOpen, setIsComingSoonModalOpen] = useState(false);
+  const [isRewriteModalOpen, setIsRewriteModalOpen] = useState(false);
+  const [textToRewrite, setTextToRewrite] = useState('');
+
+  const [summaryText, setSummaryText] = useState<string | null>(null);
   
   const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
   const [isGeminiConfigured, setIsGeminiConfigured] = useState(false);
@@ -419,7 +424,6 @@ const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSa
             videoId = urlParams.get('v') || '';
         }
     } catch (e) {
-        // Fallback for non-standard URLs
         const match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?#]+)/);
         videoId = match ? match[1] : '';
     }
@@ -458,13 +462,11 @@ const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSa
     input.click();
   };
 
-  const handleWritingTool = async (action: 'rewrite' | 'summarize', statusText: string) => {
+  const handleWritingTool = async (action: 'rewrite' | 'summarize') => {
     if (!geminiApiKey) return;
-
     const selection = window.getSelection();
     let textToProcess = '';
     let isSelection = false;
-
     if (selection && !selection.isCollapsed && contentEditableRef.current?.contains(selection.getRangeAt(0).commonAncestorContainer)) {
         textToProcess = selection.toString();
         isSelection = true;
@@ -473,46 +475,47 @@ const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSa
         tempDiv.innerHTML = content;
         textToProcess = tempDiv.textContent || tempDiv.innerText || '';
     }
+    if (!textToProcess.trim()) return;
 
-    if (!textToProcess.trim()) {
-      setWritingToolStatus('No text to process');
-      setTimeout(() => setWritingToolStatus('Idle'), 2000);
-      return;
-    }
-
-    setWritingToolStatus(statusText);
-    try {
-      const ai = new GoogleGenAI({ apiKey: geminiApiKey });
-      const prompt = action === 'rewrite'
-        ? `Rewrite the following text:\n\n"${textToProcess}"`
-        : `Summarize the following text concisely:\n\n"${textToProcess}"`;
-      
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
-      const resultText = response.text;
-
-      if (isSelection && selection) {
-          const range = selection.getRangeAt(0);
-          range.deleteContents();
-          range.insertNode(document.createTextNode(resultText));
-      } else {
-          if (contentEditableRef.current) {
-              contentEditableRef.current.innerHTML = resultText.replace(/\n/g, '<br>');
-          }
-      }
-      setContent(contentEditableRef.current?.innerHTML || '');
-      setWritingToolStatus('Done!');
-    } catch (err) {
-      console.error("Gemini API Error:", err);
-      setWritingToolStatus('Error');
-    } finally {
-      setTimeout(() => setWritingToolStatus('Idle'), 2000);
+    if (action === 'rewrite') {
+        setTextToRewrite(textToProcess);
+        setIsRewriteModalOpen(true);
+    } else {
+        setWritingToolStatus('Summarizing...');
+        try {
+            const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: `Summarize the following text concisely:\n\n"${textToProcess}"`,
+            });
+            setSummaryText(response.text);
+            setWritingToolStatus('Done!');
+        } catch (err) {
+            console.error("Gemini API Error:", err);
+            setWritingToolStatus('Error');
+        } finally {
+            setTimeout(() => setWritingToolStatus('Idle'), 2000);
+        }
     }
   };
+  
+  const handleReplaceText = (newText: string) => {
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed && contentEditableRef.current?.contains(selection.getRangeAt(0).commonAncestorContainer)) {
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(document.createTextNode(newText));
+    } else {
+        if (contentEditableRef.current) {
+            contentEditableRef.current.innerHTML = newText.replace(/\n/g, '<br>');
+        }
+    }
+    setContent(contentEditableRef.current?.innerHTML || '');
+    setIsRewriteModalOpen(false);
+  };
 
-  const isActionActive = isRecording || isVoiceMemoRecording || isTtsModalOpen || writingToolStatus !== 'Idle' || isLocked || isYouTubeModalOpen || isComingSoonModalOpen;
+
+  const isActionActive = isRecording || isVoiceMemoRecording || isTtsModalOpen || writingToolStatus !== 'Idle' || isLocked || isYouTubeModalOpen || isComingSoonModalOpen || isRewriteModalOpen;
 
   const ToolButton: React.FC<{
     onClick: () => void;
@@ -580,6 +583,18 @@ const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSa
           className="flex-1 w-full text-lg leading-relaxed text-gray-700 focus:outline-none resize-none [&:empty]:before:content-[attr(data-placeholder)] [&:empty]:before:text-gray-400"
         />
 
+        {summaryText && (
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200 relative">
+                <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">AI Summary</h3>
+                    <button onClick={() => setSummaryText(null)} className="text-gray-400 hover:text-gray-700">
+                        <CloseIcon />
+                    </button>
+                </div>
+                <p className="text-gray-700 text-sm">{summaryText}</p>
+            </div>
+        )}
+
         {audioNotes.length > 0 && (
           <div className="mt-6 flex-shrink-0">
             <h3 className="text-sm font-semibold text-gray-600 mb-2">Voice Memos</h3>
@@ -632,10 +647,10 @@ const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSa
         
         {isGeminiConfigured ? (
             <>
-                <ToolButton onClick={() => handleWritingTool('rewrite', 'Rewriting...')} disabled={isActionActive || !content.trim()} label="Rewrite" aria-label="Rewrite Text">
+                <ToolButton onClick={() => handleWritingTool('rewrite')} disabled={isActionActive || !content.trim()} label="Rewrite" aria-label="Rewrite Text">
                     <RewriteIcon />
                 </ToolButton>
-                <ToolButton onClick={() => handleWritingTool('summarize', 'Summarizing...')} disabled={isActionActive || !content.trim()} label="Summarize" aria-label="Summarize Text">
+                <ToolButton onClick={() => handleWritingTool('summarize')} disabled={isActionActive || !content.trim()} label={writingToolStatus === 'Summarizing...' ? 'Summarizing...' : 'Summarize'} aria-label="Summarize Text">
                     <SummarizeIcon />
                 </ToolButton>
             </>
@@ -647,6 +662,7 @@ const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSa
       {isTtsModalOpen && <TextToSpeechModal onClose={() => setIsTtsModalOpen(false)} onAddAudio={handleAddTtsAudio} />}
       {isYouTubeModalOpen && <YouTubeModal onClose={() => setIsYouTubeModalOpen(false)} onSubmit={handleYouTubeSubmit} />}
       {isComingSoonModalOpen && <ComingSoonModal onClose={() => setIsComingSoonModalOpen(false)} />}
+      {isRewriteModalOpen && <RewriteModal geminiApiKey={geminiApiKey} textToProcess={textToRewrite} onClose={() => setIsRewriteModalOpen(false)} onReplace={handleReplaceText} />}
 
     </div>
   );

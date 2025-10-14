@@ -20,6 +20,10 @@ import SpeechToTextToolView from './components/SpeechToTextToolView';
 import TextToSpeechToolView from './components/TextToSpeechToolView';
 import MindMapView from './components/MindMapView';
 import WorkflowView from './components/WorkflowView';
+import LandingPage from './components/LandingPage';
+import LoginPage from './components/LoginPage';
+import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
 import { GoogleGenAI } from "@google/genai";
 import { ArrowUpIcon, CloseIcon } from './components/icons';
 import NewNoteTypeModal from './components/NewNoteTypeModal';
@@ -255,6 +259,30 @@ const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey, onAddTask, onAddMe
 
 
 const App: React.FC = () => {
+  // Authentication & Routing
+  const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('silo-authenticated') === 'true');
+  const [route, setRoute] = useState(window.location.hash || '#/');
+
+  useEffect(() => {
+    const handleHashChange = () => {
+        setRoute(window.location.hash || '#/');
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  const handleLoginSuccess = () => {
+    localStorage.setItem('silo-authenticated', 'true');
+    setIsAuthenticated(true);
+    window.location.hash = '#/home';
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('silo-authenticated');
+    setIsAuthenticated(false);
+    window.location.hash = '#/';
+  };
+
   // State management
   const [activeView, setActiveView] = useState<View>(View.HOME);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -271,6 +299,16 @@ const App: React.FC = () => {
   const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
   const [activeClock, setActiveClock] = useState<{ type: 'timer' | 'stopwatch'; props: any } | null>(null);
 
+  useEffect(() => {
+    if (route.startsWith('#/')) {
+        const viewKey = route.substring(2).toUpperCase();
+        if (Object.values(View).includes(viewKey as View)) {
+            handleViewChange(viewKey as View);
+        } else if (route === '#/home') {
+            handleViewChange(View.HOME);
+        }
+    }
+  }, [route]);
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -283,7 +321,6 @@ const App: React.FC = () => {
       const savedGeminiKey = localStorage.getItem('gemini-api-key');
 
       if (savedNotes) {
-        // Migration for older notes without a 'type' property
         const parsedNotes = JSON.parse(savedNotes).map((note: Note) => ({
             ...note,
             type: note.type || NoteType.CLASSIC,
@@ -313,27 +350,17 @@ const App: React.FC = () => {
     }
   }, [notes, spaces, boards, tasks, meetings]);
 
-  const handleToggleAiChat = useCallback(() => {
-    setIsAiChatVisible(prev => !prev);
-  }, []);
-  
-  const handleSetTimer = useCallback((props: { initialSeconds: number }) => {
-      setActiveClock({ type: 'timer', props });
-  }, []);
-
-  const handleSetStopwatch = useCallback(() => {
-      setActiveClock({ type: 'stopwatch', props: {} });
-  }, []);
-
-  const handleCloseClock = useCallback(() => {
-      setActiveClock(null);
-  }, []);
+  const handleToggleAiChat = useCallback(() => setIsAiChatVisible(prev => !prev), []);
+  const handleSetTimer = useCallback((props: { initialSeconds: number }) => setActiveClock({ type: 'timer', props }), []);
+  const handleSetStopwatch = useCallback(() => setActiveClock({ type: 'stopwatch', props: {} }), []);
+  const handleCloseClock = useCallback(() => setActiveClock(null), []);
 
   const handleViewChange = useCallback((view: View) => {
     setActiveView(view);
     setCurrentNote(null);
     setActiveSpaceId(null);
     setActiveBoard(null);
+    window.location.hash = `/${view.toLowerCase()}`;
   }, []);
 
   const handleOpenNewNoteModal = () => setIsNewNoteModalVisible(true);
@@ -341,91 +368,40 @@ const App: React.FC = () => {
 
   const handleSelectNoteType = (type: NoteType) => {
     const newNote: Omit<Note, 'id'> = {
-        title: '',
-        content: '',
-        createdAt: new Date().toISOString(),
-        privacy: 'public',
-        type: type,
-        audioNotes: [],
+        title: '', content: '', createdAt: new Date().toISOString(), privacy: 'public', type: type, audioNotes: [],
     };
-    setCurrentNote(newNote as Note); // Temporarily cast, id will be set on save
-    setActiveView(View.CREATE);
-    setActiveSpaceId(null);
-    setActiveBoard(null);
+    setCurrentNote(newNote as Note);
+    handleViewChange(View.CREATE);
     handleCloseNewNoteModal();
   };
 
   const handleEditNote = (note: Note) => {
     setCurrentNote(note);
-    setActiveView(View.CREATE);
-    setActiveSpaceId(null);
-    setActiveBoard(null);
+    handleViewChange(View.CREATE);
   };
 
   const handleSaveNote = (noteData: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => {
     if (noteData.id) {
-      // Update existing note
       setNotes(notes.map(n => n.id === noteData.id ? { ...n, ...noteData, id: noteData.id } : n));
     } else {
-      // Create new note
       const newNote: Note = {
-        id: new Date().toISOString(),
-        createdAt: new Date().toISOString(),
-        title: noteData.title,
-        content: noteData.content,
-        audioNotes: noteData.audioNotes || [],
-        privacy: noteData.privacy,
-        pin: noteData.pin,
-        type: noteData.type,
-        color: noteData.color,
+        id: new Date().toISOString(), createdAt: new Date().toISOString(), title: noteData.title, content: noteData.content,
+        audioNotes: noteData.audioNotes || [], privacy: noteData.privacy, pin: noteData.pin, type: noteData.type, color: noteData.color,
       };
       setNotes([newNote, ...notes]);
     }
     handleViewChange(View.HOME);
   };
   
-  // Task and Meeting Handlers
-  const handleAddTask = (title: string) => {
-    const newTask: Task = {
-      id: new Date().toISOString(),
-      title,
-      completed: false,
-      createdAt: new Date().toISOString(),
-    };
-    setTasks(prev => [newTask, ...prev]);
-  };
-
-  const handleAddMeeting = (title: string, dateTime: string) => {
-    const newMeeting: Meeting = {
-      id: new Date().toISOString(),
-      title,
-      dateTime,
-      createdAt: new Date().toISOString(),
-    };
-    setMeetings(prev => [newMeeting, ...prev]);
-  };
-
-  const handleToggleTask = (taskId: string) => {
-    setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, completed: !task.completed } : task
-    ));
-  };
-
-  const handleDeleteTask = (taskId: string) => {
-    setTasks(tasks.filter(task => task.id !== taskId));
-  };
-  
-  const handleDeleteMeeting = (meetingId: string) => {
-    setMeetings(meetings.filter(meeting => meeting.id !== meetingId));
-  };
+  const handleAddTask = (title: string) => { setTasks(prev => [{ id: new Date().toISOString(), title, completed: false, createdAt: new Date().toISOString() }, ...prev]); };
+  const handleAddMeeting = (title: string, dateTime: string) => { setMeetings(prev => [{ id: new Date().toISOString(), title, dateTime, createdAt: new Date().toISOString() }, ...prev]); };
+  const handleToggleTask = (taskId: string) => { setTasks(tasks.map(task => task.id === taskId ? { ...task, completed: !task.completed } : task)); };
+  const handleDeleteTask = (taskId: string) => { setTasks(tasks.filter(task => task.id !== taskId)); };
+  const handleDeleteMeeting = (meetingId: string) => { setMeetings(meetings.filter(meeting => meeting.id !== meetingId)); };
 
   const handleAddSpace = (name: string) => {
     if (name.trim() === '') return;
-    const newSpace: Space = {
-      id: new Date().toISOString(),
-      name,
-    };
-    setSpaces([...spaces, newSpace]);
+    setSpaces([...spaces, { id: new Date().toISOString(), name }]);
   };
 
   const handleSelectSpace = (spaceId: string) => {
@@ -437,107 +413,60 @@ const App: React.FC = () => {
   
   const handleAddBoard = (name: string, spaceId: string, type: BoardType) => {
     if (name.trim() === '') return;
-    const newBoard: Board = {
-      id: new Date().toISOString(),
-      name,
-      spaceId,
-      type
-    };
-    setBoards([...boards, newBoard]);
+    setBoards([...boards, { id: new Date().toISOString(), name, spaceId, type }]);
   };
 
-  const handleSelectBoard = (board: Board) => {
-    setActiveBoard(board);
-    setActiveView(View.BOARD);
-  };
-
-  const handleBackToSpace = () => {
-    setActiveView(View.SPACE);
-    setActiveBoard(null);
-  };
+  const handleSelectBoard = (board: Board) => { setActiveBoard(board); setActiveView(View.BOARD); };
+  const handleBackToSpace = () => { setActiveView(View.SPACE); setActiveBoard(null); };
 
   useEffect(() => {
     const activeSpace = spaces.find(s => s.id === activeSpaceId);
-    const isInvalidSpaceView = activeView === View.SPACE && !activeSpace;
-    const isInvalidBoardView = activeView === View.BOARD && (!activeBoard || !activeSpace);
-
-    if (isInvalidSpaceView || isInvalidBoardView) {
+    if ((activeView === View.SPACE && !activeSpace) || (activeView === View.BOARD && (!activeBoard || !activeSpace))) {
       handleViewChange(View.HOME);
     }
   }, [activeView, activeBoard, activeSpaceId, spaces, handleViewChange]);
 
   const renderMainView = () => {
     const activeSpace = spaces.find(s => s.id === activeSpaceId);
-
     if (activeView === View.BOARD && activeBoard && activeSpace) {
         switch (activeBoard.type) {
-            case BoardType.NOTE_BOARD:
-                return <NoteBoardView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
-            case BoardType.DIAGRAM:
-                return <DiagramView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
-            case BoardType.JAM_BOARD:
-                return <JamBoardView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
-            case BoardType.MIND_MAP:
-                return <MindMapView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
-            case BoardType.WORKFLOW:
-                 return <WorkflowView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
-            default:
-                return <HomeView notes={notes} onEditNote={handleEditNote} />;
+            case BoardType.NOTE_BOARD: return <NoteBoardView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
+            case BoardType.DIAGRAM: return <DiagramView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
+            case BoardType.JAM_BOARD: return <JamBoardView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
+            case BoardType.MIND_MAP: return <MindMapView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
+            case BoardType.WORKFLOW: return <WorkflowView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
+            default: return <HomeView notes={notes} onEditNote={handleEditNote} />;
         }
     }
-
-    if (activeView === View.SPACE && activeSpace) {
-        return <SpaceView 
-            space={activeSpace} 
-            boards={boards.filter(b => b.spaceId === activeSpace.id)} 
-            addBoard={handleAddBoard} 
-            onSelectBoard={handleSelectBoard}
-        />;
-    }
-
+    if (activeView === View.SPACE && activeSpace) return <SpaceView space={activeSpace} boards={boards.filter(b => b.spaceId === activeSpace.id)} addBoard={handleAddBoard} onSelectBoard={handleSelectBoard}/>;
     switch (activeView) {
-      case View.HOME:
-        return <HomeView notes={notes} onEditNote={handleEditNote} />;
+      case View.HOME: return <HomeView notes={notes} onEditNote={handleEditNote} />;
       case View.CREATE:
-        if (currentNote?.type === NoteType.JOURNAL) {
-            return <JournalEditor currentNote={currentNote} onSave={handleSaveNote} />;
-        }
-        if (currentNote?.type === NoteType.STICKY) {
-            return <StickyNoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
-        }
+        if (currentNote?.type === NoteType.JOURNAL) return <JournalEditor currentNote={currentNote} onSave={handleSaveNote} />;
+        if (currentNote?.type === NoteType.STICKY) return <StickyNoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
         return <ClassicNoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
-      case View.EXPLORE:
-        return <ExploreView />;
-      case View.IDEAS:
-        return <IdeasView />;
-      case View.AGENDA:
-        return <AgendaView 
-            tasks={tasks} 
-            meetings={meetings} 
-            onAddTask={handleAddTask}
-            onAddMeeting={handleAddMeeting}
-            onToggleTask={handleToggleTask}
-            onDeleteTask={handleDeleteTask}
-            onDeleteMeeting={handleDeleteMeeting}
-        />;
-      case View.SETTINGS:
-        return <SettingsView onKeyUpdate={setGeminiApiKey} />;
-      case View.SILO_LABS:
-        return <SiloLabsView onViewChange={handleViewChange} />;
-      case View.SUMMARIZE_TOOL:
-        return <SummarizeToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
-      case View.REWRITE_TOOL:
-        return <RewriteToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
-      case View.VOICE_MEMO_TOOL:
-        return <VoiceMemoToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
-      case View.SPEECH_TO_TEXT_TOOL:
-        return <SpeechToTextToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
-      case View.TEXT_TO_SPEECH_TOOL:
-        return <TextToSpeechToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
-      default:
-        return <HomeView notes={notes} onEditNote={handleEditNote} />;
+      case View.EXPLORE: return <ExploreView />;
+      case View.IDEAS: return <IdeasView />;
+      case View.AGENDA: return <AgendaView tasks={tasks} meetings={meetings} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onDeleteMeeting={handleDeleteMeeting} />;
+      case View.SETTINGS: return <SettingsView onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} />;
+      case View.SILO_LABS: return <SiloLabsView onViewChange={handleViewChange} />;
+      case View.SUMMARIZE_TOOL: return <SummarizeToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.REWRITE_TOOL: return <RewriteToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.VOICE_MEMO_TOOL: return <VoiceMemoToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.SPEECH_TO_TEXT_TOOL: return <SpeechToTextToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.TEXT_TO_SPEECH_TOOL: return <TextToSpeechToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      default: return <HomeView notes={notes} onEditNote={handleEditNote} />;
     }
   };
+  
+  if (!isAuthenticated) {
+    switch (route) {
+        case '#/login': return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+        case '#/privacy': return <PrivacyPolicy />;
+        case '#/terms': return <TermsOfService />;
+        default: return <LandingPage />;
+    }
+  }
 
   return (
     <div className="flex h-screen font-sans bg-white">
@@ -554,25 +483,12 @@ const App: React.FC = () => {
       <main className="flex-1 overflow-y-auto">
         {renderMainView()}
       </main>
-      {isAiChatVisible && <AiChatComponent 
-            onClose={handleToggleAiChat} 
-            onSaveNote={handleSaveNote} 
-            geminiApiKey={geminiApiKey} 
-            onAddTask={handleAddTask} 
-            onAddMeeting={handleAddMeeting} 
-            onSetTimer={handleSetTimer}
-            onSetStopwatch={handleSetStopwatch}
-        />}
+      {isAiChatVisible && <AiChatComponent onClose={handleToggleAiChat} onSaveNote={handleSaveNote} geminiApiKey={geminiApiKey} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} onSetTimer={handleSetTimer} onSetStopwatch={handleSetStopwatch} />}
       {isNewNoteModalVisible && <NewNoteTypeModal onSelect={handleSelectNoteType} onClose={handleCloseNewNoteModal} />}
-      
       {activeClock && (
         <div className="fixed bottom-8 right-8 z-50">
-          {activeClock.type === 'timer' && (
-            <TimerComponent {...activeClock.props} onClose={handleCloseClock} />
-          )}
-          {activeClock.type === 'stopwatch' && (
-            <StopwatchComponent onClose={handleCloseClock} />
-          )}
+          {activeClock.type === 'timer' && <TimerComponent {...activeClock.props} onClose={handleCloseClock} />}
+          {activeClock.type === 'stopwatch' && <StopwatchComponent onClose={handleCloseClock} />}
         </div>
       )}
     </div>
