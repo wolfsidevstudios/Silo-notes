@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Space, Board, BoardType } from '../types';
-import { PlusIcon, NoteBoardIcon, DiagramIcon, JamBoardIcon, HashtagIcon, MindMapIcon } from './icons';
+import { PlusIcon, NoteBoardIcon, DiagramIcon, JamBoardIcon, HashtagIcon, MindMapIcon, WorkflowIcon } from './icons';
 
 interface SpaceViewProps {
   space: Space;
@@ -31,6 +31,7 @@ const BoardCard: React.FC<{ board: Board, onSelectBoard: (board: Board) => void 
       case BoardType.DIAGRAM: return <DiagramIcon />;
       case BoardType.JAM_BOARD: return <JamBoardIcon />;
       case BoardType.MIND_MAP: return <MindMapIcon />;
+      case BoardType.WORKFLOW: return <WorkflowIcon />;
       default: return null;
     }
   }
@@ -97,7 +98,7 @@ const SpaceView: React.FC<SpaceViewProps> = ({ space, boards, addBoard, onSelect
 
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300" aria-modal="true" role="dialog">
-          <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md m-4 transform transition-all duration-300 scale-100">
+          <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg m-4 transform transition-all duration-300 scale-100">
             <h2 className="text-2xl font-bold mb-6">Create a new board</h2>
             <form onSubmit={handleCreateBoard}>
               <div className="mb-4">
@@ -114,9 +115,10 @@ const SpaceView: React.FC<SpaceViewProps> = ({ space, boards, addBoard, onSelect
               </div>
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Board Type</label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                   <BoardTypeOption type={BoardType.NOTE_BOARD} selectedType={newBoardType} setType={setNewBoardType} />
                   <BoardTypeOption type={BoardType.MIND_MAP} selectedType={newBoardType} setType={setNewBoardType} />
+                  <BoardTypeOption type={BoardType.WORKFLOW} selectedType={newBoardType} setType={setNewBoardType} />
                   <BoardTypeOption type={BoardType.DIAGRAM} selectedType={newBoardType} setType={setNewBoardType} />
                   <BoardTypeOption type={BoardType.JAM_BOARD} selectedType={newBoardType} setType={setNewBoardType} />
                 </div>

@@ -39,6 +39,7 @@ export enum BoardType {
   DIAGRAM = 'Diagram',
   JAM_BOARD = 'Jam Board',
   MIND_MAP = 'Mind Map',
+  WORKFLOW = 'Workflow',
 }
 
 export interface Board {

@@ -16,6 +16,7 @@ import VoiceMemoToolView from './components/VoiceMemoToolView';
 import SpeechToTextToolView from './components/SpeechToTextToolView';
 import TextToSpeechToolView from './components/TextToSpeechToolView';
 import MindMapView from './components/MindMapView';
+import WorkflowView from './components/WorkflowView';
 import { GoogleGenAI } from "@google/genai";
 import { ArrowUpIcon, CloseIcon } from './components/icons';
 
@@ -168,7 +169,7 @@ const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey }: { onClose: () =>
         }
     };
 
-    const containerClasses = `fixed bottom-8 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out flex items-center justify-center ${
+    const containerClasses = `fixed top-8 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out flex items-center justify-center ${
         activeTool !== 'none'
         ? 'w-96 h-48 bg-black rounded-3xl shadow-2xl'
         : 'w-[500px] h-14 bg-white rounded-full shadow-lg border'
@@ -354,6 +355,8 @@ const App: React.FC = () => {
                 return <JamBoardView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
             case BoardType.MIND_MAP:
                 return <MindMapView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
+            case BoardType.WORKFLOW:
+                 return <WorkflowView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
             default:
                 return <HomeView notes={notes} onEditNote={handleEditNote} />;
         }
