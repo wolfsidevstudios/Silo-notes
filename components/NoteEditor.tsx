@@ -169,6 +169,7 @@ const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSa
   
   const contentEditableRef = useRef<HTMLDivElement>(null);
   const [toolbarState, setToolbarState] = useState<{ top: number; left: number; visible: boolean }>({ top: 0, left: 0, visible: false });
+  const [isLoaded, setIsLoaded] = useState(false);
 
   const handleSelectionChange = useCallback(() => {
     const selection = window.getSelection();
@@ -224,16 +225,18 @@ const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSa
       } else {
         setIsLocked(false);
       }
+      setIsLoaded(true);
     }
+    return () => setIsLoaded(false);
   }, [currentNote]);
 
   useEffect(() => {
-    if (currentNote && !isLocked) {
+    if (isLoaded && currentNote && !isLocked) {
         const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
         const draft = { title, content };
         localStorage.setItem(draftKey, JSON.stringify(draft));
     }
-  }, [title, content, currentNote, isLocked]);
+  }, [title, content, currentNote, isLocked, isLoaded]);
 
   useEffect(() => {
     const key = localStorage.getItem('gemini-api-key');

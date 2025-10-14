@@ -14,6 +14,7 @@ const StickyNoteEditor: React.FC<StickyNoteEditorProps> = ({ currentNote, onSave
   const [content, setContent] = useState('');
   const [color, setColor] = useState(STICKY_COLORS[0]);
   const [privacy, setPrivacy] = useState<'public' | 'private'>('public');
+  const [isLoaded, setIsLoaded] = useState(false);
   
   const contentEditableRef = useRef<HTMLDivElement>(null);
 
@@ -44,16 +45,18 @@ const StickyNoteEditor: React.FC<StickyNoteEditorProps> = ({ currentNote, onSave
       if (contentEditableRef.current) {
         contentEditableRef.current.innerHTML = initialContent;
       }
+      setIsLoaded(true);
     }
+    return () => setIsLoaded(false);
   }, [currentNote]);
 
   useEffect(() => {
-    if(currentNote){
+    if(isLoaded && currentNote){
         const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
         const draft = { title, content, color };
         localStorage.setItem(draftKey, JSON.stringify(draft));
     }
-  }, [title, content, color, currentNote]);
+  }, [title, content, color, currentNote, isLoaded]);
 
   const handleSave = () => {
     if (currentNote) {

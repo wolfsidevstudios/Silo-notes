@@ -12,6 +12,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ currentNote, onSave }) =>
   const [pages, setPages] = useState<string[]>(['']);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [privacy, setPrivacy] = useState<'public' | 'private'>('public');
+  const [isLoaded, setIsLoaded] = useState(false);
   
   const contentEditableRef = useRef<HTMLDivElement>(null);
   const editorWrapperRef = useRef<HTMLDivElement>(null);
@@ -47,16 +48,18 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ currentNote, onSave }) =>
       setPages(initialPages.length > 0 ? initialPages : ['']);
       setPrivacy(currentNote.privacy || 'public');
       setCurrentPageIndex(0);
+      setIsLoaded(true);
     }
+    return () => setIsLoaded(false);
   }, [currentNote]);
 
   useEffect(() => {
-    if (currentNote) {
+    if (isLoaded && currentNote) {
       const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
       const draft = { title, pages };
       localStorage.setItem(draftKey, JSON.stringify(draft));
     }
-  }, [title, pages, currentNote]);
+  }, [title, pages, currentNote, isLoaded]);
 
   const handleSave = () => {
     if (currentNote) {

@@ -22,6 +22,7 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isFullWidth, setIsFullWidth] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -62,17 +63,19 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
       if (contentEditableRef.current) {
         contentEditableRef.current.innerHTML = initialContent;
       }
+      setIsLoaded(true);
     }
+    return () => setIsLoaded(false);
   }, [currentNote]);
 
   // Effect to save drafts
   useEffect(() => {
-    if (currentNote) {
+    if (isLoaded && currentNote) {
         const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
         const draft = { title, content };
         localStorage.setItem(draftKey, JSON.stringify(draft));
     }
-  }, [title, content, currentNote]);
+  }, [title, content, currentNote, isLoaded]);
 
   // Scroll chat to bottom
   useEffect(() => {
@@ -232,9 +235,9 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
 
 
   return (
-    <div className="flex h-full font-sans bg-white">
-      {/* Main Editor Panel (Left) */}
-      <div className="flex-grow flex flex-col relative overflow-hidden">
+    <div className="h-full font-sans bg-white relative">
+      {/* Main Editor Panel */}
+      <div className="h-full flex flex-col relative overflow-hidden">
         <div className="flex items-center justify-between flex-shrink-0 p-8 lg:px-12 pt-8 pb-4">
             <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
                 <SiloAiIcon /> Silo AI Note
@@ -283,9 +286,9 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
         </div>
       </div>
       
-      {/* AI Chat Panel (Right) */}
-      <div className="w-[450px] flex-shrink-0 border-l border-gray-200 bg-gray-50 flex flex-col">
-        <div className="p-4 border-b text-center flex-shrink-0">
+      {/* Floating AI Chat Panel */}
+      <div className="absolute top-6 right-6 bottom-6 w-[400px] flex-shrink-0 border border-gray-200 bg-white/50 backdrop-blur-lg rounded-2xl shadow-xl flex flex-col z-10">
+        <div className="p-4 border-b border-black/10 text-center flex-shrink-0">
           <h2 className="font-semibold text-gray-800">AI Assistant</h2>
         </div>
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -315,7 +318,7 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
             )}
           <div ref={chatEndRef}></div>
         </div>
-        <div className="p-4 border-t flex-shrink-0">
+        <div className="p-4 border-t border-black/10 flex-shrink-0">
           <form onSubmit={handleChatSend} className="flex items-center gap-2">
             <input
                 type="text"
