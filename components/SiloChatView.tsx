@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { Note, Task, Meeting, NoteType, TaskPriority } from '../types';
-import { ArrowUpIcon, JournalIcon } from './icons';
+import { ArrowUpIcon, SettingsIcon } from './icons';
 
 interface SiloChatViewProps {
   geminiApiKey: string | null;
@@ -175,6 +175,26 @@ If the user is just chatting or you are clarifying, "action" should be null. Alw
         </div>
     )
   }
+
+  if (!geminiApiKey) {
+    return (
+        <div className="h-full flex flex-col bg-white relative overflow-hidden">
+            <header className="p-4 text-center border-b z-10 bg-white/50 backdrop-blur-sm">
+                <h1 className="text-xl font-bold text-gray-800">Silo Chat</h1>
+            </header>
+            <div className="flex-grow flex flex-col items-center justify-center text-center p-4 z-10">
+                <div className="bg-yellow-100 text-yellow-800 p-3 rounded-full mb-4">
+                   <SettingsIcon />
+                </div>
+                <h2 className="text-2xl font-semibold text-gray-800">API Key Required</h2>
+                <p className="text-gray-600 mt-2 max-w-sm">
+                    Please set your Google Gemini API key in the Settings to enable Silo Chat.
+                </p>
+            </div>
+        </div>
+    );
+  }
+
 
   return (
     <div className="h-full flex flex-col bg-white relative overflow-hidden">

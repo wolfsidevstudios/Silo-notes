@@ -381,9 +381,11 @@ const App: React.FC = () => {
   const handleSetStopwatch = useCallback(() => setActiveClock({ type: 'stopwatch', props: {} }), []);
   const handleCloseClock = useCallback(() => setActiveClock(null), []);
 
-  const handleViewChange = useCallback((view: View) => {
+  const handleViewChange = useCallback((view: View, options?: { keepCurrentNote?: boolean }) => {
     setActiveView(view);
-    setCurrentNote(null);
+    if (!options?.keepCurrentNote) {
+      setCurrentNote(null);
+    }
     setActiveSpaceId(null);
     setActiveBoard(null);
     window.location.hash = `/${view.toLowerCase()}`;
@@ -397,13 +399,13 @@ const App: React.FC = () => {
         title: '', content: '', createdAt: new Date().toISOString(), privacy: 'public', type: type, audioNotes: [],
     };
     setCurrentNote(newNote as Note);
-    handleViewChange(View.CREATE);
+    handleViewChange(View.CREATE, { keepCurrentNote: true });
     handleCloseNewNoteModal();
   };
 
   const handleEditNote = (note: Note) => {
     setCurrentNote(note);
-    handleViewChange(View.CREATE);
+    handleViewChange(View.CREATE, { keepCurrentNote: true });
   };
 
   const handleSaveNote = (noteData: Omit<Note, 'id' | 'createdAt'> & { id?: string; type: NoteType; }) => {
