@@ -57,6 +57,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
     
     const clientId = 'qy8KhVTKRZG1Pl4dhQwZSw';
     const redirectUri = window.location.origin + window.location.pathname;
+    // Scopes needed to fetch user profile and upcoming meetings.
     const scope = 'user:read meeting:read';
 
     const verifier = generateRandomString(128);
@@ -107,7 +108,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
             ) : (
                 <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="bg-blue-100 p-2 rounded-full"><ZoomIcon /></div>
+                        <div className="p-2 rounded-full"><ZoomIcon className="w-8 h-8" /></div>
                         <div>
                             <p className="font-semibold text-gray-800">Zoom</p>
                             <p className="text-sm text-gray-500">Sync your meetings</p>
