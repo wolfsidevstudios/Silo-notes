@@ -31,6 +31,7 @@ import { View, Note, Space, Board, BoardType, Task, Meeting, NoteType } from './
 const TimerComponent = ({ initialSeconds, onClose }: { initialSeconds: number; onClose: () => void }) => {
     const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
     const [isActive, setIsActive] = useState(true);
+    const [isPill, setIsPill] = useState(false);
     const intervalRef = useRef<number | null>(null);
 
     useEffect(() => {
@@ -57,14 +58,31 @@ const TimerComponent = ({ initialSeconds, onClose }: { initialSeconds: number; o
     };
 
     return (
-        <div className="text-center text-white p-4">
-            <h3 className="font-semibold mb-2">Timer</h3>
-            <p className="text-5xl font-mono mb-4">{formatTime()}</p>
-            <div className="flex justify-center gap-2">
-                <button onClick={toggle} className="bg-white/20 px-4 py-1 rounded-full">{isActive ? 'Pause' : 'Start'}</button>
-                <button onClick={reset} className="bg-white/20 px-4 py-1 rounded-full">Reset</button>
-                <button onClick={onClose} className="bg-white/20 px-4 py-1 rounded-full">Close</button>
-            </div>
+        <div
+            onDoubleClick={() => setIsPill(p => !p)}
+            className={`bg-black text-white shadow-2xl transition-all duration-300 ease-in-out cursor-pointer ${
+                isPill
+                ? 'w-40 h-12 rounded-full flex items-center justify-center'
+                : 'w-80 rounded-3xl p-6 text-center'
+            }`}
+        >
+            {isPill ? (
+                <p className="text-xl font-mono">{formatTime()}</p>
+            ) : (
+                <>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold">Timer</h3>
+                        <button onClick={(e) => { e.stopPropagation(); onClose(); }} className="text-white/50 hover:text-white">
+                           <CloseIcon />
+                        </button>
+                    </div>
+                    <p className="text-5xl font-mono mb-4">{formatTime()}</p>
+                    <div className="flex justify-center gap-2">
+                        <button onClick={(e) => { e.stopPropagation(); toggle(); }} className="bg-white/20 px-4 py-1 rounded-full">{isActive ? 'Pause' : 'Start'}</button>
+                        <button onClick={(e) => { e.stopPropagation(); reset(); }} className="bg-white/20 px-4 py-1 rounded-full">Reset</button>
+                    </div>
+                </>
+            )}
         </div>
     );
 };
@@ -73,6 +91,7 @@ const TimerComponent = ({ initialSeconds, onClose }: { initialSeconds: number; o
 const StopwatchComponent = ({ onClose }: { onClose: () => void }) => {
     const [time, setTime] = useState(0);
     const [isActive, setIsActive] = useState(true);
+    const [isPill, setIsPill] = useState(false);
     const intervalRef = useRef<number | null>(null);
 
     useEffect(() => {
@@ -97,35 +116,53 @@ const StopwatchComponent = ({ onClose }: { onClose: () => void }) => {
     };
 
     return (
-        <div className="text-center text-white p-4">
-            <h3 className="font-semibold mb-2">Stopwatch</h3>
-            <p className="text-5xl font-mono mb-4">{formatTime()}</p>
-            <div className="flex justify-center gap-2">
-                <button onClick={toggle} className="bg-white/20 px-4 py-1 rounded-full">{isActive ? 'Pause' : 'Start'}</button>
-                <button onClick={reset} className="bg-white/20 px-4 py-1 rounded-full">Reset</button>
-                <button onClick={onClose} className="bg-white/20 px-4 py-1 rounded-full">Close</button>
-            </div>
+        <div
+            onDoubleClick={() => setIsPill(p => !p)}
+            className={`bg-black text-white shadow-2xl transition-all duration-300 ease-in-out cursor-pointer ${
+                isPill
+                ? 'w-48 h-12 rounded-full flex items-center justify-center'
+                : 'w-80 rounded-3xl p-6 text-center'
+            }`}
+        >
+            {isPill ? (
+                 <p className="text-xl font-mono">{formatTime()}</p>
+            ) : (
+                <>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="font-semibold">Stopwatch</h3>
+                         <button onClick={(e) => { e.stopPropagation(); onClose(); }} className="text-white/50 hover:text-white">
+                            <CloseIcon />
+                        </button>
+                    </div>
+                    <p className="text-5xl font-mono mb-4">{formatTime()}</p>
+                    <div className="flex justify-center gap-2">
+                        <button onClick={(e) => { e.stopPropagation(); toggle(); }} className="bg-white/20 px-4 py-1 rounded-full">{isActive ? 'Pause' : 'Start'}</button>
+                        <button onClick={(e) => { e.stopPropagation(); reset(); }} className="bg-white/20 px-4 py-1 rounded-full">Reset</button>
+                    </div>
+                </>
+            )}
         </div>
     );
 };
 
 
 // AI Chat Component
-const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey, onAddTask, onAddMeeting }: { onClose: () => void; onSaveNote: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => void; geminiApiKey: string | null; onAddTask: (title: string) => void; onAddMeeting: (title: string, dateTime: string) => void; }) => {
+const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey, onAddTask, onAddMeeting, onSetTimer, onSetStopwatch }: { 
+    onClose: () => void; 
+    onSaveNote: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => void; 
+    geminiApiKey: string | null; 
+    onAddTask: (title: string) => void; 
+    onAddMeeting: (title: string, dateTime: string) => void;
+    onSetTimer: (props: { initialSeconds: number }) => void;
+    onSetStopwatch: () => void;
+}) => {
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [activeTool, setActiveTool] = useState<'none' | 'timer' | 'stopwatch'>('none');
-    const [toolProps, setToolProps] = useState<any>({});
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         inputRef.current?.focus();
     }, []);
-
-    const handleToolClose = () => {
-        setActiveTool('none');
-        setToolProps({});
-    };
     
     const handleSend = async () => {
         if (!inputValue.trim() || isLoading || !geminiApiKey) return;
@@ -154,11 +191,12 @@ const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey, onAddTask, onAddMe
             if (resultText.startsWith('TIMER::')) {
                 const seconds = parseInt(resultText.split('::')[1], 10);
                 if (!isNaN(seconds)) {
-                    setToolProps({ initialSeconds: seconds });
-                    setActiveTool('timer');
+                    onSetTimer({ initialSeconds: seconds });
+                    onClose();
                 }
             } else if (resultText === 'STOPWATCH') {
-                setActiveTool('stopwatch');
+                onSetStopwatch();
+                onClose();
             } else if (resultText.startsWith('TASK::')) {
                 const title = resultText.split('::')[1];
                 if (title) onAddTask(title);
@@ -185,40 +223,32 @@ const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey, onAddTask, onAddMe
         }
     };
 
-    const containerClasses = `fixed top-8 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out flex items-center justify-center ${
-        activeTool !== 'none'
-        ? 'w-96 h-48 bg-black rounded-3xl shadow-2xl'
-        : 'w-[500px] h-14 bg-white rounded-full shadow-lg border'
-    }`;
+    const containerClasses = `fixed top-8 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out flex items-center justify-center w-[500px] h-14 bg-white rounded-full shadow-lg border`;
 
     return (
         <div className={containerClasses}>
-            {activeTool === 'timer' && <TimerComponent {...toolProps} onClose={handleToolClose} />}
-            {activeTool === 'stopwatch' && <StopwatchComponent onClose={handleToolClose} />}
-            {activeTool === 'none' && (
-                <div className="w-full flex items-center px-2 gap-2">
-                    <button onClick={onClose} className="p-2 text-gray-500 hover:text-black rounded-full">
-                        <CloseIcon />
-                    </button>
-                    <input
-                        ref={inputRef}
-                        type="text"
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                        placeholder={geminiApiKey ? "Ask Silo AI to create a note, timer, etc..." : "Please set Gemini API key in Settings"}
-                        className="flex-1 bg-transparent focus:outline-none text-sm"
-                        disabled={isLoading || !geminiApiKey}
-                    />
-                    <button 
-                        onClick={handleSend}
-                        className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center flex-shrink-0 disabled:bg-gray-400"
-                        disabled={isLoading || !inputValue.trim() || !geminiApiKey}
-                    >
-                        {isLoading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <ArrowUpIcon />}
-                    </button>
-                </div>
-            )}
+            <div className="w-full flex items-center px-2 gap-2">
+                <button onClick={onClose} className="p-2 text-gray-500 hover:text-black rounded-full">
+                    <CloseIcon />
+                </button>
+                <input
+                    ref={inputRef}
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                    placeholder={geminiApiKey ? "Ask Silo AI to create a note, timer, etc..." : "Please set Gemini API key in Settings"}
+                    className="flex-1 bg-transparent focus:outline-none text-sm"
+                    disabled={isLoading || !geminiApiKey}
+                />
+                <button 
+                    onClick={handleSend}
+                    className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center flex-shrink-0 disabled:bg-gray-400"
+                    disabled={isLoading || !inputValue.trim() || !geminiApiKey}
+                >
+                    {isLoading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <ArrowUpIcon />}
+                </button>
+            </div>
         </div>
     );
 };
@@ -239,6 +269,7 @@ const App: React.FC = () => {
   const [isAiChatVisible, setIsAiChatVisible] = useState(false);
   const [isNewNoteModalVisible, setIsNewNoteModalVisible] = useState(false);
   const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
+  const [activeClock, setActiveClock] = useState<{ type: 'timer' | 'stopwatch'; props: any } | null>(null);
 
 
   // Load data from localStorage on mount
@@ -284,6 +315,18 @@ const App: React.FC = () => {
 
   const handleToggleAiChat = useCallback(() => {
     setIsAiChatVisible(prev => !prev);
+  }, []);
+  
+  const handleSetTimer = useCallback((props: { initialSeconds: number }) => {
+      setActiveClock({ type: 'timer', props });
+  }, []);
+
+  const handleSetStopwatch = useCallback(() => {
+      setActiveClock({ type: 'stopwatch', props: {} });
+  }, []);
+
+  const handleCloseClock = useCallback(() => {
+      setActiveClock(null);
   }, []);
 
   const handleViewChange = useCallback((view: View) => {
@@ -511,8 +554,27 @@ const App: React.FC = () => {
       <main className="flex-1 overflow-y-auto">
         {renderMainView()}
       </main>
-      {isAiChatVisible && <AiChatComponent onClose={handleToggleAiChat} onSaveNote={handleSaveNote} geminiApiKey={geminiApiKey} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} />}
+      {isAiChatVisible && <AiChatComponent 
+            onClose={handleToggleAiChat} 
+            onSaveNote={handleSaveNote} 
+            geminiApiKey={geminiApiKey} 
+            onAddTask={handleAddTask} 
+            onAddMeeting={handleAddMeeting} 
+            onSetTimer={handleSetTimer}
+            onSetStopwatch={handleSetStopwatch}
+        />}
       {isNewNoteModalVisible && <NewNoteTypeModal onSelect={handleSelectNoteType} onClose={handleCloseNewNoteModal} />}
+      
+      {activeClock && (
+        <div className="fixed bottom-8 right-8 z-50">
+          {activeClock.type === 'timer' && (
+            <TimerComponent {...activeClock.props} onClose={handleCloseClock} />
+          )}
+          {activeClock.type === 'stopwatch' && (
+            <StopwatchComponent onClose={handleCloseClock} />
+          )}
+        </div>
+      )}
     </div>
   );
 };

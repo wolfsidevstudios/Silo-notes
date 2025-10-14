@@ -54,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className="w-64 flex-shrink-0 border-r border-gray-200 bg-white p-4 flex flex-col">
       <div className="flex items-center mb-8">
-        <img src="https://i.ibb.co/KxJMJ2H/IMG-3995.png" alt="Silo Notes Logo" className="w-8 h-8" />
+        <img src="https://i.ibb.co/7J7XQxy/IMG-3995.png" alt="Silo Notes Logo" className="w-8 h-8" />
         <span className="ml-3 font-bold text-lg">Silo Notes</span>
       </div>
       
