@@ -92,20 +92,29 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
         
         <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
             <h2 className="text-2xl font-semibold text-gray-800 mb-6">Third-Party Integrations</h2>
-            <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <div className="bg-blue-100 p-2 rounded-full"><ZoomIcon /></div>
-                    <div>
-                        <p className="font-semibold text-gray-800">Zoom</p>
-                        <p className="text-sm text-gray-500">{zoomUser ? `Connected as ${zoomUser.email}` : 'Sync your meetings'}</p>
+            {zoomUser ? (
+                 <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <img src={zoomUser.pic_url} alt="Zoom profile" className="w-12 h-12 rounded-full" />
+                        <div>
+                            <p className="font-semibold text-gray-800">{zoomUser.first_name} {zoomUser.last_name}</p>
+                            <p className="text-sm text-gray-500">{zoomUser.email}</p>
+                        </div>
                     </div>
-                </div>
-                {zoomUser ? (
                     <button onClick={onZoomDisconnect} className="text-sm font-semibold text-red-600 bg-white border rounded-full px-4 py-1.5 hover:bg-red-50">Disconnect</button>
-                ) : (
+                </div>
+            ) : (
+                <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-blue-100 p-2 rounded-full"><ZoomIcon /></div>
+                        <div>
+                            <p className="font-semibold text-gray-800">Zoom</p>
+                            <p className="text-sm text-gray-500">Sync your meetings</p>
+                        </div>
+                    </div>
                     <button onClick={handleZoomConnect} className="text-sm font-semibold text-blue-600 bg-white border rounded-full px-4 py-1.5 hover:bg-blue-50">Connect</button>
-                )}
-            </div>
+                </div>
+            )}
         </div>
 
 
