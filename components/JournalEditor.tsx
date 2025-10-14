@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Note, NoteType } from '../types';
+import { ChevronLeftIcon, ChevronRightIcon } from './icons';
 
 interface JournalEditorProps {
   currentNote: Note | null;
@@ -7,27 +8,36 @@ interface JournalEditorProps {
 }
 
 const JournalEditor: React.FC<JournalEditorProps> = ({ currentNote, onSave }) => {
-  // Fix: Removed extra equals sign
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
+  const [pages, setPages] = useState<string[]>(['']);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
   const [privacy, setPrivacy] = useState<'public' | 'private'>('public');
   
   const contentEditableRef = useRef<HTMLDivElement>(null);
   const editorWrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const originalTitle = document.title;
+    document.title = 'Journal | Silo Notes';
+
+    return () => {
+      document.title = originalTitle;
+    };
+  }, []);
+
+  useEffect(() => {
     if (currentNote) {
       setTitle(currentNote.title || 'My Journal Entry');
-      setContent(currentNote.content || '');
+      const initialPages = currentNote.content ? currentNote.content.split('<!--PAGE_BREAK-->') : [''];
+      setPages(initialPages.length > 0 ? initialPages : ['']);
       setPrivacy(currentNote.privacy || 'public');
-      if (contentEditableRef.current) {
-        contentEditableRef.current.innerHTML = currentNote.content || '';
-      }
+      setCurrentPageIndex(0);
     }
   }, [currentNote]);
 
   const handleSave = () => {
-    onSave({ id: currentNote?.id, title, content, privacy, type: NoteType.JOURNAL });
+    const contentToSave = pages.join('<!--PAGE_BREAK-->');
+    onSave({ id: currentNote?.id, title, content: contentToSave, privacy, type: NoteType.JOURNAL });
   };
   
   const getFormattedDate = () => {
@@ -40,9 +50,25 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ currentNote, onSave }) =>
       });
   }
 
+  const handlePrevPage = () => {
+    if (currentPageIndex > 0) {
+      setCurrentPageIndex(currentPageIndex - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPageIndex < pages.length - 1) {
+      setCurrentPageIndex(prev => prev + 1);
+    } else {
+      setPages(prev => [...prev, '']);
+      setCurrentPageIndex(pages.length);
+    }
+  };
+
+
   return (
-    <div ref={editorWrapperRef} className="h-full flex flex-col items-center justify-center bg-gray-100 p-8">
-       <div className="absolute top-0 left-0 w-full p-4 lg:px-12 flex items-center justify-between">
+    <div ref={editorWrapperRef} className="h-full flex flex-col items-center justify-center bg-gray-100 p-8 relative">
+       <div className="absolute top-0 left-0 w-full p-4 lg:px-12 flex items-center justify-between z-20">
          <h1 className="text-xl font-bold text-gray-800">Journal</h1>
          <div className="flex items-center gap-4">
             <div className="flex items-center bg-gray-200 rounded-full p-1">
@@ -56,6 +82,15 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ currentNote, onSave }) =>
        </div>
 
       <div className="w-full max-w-5xl h-[80vh] bg-white shadow-2xl rounded-lg flex book-container relative">
+        <button 
+            onClick={handlePrevPage} 
+            disabled={currentPageIndex === 0}
+            className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 p-2 bg-white rounded-full shadow-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+            aria-label="Previous Page"
+        >
+            <ChevronLeftIcon />
+        </button>
+
         {/* Spine */}
         <div className="w-8 bg-gray-200 h-full flex-shrink-0 absolute left-1/2 -translate-x-1/2 shadow-inner-lg" />
         
@@ -74,14 +109,30 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ currentNote, onSave }) =>
         {/* Right Page */}
         <div className="w-1/2 p-10">
             <div
+                key={currentPageIndex}
                 ref={contentEditableRef}
                 contentEditable
-                onInput={(e) => setContent(e.currentTarget.innerHTML)}
+                onInput={(e) => {
+                    const newPages = [...pages];
+                    newPages[currentPageIndex] = e.currentTarget.innerHTML;
+                    setPages(newPages);
+                }}
+                dangerouslySetInnerHTML={{ __html: pages[currentPageIndex] || '' }}
                 data-placeholder="Start writing your entry..."
                 className="w-full h-full text-lg leading-10 text-gray-800 focus:outline-none resize-none font-serif ruled-paper [&:empty]:before:content-[attr(data-placeholder)] [&:empty]:before:text-gray-400"
             />
         </div>
+
+        <button 
+            onClick={handleNextPage}
+            className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 z-10 p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
+            aria-label="Next Page or New Page"
+        >
+            <ChevronRightIcon />
+        </button>
       </div>
+      
+      <p className="mt-4 text-sm text-gray-500 font-medium">Page {currentPageIndex + 1} of {pages.length}</p>
 
        <style>{`
           .book-container {
