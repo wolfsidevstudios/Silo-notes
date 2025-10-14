@@ -149,20 +149,39 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
   const executeCommand = useCallback((command: Command) => {
     if (!commandRef.current || !contentEditableRef.current) return;
     
+    // Restore focus to the editor before manipulating the DOM or selection
+    contentEditableRef.current.focus();
+
     const { range } = commandRef.current;
+    
+    // Restore the selection to where the command was initiated
+    const selection = window.getSelection();
+    if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+    
+    // Select the text node that contains the command (e.g., the "/h1" text)
+    // and delete it to make way for the new block.
     range.selectNodeContents(range.startContainer);
     range.deleteContents();
     
+    // Execute the appropriate command to create the new block
     if (command.tag === 'ul') {
         document.execCommand('insertUnorderedList');
     } else if (command.tag === 'ol') {
         document.execCommand('insertOrderedList');
     } else {
-        document.execCommand('formatBlock', false, `<${command.tag}>`);
+        // FIX: The 'formatBlock' command expects just the tag name (e.g., 'h1')
+        // not the full HTML tag (e.g., '<h1>').
+        document.execCommand('formatBlock', false, command.tag);
     }
 
+    // Clean up state
     setIsCommandMenuOpen(false);
     commandRef.current = null;
+    
+    // Sync React state with the DOM and ensure the editor remains focused for a seamless user experience.
     setContent(contentEditableRef.current.innerHTML || '');
     contentEditableRef.current.focus();
   }, []);
