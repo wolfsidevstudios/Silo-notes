@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { SettingsIcon } from './icons';
 
-const SettingsView: React.FC = () => {
+interface SettingsViewProps {
+  onKeyUpdate: (key: string) => void;
+}
+
+const SettingsView: React.FC<SettingsViewProps> = ({ onKeyUpdate }) => {
   const [apiKey, setApiKey] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
@@ -15,6 +19,7 @@ const SettingsView: React.FC = () => {
   const handleSave = () => {
     setSaveStatus('saving');
     localStorage.setItem('gemini-api-key', apiKey);
+    onKeyUpdate(apiKey);
     setTimeout(() => {
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus('idle'), 2000); 

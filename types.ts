@@ -11,6 +11,7 @@ export enum View {
   REWRITE_TOOL = 'REWRITE_TOOL',
   VOICE_MEMO_TOOL = 'VOICE_MEMO_TOOL',
   SPEECH_TO_TEXT_TOOL = 'SPEECH_TO_TEXT_TOOL',
+  TEXT_TO_SPEECH_TOOL = 'TEXT_TO_SPEECH_TOOL',
 }
 
 export interface AudioNote {

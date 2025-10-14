@@ -14,6 +14,7 @@ import SummarizeToolView from './components/SummarizeToolView';
 import RewriteToolView from './components/RewriteToolView';
 import VoiceMemoToolView from './components/VoiceMemoToolView';
 import SpeechToTextToolView from './components/SpeechToTextToolView';
+import TextToSpeechToolView from './components/TextToSpeechToolView';
 import MindMapView from './components/MindMapView';
 import { GoogleGenAI } from "@google/genai";
 import { ArrowUpIcon, CloseIcon } from './components/icons';
@@ -105,7 +106,7 @@ const StopwatchComponent = ({ onClose }: { onClose: () => void }) => {
 
 
 // AI Chat Component
-const AiChatComponent = ({ onClose, onSaveNote }: { onClose: () => void; onSaveNote: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => void }) => {
+const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey }: { onClose: () => void; onSaveNote: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => void; geminiApiKey: string | null }) => {
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [activeTool, setActiveTool] = useState<'none' | 'timer' | 'stopwatch'>('none');
@@ -122,13 +123,13 @@ const AiChatComponent = ({ onClose, onSaveNote }: { onClose: () => void; onSaveN
     };
     
     const handleSend = async () => {
-        if (!inputValue.trim() || isLoading) return;
+        if (!inputValue.trim() || isLoading || !geminiApiKey) return;
         setIsLoading(true);
         const prompt = inputValue;
         setInputValue('');
 
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const ai = new GoogleGenAI({ apiKey: geminiApiKey });
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
@@ -158,13 +159,10 @@ const AiChatComponent = ({ onClose, onSaveNote }: { onClose: () => void; onSaveN
                 onSaveNote({ title, content, audioNotes: [], privacy: 'public' });
                 onClose();
             } else {
-                // For now, we just handle tools and note creation. 
-                // A future feature could show chat responses.
                  onClose();
             }
         } catch (error) {
             console.error("AI Chat Error:", error);
-            // Handle error state, maybe show a toast message
         } finally {
             setIsLoading(false);
         }
@@ -191,14 +189,14 @@ const AiChatComponent = ({ onClose, onSaveNote }: { onClose: () => void; onSaveN
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                        placeholder="Ask Silo AI to create a note, timer, etc..."
+                        placeholder={geminiApiKey ? "Ask Silo AI to create a note, timer, etc..." : "Please set Gemini API key in Settings"}
                         className="flex-1 bg-transparent focus:outline-none text-sm"
-                        disabled={isLoading}
+                        disabled={isLoading || !geminiApiKey}
                     />
                     <button 
                         onClick={handleSend}
-                        className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center flex-shrink-0"
-                        disabled={isLoading || !inputValue.trim()}
+                        className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center flex-shrink-0 disabled:bg-gray-400"
+                        disabled={isLoading || !inputValue.trim() || !geminiApiKey}
                     >
                         {isLoading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <ArrowUpIcon />}
                     </button>
@@ -220,6 +218,7 @@ const App: React.FC = () => {
   const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
   const [activeBoard, setActiveBoard] = useState<Board | null>(null);
   const [isAiChatVisible, setIsAiChatVisible] = useState(false);
+  const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
 
 
   // Load data from localStorage on mount
@@ -228,9 +227,13 @@ const App: React.FC = () => {
       const savedNotes = localStorage.getItem('silo-notes');
       const savedSpaces = localStorage.getItem('silo-spaces');
       const savedBoards = localStorage.getItem('silo-boards');
+      const savedGeminiKey = localStorage.getItem('gemini-api-key');
+
       if (savedNotes) setNotes(JSON.parse(savedNotes));
       if (savedSpaces) setSpaces(JSON.parse(savedSpaces));
       if (savedBoards) setBoards(JSON.parse(savedBoards));
+      if (savedGeminiKey) setGeminiApiKey(savedGeminiKey);
+
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
     }
@@ -241,7 +244,6 @@ const App: React.FC = () => {
       localStorage.setItem('silo-notes', JSON.stringify(notes));
       localStorage.setItem('silo-spaces', JSON.stringify(spaces));
       localStorage.setItem('silo-boards', JSON.stringify(boards));
-    // Fix: Added braces to the catch block to fix syntax error. This was causing all subsequent errors.
     } catch (error) {
       console.error("Failed to save data to localStorage", error);
     }
@@ -376,7 +378,7 @@ const App: React.FC = () => {
       case View.IDEAS:
         return <IdeasView />;
       case View.SETTINGS:
-        return <SettingsView />;
+        return <SettingsView onKeyUpdate={setGeminiApiKey} />;
       case View.SILO_LABS:
         return <SiloLabsView onViewChange={handleViewChange} />;
       case View.SUMMARIZE_TOOL:
@@ -387,6 +389,8 @@ const App: React.FC = () => {
         return <VoiceMemoToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
       case View.SPEECH_TO_TEXT_TOOL:
         return <SpeechToTextToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
+      case View.TEXT_TO_SPEECH_TOOL:
+        return <TextToSpeechToolView onBack={() => handleViewChange(View.SILO_LABS)} />;
       default:
         return <HomeView notes={notes} onEditNote={handleEditNote} />;
     }
@@ -407,7 +411,7 @@ const App: React.FC = () => {
       <main className="flex-1 overflow-y-auto">
         {renderMainView()}
       </main>
-      {isAiChatVisible && <AiChatComponent onClose={handleToggleAiChat} onSaveNote={handleSaveNote} />}
+      {isAiChatVisible && <AiChatComponent onClose={handleToggleAiChat} onSaveNote={handleSaveNote} geminiApiKey={geminiApiKey} />}
     </div>
   );
 };

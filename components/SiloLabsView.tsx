@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View } from '../types';
-import { SiloLabsIcon, SummarizeIcon, RewriteIcon, SettingsIcon, VoiceTypingIcon, VoiceMemoIcon } from './icons';
+import { SiloLabsIcon, SummarizeIcon, RewriteIcon, SettingsIcon, VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon } from './icons';
 
 interface SiloLabsViewProps {
   onViewChange: (view: View) => void;
@@ -58,6 +58,12 @@ const SiloLabsView: React.FC<SiloLabsViewProps> = ({ onViewChange }) => {
             title="Voice Memo"
             description="Quickly record audio notes. Perfect for capturing thoughts and ideas on the go."
             onClick={() => onViewChange(View.VOICE_MEMO_TOOL)}
+          />
+          <ToolCard
+            icon={<TextToSpeechIcon />}
+            title="Text-to-Speech"
+            description="Create high-quality audio from text using a variety of realistic AI voices."
+            onClick={() => onViewChange(View.TEXT_TO_SPEECH_TOOL)}
           />
         {isGeminiConfigured ? (
           <>

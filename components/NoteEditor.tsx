@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Note, AudioNote } from '../types';
-import { VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, StopIcon, RewriteIcon, SummarizeIcon } from './icons';
+import { VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, StopIcon, RewriteIcon, SummarizeIcon, YouTubeIcon, ImageIcon, PdfIcon, FileIcon } from './icons';
 import { GoogleGenAI } from "@google/genai";
 import FloatingToolbar from './FloatingToolbar';
 import PinModal from './PinModal';
@@ -104,7 +104,7 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
         </div>
         <div className="flex-shrink-0 mt-4">
             <button onClick={handleGenerateAudio} disabled={isLoading} className="w-full bg-black text-white font-semibold py-3 px-6 rounded-full hover:bg-gray-800 transition-colors disabled:bg-gray-400 flex items-center justify-center">
-                {isLoading ? (<> <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating... </>) : "Generate Audio"}
+                {isLoading ? (<> <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating... </>) : "Generate Audio"}
             </button>
             {error && <p className="text-red-500 text-sm mt-4 text-center">{error}</p>}
             {audioUrl && (
@@ -398,6 +398,57 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
 
   const handleDeleteAudioNote = (id: string) => { setAudioNotes(prev => prev.filter(note => note.id !== id)); };
   
+  const handleAddYouTubeVideo = () => {
+    const url = prompt("Enter YouTube video URL:");
+    if (!url) return;
+
+    let videoId = '';
+    try {
+        const urlObj = new URL(url);
+        if (urlObj.hostname === 'youtu.be') {
+            videoId = urlObj.pathname.slice(1);
+        } else if (urlObj.hostname.includes('youtube.com')) {
+            const urlParams = new URLSearchParams(urlObj.search);
+            videoId = urlParams.get('v') || '';
+        }
+    } catch (e) {
+        // Fallback for non-standard URLs
+        const match = url.match(/(?:https?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?#]+)/);
+        videoId = match ? match[1] : '';
+    }
+
+    if (videoId && contentEditableRef.current) {
+        const iframe = `<br><div contenteditable="false" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%;"><iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/${videoId}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div><br>`;
+        contentEditableRef.current.focus();
+        document.execCommand('insertHTML', false, iframe);
+        setContent(contentEditableRef.current.innerHTML);
+    } else {
+        alert("Could not find a valid YouTube Video ID in the URL.");
+    }
+  };
+
+  const handleAddImage = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = () => {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (e.target?.result && contentEditableRef.current) {
+                    const img = `<br><img src="${e.target.result}" style="max-width: 100%; height: auto; border-radius: 8px;" /><br>`;
+                    contentEditableRef.current.focus();
+                    document.execCommand('insertHTML', false, img);
+                    setContent(contentEditableRef.current.innerHTML);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    input.click();
+  };
+
   const handleWritingTool = async (action: 'rewrite' | 'summarize', statusText: string) => {
     if (!geminiApiKey) return;
 
@@ -552,6 +603,23 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
         <ToolButton onClick={() => setIsTtsModalOpen(true)} disabled={isActionActive} label="Text to Speech" aria-label="Text to Speech">
           <TextToSpeechIcon />
         </ToolButton>
+        
+        <div className="border-l h-6 border-gray-300 mx-1"></div>
+
+        <ToolButton onClick={handleAddImage} disabled={isActionActive} label="Image" aria-label="Add Image">
+            <ImageIcon />
+        </ToolButton>
+        <ToolButton onClick={handleAddYouTubeVideo} disabled={isActionActive} label="YouTube" aria-label="Add YouTube Video">
+            <YouTubeIcon />
+        </ToolButton>
+        <ToolButton onClick={() => alert('Coming soon!')} disabled={isActionActive} label="PDF" aria-label="Add PDF">
+            <PdfIcon />
+        </ToolButton>
+        <ToolButton onClick={() => alert('Coming soon!')} disabled={isActionActive} label="File" aria-label="Add File">
+            <FileIcon />
+        </ToolButton>
+
+        <div className="border-l h-6 border-gray-300 mx-1"></div>
         
         {isGeminiConfigured ? (
             <>
