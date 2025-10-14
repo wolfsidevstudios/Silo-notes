@@ -57,27 +57,40 @@ const AppPreviewAnimation = () => {
     const animatedTexts = ["Save and secure", "AI Powered", "Modern UI"];
 
     useEffect(() => {
+        let typingInterval: number;
+        let timeout: number;
+
         if (phase === 0) {
-            const typingInterval = setInterval(() => {
+            typingInterval = window.setInterval(() => {
                 setTypedText(prev => {
                     if (prev.length < textToType.length) {
-                        return textToType.substring(0, prev.length + 1);
+                        return textToType.substring(0, prev.length + 2); // Type faster
                     }
                     clearInterval(typingInterval);
-                    setTimeout(() => setShowSave(true), 500);
-                    setTimeout(() => setPhase(1), 2500); // Wait after typing and saving
+                    timeout = window.setTimeout(() => setShowSave(true), 500);
+                    timeout = window.setTimeout(() => setPhase(1), 2500);
                     return prev;
                 });
             }, 30);
-            return () => clearInterval(typingInterval);
-        }
-        if (phase > 0 && phase <= animatedTexts.length) {
-            const textTimeout = setTimeout(() => {
+        } else if (phase > 0 && phase <= animatedTexts.length) {
+            timeout = window.setTimeout(() => {
                 setPhase(p => p + 1);
-            }, 2500); // Each text shows for 2.5s
-            return () => clearTimeout(textTimeout);
+            }, 2500);
+        } else if (phase > animatedTexts.length) {
+            // Restart the animation
+            timeout = window.setTimeout(() => {
+                setTypedText('');
+                setShowSave(false);
+                setPhase(0);
+            }, 2500);
         }
-    }, [phase]);
+
+        return () => {
+            clearInterval(typingInterval);
+            clearTimeout(timeout);
+        };
+    }, [phase, animatedTexts.length, textToType.length]);
+
 
     return (
         <section className="py-20 sm:py-24 bg-white">
@@ -85,15 +98,23 @@ const AppPreviewAnimation = () => {
                 <div className="relative w-full h-96 bg-gray-100 rounded-2xl shadow-xl overflow-hidden flex items-center justify-center p-4">
                     {/* Notepad UI */}
                     <div className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${phase > 0 ? 'opacity-0' : 'opacity-100'}`}>
-                        <div className="w-full h-full bg-white rounded-lg flex flex-col">
-                            <div className="flex-shrink-0 h-14 bg-gray-50/80 border-b p-4 flex items-center justify-between">
-                                <p className="font-bold text-lg text-gray-800">New Note</p>
-                                <button className={`px-5 py-1.5 text-sm font-semibold rounded-full transition-colors ${showSave ? 'bg-green-600 text-white' : 'bg-black text-white'}`}>
-                                    {showSave ? 'Saved!' : 'Save'}
+                        <div className="w-full h-full bg-white rounded-lg flex flex-col p-6 lg:p-8">
+                            {/* Header */}
+                            <div className="flex items-center justify-between mb-8 flex-shrink-0">
+                                <h1 className="text-2xl font-bold text-gray-400">Classic Note</h1>
+                                <button className={`font-semibold py-2 px-6 rounded-full transition-colors duration-300 ${showSave ? 'bg-green-600 text-white' : 'bg-black text-white'}`}>
+                                    {showSave ? 'Saved!' : 'Save Note'}
                                 </button>
                             </div>
-                            <div className="flex-grow p-6 font-mono text-gray-700 text-sm overflow-y-auto">
-                                <pre className="whitespace-pre-wrap">{typedText}<span className="blinking-cursor">|</span></pre>
+
+                            {/* Editor area */}
+                            <div className="flex-grow flex flex-col overflow-hidden">
+                                <div className="text-4xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-200">
+                                    Marketing Campaign
+                                </div>
+                                <div className="flex-1 w-full text-lg leading-relaxed text-gray-700">
+                                    <pre className="whitespace-pre-wrap font-sans">{typedText}<span className="blinking-cursor">|</span></pre>
+                                </div>
                             </div>
                         </div>
                     </div>
