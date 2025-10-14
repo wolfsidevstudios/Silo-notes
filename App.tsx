@@ -271,6 +271,20 @@ interface UserProfile {
     email: string;
 }
 
+const decodeJwtResponse = (token: string) => {
+    try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+    } catch (e) {
+        console.error("Error decoding JWT", e);
+        return null;
+    }
+};
+
 const App: React.FC = () => {
   // Authentication & Routing
   const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem('silo-authenticated') === 'true');
@@ -303,6 +317,32 @@ const App: React.FC = () => {
     setUserProfile(null);
     window.location.hash = '#/';
   };
+  
+  // Handle Yahoo Login Redirect
+  useEffect(() => {
+    if (window.location.hash.includes('id_token')) {
+        const params = new URLSearchParams(window.location.hash.substring(1));
+        const idToken = params.get('id_token');
+        const storedNonce = sessionStorage.getItem('yahoo_nonce');
+
+        if (idToken) {
+            const decoded = decodeJwtResponse(idToken);
+            if (decoded && decoded.nonce === storedNonce) {
+                const userProfile = {
+                    name: decoded.name,
+                    picture: decoded.picture,
+                    email: decoded.email
+                };
+                handleLoginSuccess(userProfile);
+                sessionStorage.removeItem('yahoo_nonce');
+                window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+            } else {
+                console.error("Yahoo login failed: Nonce mismatch or invalid token.");
+                window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+            }
+        }
+    }
+  }, []); // Run only once on initial load
 
   // State management
   const [activeView, setActiveView] = useState<View>(View.HOME);

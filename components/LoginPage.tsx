@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { AppLogoIcon } from './icons';
+import { AppLogoIcon, YahooIcon } from './icons';
 
 // FIX: Add google to window type to fix TypeScript errors.
 declare global {
@@ -49,6 +49,18 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             console.error("Could not process login.")
         }
     };
+    
+    const handleYahooLogin = () => {
+        const clientId = 'dj0yJmk9cGFERnI4WExsS2JhJmQ9WVdrOVdrSk9TVUV6V1dZbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PWQz';
+        const redirectUri = window.location.origin + window.location.pathname;
+        const nonce = Math.random().toString(36).substring(2);
+        sessionStorage.setItem('yahoo_nonce', nonce); // Store nonce to verify it on return
+        
+        const authUrl = `https://api.login.yahoo.com/oauth2/request_auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token token&scope=openid profile email&nonce=${nonce}`;
+        
+        window.location.href = authUrl;
+    };
+
 
     useEffect(() => {
         if (window.google && signInButtonRef.current) {
@@ -87,7 +99,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                     <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome Back</h2>
                     <p className="text-gray-500 mb-8">Sign in to continue to Silo Notes.</p>
                     
-                    <div ref={signInButtonRef} className="flex justify-center"></div>
+                    <div className="flex flex-col items-center gap-4">
+                        <div ref={signInButtonRef}></div>
+                        <button
+                          onClick={handleYahooLogin}
+                          className="flex justify-center items-center gap-2 w-[300px] h-[40px] bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <YahooIcon />
+                          Sign in with Yahoo
+                        </button>
+                    </div>
 
                     <p className="text-xs text-gray-400 mt-12">
                         By continuing, you agree to our 
