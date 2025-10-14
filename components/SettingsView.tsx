@@ -15,11 +15,14 @@ interface SettingsViewProps {
   onViewChange: (view: View) => void;
   slackUser: any | null;
   onSlackDisconnect: () => void;
+  onSlackPatConnect: (token: string) => void;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, onLogout, onViewChange, slackUser, onSlackDisconnect }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, onLogout, onViewChange, slackUser, onSlackDisconnect, onSlackPatConnect }) => {
   const [apiKey, setApiKey] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [showTokenInput, setShowTokenInput] = useState(false);
+  const [slackPat, setSlackPat] = useState('');
 
   useEffect(() => {
     const savedKey = localStorage.getItem('gemini-api-key');
@@ -64,7 +67,17 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
 
     const userScope = "reminders:read users.profile:read";
     const authUrl = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&user_scope=${userScope}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256&response_type=code`;
+    
+    sessionStorage.setItem('silo_slack_redirect_hash', window.location.hash);
     window.location.href = authUrl;
+  };
+  
+  const handleSavePat = () => {
+    if (slackPat.trim()) {
+      onSlackPatConnect(slackPat.trim());
+      setSlackPat('');
+      setShowTokenInput(false);
+    }
   };
 
 
@@ -105,15 +118,34 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
                     <button onClick={onSlackDisconnect} className="text-sm font-semibold text-red-600 bg-white border rounded-full px-4 py-1.5 hover:bg-red-50">Disconnect</button>
                 </div>
             ) : (
-                <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-full"><SlackIcon className="w-8 h-8" /></div>
-                        <div>
-                            <p className="font-semibold text-gray-800">Slack</p>
-                            <p className="text-sm text-gray-500">Sync your reminders and starred items</p>
+                <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-full"><SlackIcon className="w-8 h-8" /></div>
+                            <div>
+                                <p className="font-semibold text-gray-800">Slack</p>
+                                <p className="text-sm text-gray-500">Sync your reminders and starred items</p>
+                            </div>
                         </div>
+                        <button onClick={handleSlackConnect} className="text-sm font-semibold text-blue-600 bg-white border rounded-full px-4 py-1.5 hover:bg-blue-50 flex-shrink-0">Connect via OAuth</button>
                     </div>
-                    <button onClick={handleSlackConnect} className="text-sm font-semibold text-blue-600 bg-white border rounded-full px-4 py-1.5 hover:bg-blue-50">Connect</button>
+                     <div className="mt-4 pt-4 border-t border-gray-200">
+                        <button onClick={() => setShowTokenInput(p => !p)} className="text-xs text-gray-500 hover:text-gray-700">
+                            Or connect with a personal access token
+                        </button>
+                        {showTokenInput && (
+                            <div className="mt-2 flex gap-2 animate-fade-in">
+                                <input 
+                                    type="password"
+                                    value={slackPat}
+                                    onChange={(e) => setSlackPat(e.target.value)}
+                                    placeholder="Paste your xoxp- token here"
+                                    className="flex-grow p-2 border rounded-lg text-sm focus:ring-black focus:border-black"
+                                />
+                                <button onClick={handleSavePat} className="text-sm font-semibold bg-black text-white rounded-lg px-4 hover:bg-gray-800 transition-colors">Save</button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
             <div className="text-center mt-6 p-4 bg-gray-100 rounded-lg border-2 border-dashed">
@@ -178,6 +210,13 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
             </button>
         </div>
       </div>
+      <style>{`
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fade-in 0.3s ease-out; }
+      `}</style>
     </div>
   );
 };

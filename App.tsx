@@ -367,6 +367,11 @@ const App: React.FC = () => {
   const [slackToken, setSlackToken] = useState<string | null>(() => localStorage.getItem('slack_access_token'));
   const [slackUser, setSlackUser] = useState<any | null>(null);
 
+  const handleSlackPatConnect = useCallback((token: string) => {
+    localStorage.setItem('slack_access_token', token);
+    setSlackToken(token);
+  }, []);
+
   const handleSlackDisconnect = useCallback(() => {
     localStorage.removeItem('slack_access_token');
     setSlackToken(null);
@@ -428,8 +433,21 @@ const App: React.FC = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const slackCode = urlParams.get('code');
     if (slackCode) {
-      handleSlackOauth(slackCode);
-      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+      const processSlackAuth = async () => {
+        await handleSlackOauth(slackCode);
+        const savedHash = sessionStorage.getItem('silo_slack_redirect_hash');
+        
+        if (savedHash) {
+            sessionStorage.removeItem('silo_slack_redirect_hash');
+            // Clean URL search params and set hash to trigger navigation
+            window.history.replaceState({}, document.title, window.location.pathname);
+            window.location.hash = savedHash;
+        } else {
+            // This is for login flow, which is handled by handleLoginSuccess. Clean URL.
+            window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+        }
+      };
+      processSlackAuth();
     }
   }, [handleLoginSuccess]);
 
@@ -676,7 +694,7 @@ const App: React.FC = () => {
       case View.CALENDAR: return <CalendarView events={calendarEvents} notes={notes} tasks={tasks} meetings={meetings} onAddEvents={handleAddCalendarEvents} onDeleteEvent={handleDeleteCalendarEvent} onEditNote={handleEditNote} />;
       case View.GEMS: return <GemsView gems={gems} />;
       case View.AGENDA: return <AgendaView tasks={tasks} meetings={meetings} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onDeleteMeeting={handleDeleteMeeting} />;
-      case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} onViewChange={handleViewChange} slackUser={slackUser} onSlackDisconnect={handleSlackDisconnect} />;
+      case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} onViewChange={handleViewChange} slackUser={slackUser} onSlackDisconnect={handleSlackDisconnect} onSlackPatConnect={handleSlackPatConnect} />;
       case View.SILO_LABS: return <SiloLabsView onViewChange={handleViewChange} />;
       case View.SILO_CHAT: return <SiloChatView geminiApiKey={geminiApiKey} onSaveNote={handleSaveNote} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} />;
       case View.SUMMARIZE_TOOL: return <SummarizeToolView onBack={() => handleViewChange(View.SILO_LABS)} notes={notes} />;
