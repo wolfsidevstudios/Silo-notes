@@ -79,7 +79,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         };
         
         const clientId = '7938298429665.9726628658528';
-        const redirectUri = window.location.origin + window.location.pathname;
+        const redirectUri = window.location.origin;
     
         const verifier = generateRandomString(128);
         sessionStorage.setItem('slack_code_verifier', verifier);

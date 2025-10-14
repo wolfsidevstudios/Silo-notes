@@ -385,9 +385,11 @@ const App: React.FC = () => {
       }
 
       const clientId = '7938298429665.9726628658528';
+      const redirectUri = window.location.origin; // Using origin for consistency
       const params = new URLSearchParams();
       params.append('code', code);
       params.append('client_id', clientId);
+      params.append('redirect_uri', redirectUri);
       params.append('code_verifier', verifier);
 
       try {
