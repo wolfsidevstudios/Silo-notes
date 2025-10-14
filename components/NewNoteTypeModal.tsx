@@ -1,5 +1,6 @@
 import React from 'react';
 import { NoteType } from '../types';
+import { SiloAiIcon } from './icons';
 
 const ClassicNoteIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -23,7 +24,7 @@ interface NewNoteTypeModalProps {
   onClose: () => void;
 }
 
-const OptionCard: React.FC<{ icon: React.ReactNode; title: string; description: string; onClick: () => void; }> = 
+const OptionCard: React.FC<{ icon: React.ReactNode; title: React.ReactNode; description: string; onClick: () => void; }> = 
 ({ icon, title, description, onClick }) => (
     <button onClick={onClick} className="w-full text-left p-6 rounded-xl border border-gray-200 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-black transition-all duration-200">
         <div className="flex items-start">
@@ -61,6 +62,19 @@ const NewNoteTypeModal: React.FC<NewNoteTypeModalProps> = ({ onSelect, onClose }
                 title="Sticky Note" 
                 description="A quick, colorful note for capturing fleeting ideas, reminders, and tasks." 
                 onClick={() => onSelect(NoteType.STICKY)}
+            />
+             <OptionCard 
+                icon={<SiloAiIcon />} 
+                title={
+                    <div className="flex items-center gap-2">
+                        Silo AI Note
+                        <span className="bg-gray-200 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">
+                            Beta
+                        </span>
+                    </div>
+                } 
+                description="A powerful, collaborative space where you co-create notes with an AI assistant." 
+                onClick={() => onSelect(NoteType.AI_NOTE)}
             />
         </div>
         

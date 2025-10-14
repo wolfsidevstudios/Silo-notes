@@ -14,12 +14,14 @@ export enum View {
   VOICE_MEMO_TOOL = 'VOICE_MEMO_TOOL',
   SPEECH_TO_TEXT_TOOL = 'SPEECH_TO_TEXT_TOOL',
   TEXT_TO_SPEECH_TOOL = 'TEXT_TO_SPEECH_TOOL',
+  AI_NOTE_EDITOR = 'AI_NOTE_EDITOR',
 }
 
 export enum NoteType {
   CLASSIC = 'CLASSIC',
   STICKY = 'STICKY',
   JOURNAL = 'JOURNAL',
+  AI_NOTE = 'AI_NOTE',
 }
 
 export interface AudioNote {
@@ -54,7 +56,7 @@ export interface Task {
 }
 
 export interface Meeting {
-  id: string;
+  id:string;
   title: string;
   dateTime: string;
   createdAt: string; // ISO string

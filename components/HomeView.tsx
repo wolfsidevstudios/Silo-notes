@@ -1,6 +1,6 @@
 import React from 'react';
 import { Note, NoteType } from '../types';
-import { LockIcon, JournalIcon, AppLogoIcon } from './icons';
+import { LockIcon, JournalIcon, AppLogoIcon, SiloAiIcon } from './icons';
 
 interface HomeViewProps {
   notes: Note[];
@@ -57,6 +57,27 @@ const NoteCard: React.FC<{ note: Note, onEditNote: (note: Note) => void }> = ({ 
                 <h3 className="font-bold text-lg mb-2 text-gray-800">{note.title || 'Journal Entry'}</h3>
                 <p className="text-gray-600 text-sm line-clamp-3 italic">
                     "{contentPreview}"
+                </p>
+              </div>
+              <p className="text-xs text-gray-500 mt-4">{formattedDate}</p>
+            </div>
+        );
+    case NoteType.AI_NOTE:
+        return (
+             <div 
+              onClick={() => onEditNote(note)}
+              className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-lg cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all duration-200 border border-indigo-200 flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex justify-between items-start">
+                    <div className="bg-indigo-100 text-indigo-700 p-2 rounded-full mb-3">
+                        <SiloAiIcon />
+                    </div>
+                    {note.privacy === 'private' && <div className="text-gray-400 flex-shrink-0"><LockIcon /></div>}
+                </div>
+                <h3 className="font-bold text-lg mb-2 text-gray-800">{note.title || 'AI Note'}</h3>
+                <p className="text-gray-600 text-sm line-clamp-3">
+                    {contentPreview}
                 </p>
               </div>
               <p className="text-xs text-gray-500 mt-4">{formattedDate}</p>

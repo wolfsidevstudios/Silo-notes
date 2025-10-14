@@ -28,6 +28,7 @@ import TermsOfService from './components/TermsOfService';
 import { GoogleGenAI } from "@google/genai";
 import { ArrowUpIcon, CloseIcon, SiloAiIcon } from './components/icons';
 import NewNoteTypeModal from './components/NewNoteTypeModal';
+import AiNoteEditor from './components/AiNoteEditor';
 
 
 import { View, Note, Space, Board, BoardType, Task, Meeting, NoteType, TaskPriority, CalendarEvent } from './types';
@@ -401,13 +402,15 @@ const App: React.FC = () => {
         title: '', content: '', createdAt: new Date().toISOString(), privacy: 'public', type: type, audioNotes: [],
     };
     setCurrentNote(newNote as Note);
-    handleViewChange(View.CREATE, { keepCurrentNote: true });
+    const targetView = type === NoteType.AI_NOTE ? View.AI_NOTE_EDITOR : View.CREATE;
+    handleViewChange(targetView, { keepCurrentNote: true });
     handleCloseNewNoteModal();
   };
 
   const handleEditNote = (note: Note) => {
     setCurrentNote(note);
-    handleViewChange(View.CREATE, { keepCurrentNote: true });
+    const view = note.type === NoteType.AI_NOTE ? View.AI_NOTE_EDITOR : View.CREATE;
+    handleViewChange(view, { keepCurrentNote: true });
   };
 
   const handleSaveNote = (noteData: Omit<Note, 'id' | 'createdAt'> & { id?: string; type: NoteType; }) => {
@@ -490,9 +493,11 @@ const App: React.FC = () => {
     if (activeView === View.SPACE && activeSpace) return <SpaceView space={activeSpace} boards={boards.filter(b => b.spaceId === activeSpace.id)} addBoard={handleAddBoard} onSelectBoard={handleSelectBoard}/>;
     switch (activeView) {
       case View.HOME: return <HomeView notes={notes} onEditNote={handleEditNote} />;
+      case View.AI_NOTE_EDITOR: return <AiNoteEditor currentNote={currentNote} onSave={handleSaveNote} geminiApiKey={geminiApiKey} />;
       case View.CREATE:
         if (currentNote?.type === NoteType.JOURNAL) return <JournalEditor currentNote={currentNote} onSave={handleSaveNote} />;
         if (currentNote?.type === NoteType.STICKY) return <StickyNoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
+        if (currentNote?.type === NoteType.AI_NOTE) return <AiNoteEditor currentNote={currentNote} onSave={handleSaveNote} geminiApiKey={geminiApiKey} />;
         return <ClassicNoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
       case View.CALENDAR: return <CalendarView events={calendarEvents} notes={notes} tasks={tasks} onAddEvents={handleAddCalendarEvents} onDeleteEvent={handleDeleteCalendarEvent} onEditNote={handleEditNote} />;
       case View.IDEAS: return <IdeasView />;
