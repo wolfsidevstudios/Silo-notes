@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Note, AudioNote } from '../types';
 import { VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, StopIcon, RewriteIcon, SummarizeIcon } from './icons';
@@ -148,7 +149,6 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
   
   const [audioNotes, setAudioNotes] = useState<AudioNote[]>([]);
   const [isVoiceMemoRecording, setIsVoiceMemoRecording] = useState(false);
-  const [voiceMemoStatus, setVoiceMemoStatus] = useState('Idle');
   const memoRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
@@ -375,15 +375,12 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
         streamRef.current?.getTracks().forEach(track => track.stop());
         streamRef.current = null;
         setIsVoiceMemoRecording(false);
-        setVoiceMemoStatus('Idle');
       };
 
       recorder.start();
       setIsVoiceMemoRecording(true);
-      setVoiceMemoStatus('Recording memo...');
     } catch (error) {
       console.error('Error accessing microphone:', error);
-      setVoiceMemoStatus('Mic access denied');
     }
   };
 
@@ -448,7 +445,29 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
   };
 
   const isActionActive = isRecording || isVoiceMemoRecording || isTtsModalOpen || writingToolStatus !== 'Idle' || isLocked;
-  
+
+  const ToolButton: React.FC<{
+    onClick: () => void;
+    disabled: boolean;
+    label: string;
+    'aria-label': string;
+    children: React.ReactNode;
+    isActive?: boolean;
+    }> = ({ onClick, disabled, label, children, isActive, ...props }) => (
+    <button
+        onClick={onClick}
+        disabled={disabled}
+        className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full transition-colors duration-200 shadow-sm
+            ${isActive ? 'bg-black text-white' : 'bg-white hover:bg-gray-100'}
+            ${disabled ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'border border-gray-200'}
+        `}
+        aria-label={props['aria-label']}
+    >
+        {children}
+        <span className="pr-1">{label}</span>
+    </button>
+  );
+
   return (
     <div className="p-8 lg:p-12 h-full flex flex-col relative">
        {isLocked && <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-20"></div>}
@@ -516,39 +535,29 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ currentNote, onSave }) => {
         )}
       </div>
 
-      <div className="flex-shrink-0 mt-4 p-2 bg-gray-100 rounded-full shadow-sm flex items-center justify-between">
-        <div className="flex items-center gap-2">
-            <button onClick={handleToggleAiRecording} disabled={isVoiceMemoRecording || writingToolStatus !== 'Idle' || isLocked} className="p-2 hover:bg-gray-200 rounded-full disabled:text-gray-400 disabled:hover:bg-transparent" aria-label={isRecording ? 'Stop Voice Typing' : 'Start Voice Typing'}>
-                {isRecording ? <StopIcon /> : <VoiceTypingIcon />}
-            </button>
-            <button onClick={handleToggleVoiceMemoRecording} disabled={isRecording || writingToolStatus !== 'Idle' || isLocked} className="p-2 hover:bg-gray-200 rounded-full disabled:text-gray-400 disabled:hover:bg-transparent" aria-label={isVoiceMemoRecording ? 'Stop Voice Memo' : 'Start Voice Memo'}>
-                {isVoiceMemoRecording ? <StopIcon /> : <VoiceMemoIcon />}
-            </button>
-            <button onClick={() => setIsTtsModalOpen(true)} disabled={isRecording || isVoiceMemoRecording || writingToolStatus !== 'Idle' || isLocked} className="p-2 hover:bg-gray-200 rounded-full disabled:text-gray-400 disabled:hover:bg-transparent" aria-label="Text to Speech">
-                <TextToSpeechIcon />
-            </button>
-        </div>
-        <div className="text-sm text-gray-500 min-w-[120px] text-center truncate px-2">
-            {isRecording && partialTranscript ? partialTranscript 
-                : status !== 'Idle' ? status 
-                : voiceMemoStatus !== 'Idle' ? voiceMemoStatus 
-                : writingToolStatus !== 'Idle' ? writingToolStatus
-                : ''}
-        </div>
-        <div className="flex items-center gap-2">
-            {isGeminiConfigured ? (
-                <>
-                    <button onClick={() => handleWritingTool('rewrite', 'Rewriting...')} disabled={isRecording || isVoiceMemoRecording || writingToolStatus !== 'Idle' || isLocked || !content.trim()} className="p-2 hover:bg-gray-200 rounded-full disabled:text-gray-400 disabled:hover:bg-transparent" aria-label="Rewrite Text">
-                        <RewriteIcon />
-                    </button>
-                    <button onClick={() => handleWritingTool('summarize', 'Summarizing...')} disabled={isRecording || isVoiceMemoRecording || writingToolStatus !== 'Idle' || isLocked || !content.trim()} className="p-2 hover:bg-gray-200 rounded-full disabled:text-gray-400 disabled:hover:bg-transparent" aria-label="Summarize Text">
-                        <SummarizeIcon />
-                    </button>
-                </>
-            ) : (
-                <p className="text-xs text-gray-500 pr-2">Add Gemini Key for AI tools</p>
-            )}
-        </div>
+      <div className="flex-shrink-0 mt-4 p-2 flex items-center justify-center gap-2 flex-wrap">
+        <ToolButton onClick={handleToggleAiRecording} disabled={isVoiceMemoRecording || isLocked} label={isRecording ? 'Stop' : 'Voice Typing'} aria-label={isRecording ? 'Stop Voice Typing' : 'Start Voice Typing'} isActive={isRecording}>
+          {isRecording ? <StopIcon /> : <VoiceTypingIcon />}
+        </ToolButton>
+        <ToolButton onClick={handleToggleVoiceMemoRecording} disabled={isRecording || isLocked} label={isVoiceMemoRecording ? 'Stop' : 'Voice Memo'} aria-label={isVoiceMemoRecording ? 'Stop Voice Memo' : 'Start Voice Memo'} isActive={isVoiceMemoRecording}>
+          {isVoiceMemoRecording ? <StopIcon /> : <VoiceMemoIcon />}
+        </ToolButton>
+        <ToolButton onClick={() => setIsTtsModalOpen(true)} disabled={isActionActive} label="Text to Speech" aria-label="Text to Speech">
+          <TextToSpeechIcon />
+        </ToolButton>
+        
+        {isGeminiConfigured ? (
+            <>
+                <ToolButton onClick={() => handleWritingTool('rewrite', 'Rewriting...')} disabled={isActionActive || !content.trim()} label="Rewrite" aria-label="Rewrite Text">
+                    <RewriteIcon />
+                </ToolButton>
+                <ToolButton onClick={() => handleWritingTool('summarize', 'Summarizing...')} disabled={isActionActive || !content.trim()} label="Summarize" aria-label="Summarize Text">
+                    <SummarizeIcon />
+                </ToolButton>
+            </>
+        ) : (
+            <p className="text-xs text-gray-500 px-2">Add Gemini Key in Settings for more AI tools</p>
+        )}
       </div>
       
       {isTtsModalOpen && <TextToSpeechModal onClose={() => setIsTtsModalOpen(false)} onAddAudio={handleAddTtsAudio} />}

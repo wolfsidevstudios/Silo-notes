@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import HomeView from './components/HomeView';
 import NoteEditor from './components/NoteEditor';
@@ -15,9 +15,199 @@ import SummarizeToolView from './components/SummarizeToolView';
 import RewriteToolView from './components/RewriteToolView';
 import VoiceMemoToolView from './components/VoiceMemoToolView';
 import SpeechToTextToolView from './components/SpeechToTextToolView';
+import { GoogleGenAI } from "@google/genai";
+import { ArrowUpIcon, CloseIcon } from './components/icons';
 
 
 import { View, Note, Space, Board, BoardType } from './types';
+
+// Timer Component
+const TimerComponent = ({ initialSeconds, onClose }: { initialSeconds: number; onClose: () => void }) => {
+    const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
+    const [isActive, setIsActive] = useState(true);
+    const intervalRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (isActive && secondsLeft > 0) {
+            intervalRef.current = window.setInterval(() => {
+                setSecondsLeft(prev => prev - 1);
+            }, 1000);
+        } else if (secondsLeft === 0) {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+            setIsActive(false);
+        }
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+        };
+    }, [isActive, secondsLeft]);
+
+    const toggle = () => setIsActive(!isActive);
+    const reset = () => { setSecondsLeft(initialSeconds); setIsActive(false); };
+
+    const formatTime = () => {
+        const minutes = Math.floor(secondsLeft / 60);
+        const seconds = secondsLeft % 60;
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+    return (
+        <div className="text-center text-white p-4">
+            <h3 className="font-semibold mb-2">Timer</h3>
+            <p className="text-5xl font-mono mb-4">{formatTime()}</p>
+            <div className="flex justify-center gap-2">
+                <button onClick={toggle} className="bg-white/20 px-4 py-1 rounded-full">{isActive ? 'Pause' : 'Start'}</button>
+                <button onClick={reset} className="bg-white/20 px-4 py-1 rounded-full">Reset</button>
+                <button onClick={onClose} className="bg-white/20 px-4 py-1 rounded-full">Close</button>
+            </div>
+        </div>
+    );
+};
+
+// Stopwatch Component
+const StopwatchComponent = ({ onClose }: { onClose: () => void }) => {
+    const [time, setTime] = useState(0);
+    const [isActive, setIsActive] = useState(true);
+    const intervalRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (isActive) {
+            intervalRef.current = window.setInterval(() => {
+                setTime(prev => prev + 10);
+            }, 10);
+        }
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+        };
+    }, [isActive]);
+
+    const toggle = () => setIsActive(!isActive);
+    const reset = () => { setTime(0); setIsActive(false); };
+    
+    const formatTime = () => {
+        const minutes = Math.floor((time / 60000) % 60).toString().padStart(2, '0');
+        const seconds = Math.floor((time / 1000) % 60).toString().padStart(2, '0');
+        const milliseconds = (time % 1000).toString().padStart(3, '0').slice(0, 2);
+        return `${minutes}:${seconds}.${milliseconds}`;
+    };
+
+    return (
+        <div className="text-center text-white p-4">
+            <h3 className="font-semibold mb-2">Stopwatch</h3>
+            <p className="text-5xl font-mono mb-4">{formatTime()}</p>
+            <div className="flex justify-center gap-2">
+                <button onClick={toggle} className="bg-white/20 px-4 py-1 rounded-full">{isActive ? 'Pause' : 'Start'}</button>
+                <button onClick={reset} className="bg-white/20 px-4 py-1 rounded-full">Reset</button>
+                <button onClick={onClose} className="bg-white/20 px-4 py-1 rounded-full">Close</button>
+            </div>
+        </div>
+    );
+};
+
+
+// AI Chat Component
+const AiChatComponent = ({ onClose, onSaveNote }: { onClose: () => void; onSaveNote: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => void }) => {
+    const [inputValue, setInputValue] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [activeTool, setActiveTool] = useState<'none' | 'timer' | 'stopwatch'>('none');
+    const [toolProps, setToolProps] = useState<any>({});
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    useEffect(() => {
+        inputRef.current?.focus();
+    }, []);
+
+    const handleToolClose = () => {
+        setActiveTool('none');
+        setToolProps({});
+    };
+    
+    const handleSend = async () => {
+        if (!inputValue.trim() || isLoading) return;
+        setIsLoading(true);
+        const prompt = inputValue;
+        setInputValue('');
+
+        try {
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: {
+                    systemInstruction: `You are a helpful assistant in a note-taking app. Your main tasks are creating notes, timers, and stopwatches.
+- If the user asks for a timer, respond ONLY in this format: TIMER::[duration_in_seconds]. Example: "set a 5 minute timer" should respond "TIMER::300".
+- If the user asks for a stopwatch, respond ONLY with this exact word: STOPWATCH.
+- If the user asks you to create or write a note, respond with the full content of the note. The first line will be the title.
+- For any other request, provide a helpful but concise text response.`
+                }
+            });
+
+            const resultText = response.text.trim();
+
+            if (resultText.startsWith('TIMER::')) {
+                const seconds = parseInt(resultText.split('::')[1], 10);
+                if (!isNaN(seconds)) {
+                    setToolProps({ initialSeconds: seconds });
+                    setActiveTool('timer');
+                }
+            } else if (resultText === 'STOPWATCH') {
+                setActiveTool('stopwatch');
+            } else if (prompt.toLowerCase().includes('create a note') || prompt.toLowerCase().includes('write a note')) {
+                const lines = resultText.split('\n');
+                const title = lines[0] || 'AI Generated Note';
+                const content = lines.slice(1).join('<br>');
+                onSaveNote({ title, content, audioNotes: [], privacy: 'public' });
+                onClose();
+            } else {
+                // For now, we just handle tools and note creation. 
+                // A future feature could show chat responses.
+                 onClose();
+            }
+        } catch (error) {
+            console.error("AI Chat Error:", error);
+            // Handle error state, maybe show a toast message
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const containerClasses = `fixed bottom-8 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out flex items-center justify-center ${
+        activeTool !== 'none'
+        ? 'w-96 h-48 bg-black rounded-3xl shadow-2xl'
+        : 'w-[500px] h-14 bg-white rounded-full shadow-lg border'
+    }`;
+
+    return (
+        <div className={containerClasses}>
+            {activeTool === 'timer' && <TimerComponent {...toolProps} onClose={handleToolClose} />}
+            {activeTool === 'stopwatch' && <StopwatchComponent onClose={handleToolClose} />}
+            {activeTool === 'none' && (
+                <div className="w-full flex items-center px-2 gap-2">
+                    <button onClick={onClose} className="p-2 text-gray-500 hover:text-black rounded-full">
+                        <CloseIcon />
+                    </button>
+                    <input
+                        ref={inputRef}
+                        type="text"
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                        placeholder="Ask Silo AI to create a note, timer, etc..."
+                        className="flex-1 bg-transparent focus:outline-none text-sm"
+                        disabled={isLoading}
+                    />
+                    <button 
+                        onClick={handleSend}
+                        className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center flex-shrink-0"
+                        disabled={isLoading || !inputValue.trim()}
+                    >
+                        {isLoading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <ArrowUpIcon />}
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+};
+
 
 const App: React.FC = () => {
   // State management
@@ -29,6 +219,8 @@ const App: React.FC = () => {
   const [currentNote, setCurrentNote] = useState<Note | null>(null);
   const [activeSpaceId, setActiveSpaceId] = useState<string | null>(null);
   const [activeBoard, setActiveBoard] = useState<Board | null>(null);
+  const [isAiChatVisible, setIsAiChatVisible] = useState(false);
+
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -54,6 +246,10 @@ const App: React.FC = () => {
       console.error("Failed to save data to localStorage", error);
     }
   }, [notes, spaces, boards]);
+
+  const handleToggleAiChat = useCallback(() => {
+    setIsAiChatVisible(prev => !prev);
+  }, []);
 
   const handleViewChange = useCallback((view: View) => {
     setActiveView(view);
@@ -204,10 +400,12 @@ const App: React.FC = () => {
         onCreateNewNote={handleCreateNewNote}
         activeSpaceId={activeSpaceId}
         onSelectSpace={handleSelectSpace}
+        onToggleAiChat={handleToggleAiChat}
       />
       <main className="flex-1 overflow-y-auto">
         {renderMainView()}
       </main>
+      {isAiChatVisible && <AiChatComponent onClose={handleToggleAiChat} onSaveNote={handleSaveNote} />}
     </div>
   );
 };

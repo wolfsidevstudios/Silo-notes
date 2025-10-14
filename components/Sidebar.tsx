@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { View, Space } from '../types';
-import { HomeIcon, CreateIcon, ExploreIcon, IdeasIcon, PlusIcon, HashtagIcon, SettingsIcon, SiloLabsIcon } from './icons';
+import { HomeIcon, CreateIcon, ExploreIcon, IdeasIcon, PlusIcon, HashtagIcon, SettingsIcon, SiloLabsIcon, SiloAiIcon } from './icons';
 
 interface SidebarProps {
   activeView: View;
@@ -10,6 +11,7 @@ interface SidebarProps {
   onCreateNewNote: () => void;
   activeSpaceId: string | null;
   onSelectSpace: (spaceId: string) => void;
+  onToggleAiChat: () => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ 
@@ -19,7 +21,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   addSpace, 
   onCreateNewNote,
   activeSpaceId,
-  onSelectSpace
+  onSelectSpace,
+  onToggleAiChat
 }) => {
   const [newSpaceName, setNewSpaceName] = useState('');
 
@@ -99,12 +102,19 @@ const Sidebar: React.FC<SidebarProps> = ({
          <NavItem icon={<SettingsIcon />} label="Settings" isActive={isNavActive(View.SETTINGS)} onClick={() => onViewChange(View.SETTINGS)} />
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 flex items-center gap-2">
         <button 
           onClick={onCreateNewNote}
-          className="w-full bg-black text-white font-semibold py-3 px-4 rounded-full hover:bg-gray-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+          className="flex-1 bg-black text-white font-semibold py-3 px-4 rounded-full hover:bg-gray-800 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
         >
           New Note
+        </button>
+        <button
+          onClick={onToggleAiChat}
+          className="p-3 bg-gray-200 text-black rounded-full hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+          aria-label="Open Silo AI"
+        >
+          <SiloAiIcon />
         </button>
       </div>
     </aside>

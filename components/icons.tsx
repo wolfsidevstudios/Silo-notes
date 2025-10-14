@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export const HomeIcon = () => (
@@ -62,8 +63,10 @@ export const BackIcon = () => (
 );
 
 export const VoiceMemoIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" height="24" width="24">
-        <path fill="currentColor" fillRule="evenodd" d="M12 2a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3ZM7 13a5 5 0 0 0 4 4.9V21h2v-3.1A5 5 0 0 0 17 13h-2a3 3 0 0 1-6 0H7Z" clipRule="evenodd" />
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 48 48" height="24" width="24">
+        <g>
+            <path fill="currentColor" fillRule="evenodd" d="M38.5 2c0 -0.82843 -0.6716 -1.5 -1.5 -1.5s-1.5 0.67157 -1.5 1.5v2.50783c-4.9536 0.07917 -9 3.95114 -9 8.99217 0 1.2509 0.0834 2.7111 0.1754 3.9469 0.1782 2.3953 1.9634 4.4027 4.4244 4.6981 1.5387 0.1848 3.5837 0.355 5.9002 0.355s4.3615 -0.1702 5.9002 -0.355c2.461 -0.2954 4.2462 -2.3028 4.4244 -4.6981 0.092 -1.2358 0.1754 -2.696 0.1754 -3.9469 0 -5.04103 -4.0464 -8.913 -9 -8.99217V2ZM35 13c0 -0.8284 -0.6716 -1.5 -1.5 -1.5S32 12.1716 32 13v1c0 0.8284 0.6716 1.5 1.5 1.5S35 14.8284 35 14v-1Zm7 0c0 -0.8284 -0.6716 -1.5 -1.5 -1.5S39 12.1716 39 13v1c0 0.8284 0.6716 1.5 1.5 1.5S42 14.8284 42 14v-1ZM24.8657 7.92103C23.0429 6.70732 20.8541 6 18.5 6 12.1487 6 7 11.1487 7 17.5v9C7 32.8513 12.1487 38 18.5 38S30 32.8513 30 26.5v-1.5001c-3.567 -0.7652 -6.0552 -3.8208 -6.3164 -7.3304 -0.0938 -1.261 -0.1836 -2.8077 -0.1836 -4.1695 0 -2.0392 0.4952 -3.92988 1.3657 -5.57897ZM5.00116 26.6587C5.08621 34.0414 11.0974 40 18.5002 40c7.4005 0 13.4102 -5.9548 13.499 -13.3342 1.3011 -0.0601 2.3761 0.1727 3.1179 0.4162 0.915 0.3002 1.4043 1.1887 1.3436 2.0844 -0.5511 8.13 -6.8168 14.691 -14.8131 15.6992 -0.0349 0.256 -0.0727 0.5166 -0.1135 0.7841 -0.1438 0.9428 -0.855 1.7439 -1.8811 1.8139 -0.3194 0.0218 -0.7017 0.0364 -1.1525 0.0364 -0.4508 0 -0.833 -0.0146 -1.1524 -0.0364 -1.0261 -0.07 -1.738 -0.8712 -1.8795 -1.8155 -0.0397 -0.2655 -0.0767 -0.5257 -0.1109 -0.7819C7.39403 43.8646 1.14565 37.3554 0.54711 29.2729c-0.071772 -0.9692 0.49489 -1.8951 1.46263 -2.1877 0.75116 -0.2271 1.8113 -0.4554 2.99142 -0.4265Z" clipRule="evenodd" strokeWidth="1"></path>
+        </g>
     </svg>
 );
 
@@ -116,6 +119,22 @@ export const SiloLabsIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
     </svg>
+);
+
+export const SiloAiIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+    </svg>
+);
+
+export const ArrowUpIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+    </svg>
+);
+
+export const CloseIcon = () => (
+     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
 );
 
 export const LockIcon = () => (
