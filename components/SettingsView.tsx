@@ -58,7 +58,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
     const clientId = 'qy8KhVTKRZG1Pl4dhQwZSw';
     const redirectUri = window.location.origin + window.location.pathname;
     // Scopes needed to fetch user profile and upcoming meetings.
-    const scope = 'user:read meeting:read';
+    const scope = 'openid user:read meeting:read';
 
     const verifier = generateRandomString(128);
     sessionStorage.setItem('zoom_code_verifier', verifier);
