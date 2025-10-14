@@ -4,7 +4,7 @@ import { ListIcon, NumberListIcon } from './icons';
 
 interface StickyNoteEditorProps {
   currentNote: Note | null;
-  onSave: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => void;
+  onSave: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string; type: NoteType; }) => void;
 }
 
 const STICKY_COLORS = ['#FFF9C4', '#FFCDD2', '#C8E6C9', '#BBDEFB', '#D1C4E9', '#FFD8B1'];
@@ -19,17 +19,47 @@ const StickyNoteEditor: React.FC<StickyNoteEditorProps> = ({ currentNote, onSave
 
   useEffect(() => {
     if (currentNote) {
-      setTitle(currentNote.title || '');
-      setContent(currentNote.content || '');
-      setColor(currentNote.color || STICKY_COLORS[0]);
+      const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
+      const savedDraftJSON = localStorage.getItem(draftKey);
+
+      let initialTitle = currentNote.title || '';
+      let initialContent = currentNote.content || '';
+      let initialColor = currentNote.color || STICKY_COLORS[0];
+
+      if (savedDraftJSON) {
+        try {
+          const savedDraft = JSON.parse(savedDraftJSON);
+          initialTitle = savedDraft.title;
+          initialContent = savedDraft.content;
+          initialColor = savedDraft.color;
+        } catch (e) {
+          console.error("Failed to parse editor draft", e);
+        }
+      }
+
+      setTitle(initialTitle);
+      setContent(initialContent);
+      setColor(initialColor);
       setPrivacy(currentNote.privacy || 'public');
       if (contentEditableRef.current) {
-        contentEditableRef.current.innerHTML = currentNote.content || '';
+        contentEditableRef.current.innerHTML = initialContent;
       }
     }
   }, [currentNote]);
 
+  useEffect(() => {
+    if(currentNote){
+        const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
+        const draft = { title, content, color };
+        localStorage.setItem(draftKey, JSON.stringify(draft));
+    }
+  }, [title, content, color, currentNote]);
+
   const handleSave = () => {
+    if (currentNote) {
+      const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
+      localStorage.removeItem(draftKey);
+    }
     onSave({ id: currentNote?.id, title, content, privacy, type: NoteType.STICKY, color });
   };
 

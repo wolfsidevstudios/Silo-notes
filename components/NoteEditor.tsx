@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Note, AudioNote } from '../types';
+import { Note, AudioNote, NoteType } from '../types';
 import { VoiceTypingIcon, VoiceMemoIcon, TextToSpeechIcon, StopIcon, RewriteIcon, SummarizeIcon, YouTubeIcon, ImageIcon, PdfIcon, FileIcon, CloseIcon } from './icons';
 import { GoogleGenAI } from "@google/genai";
 import FloatingToolbar from './FloatingToolbar';
@@ -129,7 +129,7 @@ const TextToSpeechModal: React.FC<TextToSpeechModalProps> = ({ onClose, onAddAud
 
 interface ClassicNoteEditorProps {
   currentNote: Note | null;
-  onSave: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => void;
+  onSave: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string; type: NoteType; }) => void;
 }
 
 const ASSEMBLYAI_API_KEY = '49e6f2264b204542b812c42bfb3fcdac';
@@ -192,33 +192,48 @@ const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSa
 
   useEffect(() => {
     if (currentNote) {
-      setTitle(currentNote.title);
-      const newContent = currentNote.content || '';
-      setContent(newContent);
-      if (contentEditableRef.current) {
-        contentEditableRef.current.innerHTML = newContent;
+      const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
+      const savedDraftJSON = localStorage.getItem(draftKey);
+
+      let initialTitle = currentNote.title;
+      let initialContent = currentNote.content || '';
+
+      if (savedDraftJSON) {
+        try {
+          const savedDraft = JSON.parse(savedDraftJSON);
+          initialTitle = savedDraft.title;
+          initialContent = savedDraft.content;
+        } catch (e) {
+          console.error("Failed to parse editor draft", e);
+        }
       }
+
+      setTitle(initialTitle);
+      setContent(initialContent);
+      if (contentEditableRef.current) {
+        contentEditableRef.current.innerHTML = initialContent;
+      }
+      
       setAudioNotes(currentNote.audioNotes || []);
       setPrivacy(currentNote.privacy);
       setPin(currentNote.pin);
-      if (currentNote.privacy === 'private') {
+
+      if (currentNote.privacy === 'private' && !savedDraftJSON) { // only lock if opening for the first time, not reloading a draft
         setIsLocked(true);
         setShowPinModal('enter');
       } else {
         setIsLocked(false);
       }
-    } else {
-      setTitle('');
-      setContent('');
-      if (contentEditableRef.current) {
-        contentEditableRef.current.innerHTML = '';
-      }
-      setAudioNotes([]);
-      setPrivacy('public');
-      setPin(undefined);
-      setIsLocked(false);
     }
   }, [currentNote]);
+
+  useEffect(() => {
+    if (currentNote && !isLocked) {
+        const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
+        const draft = { title, content };
+        localStorage.setItem(draftKey, JSON.stringify(draft));
+    }
+  }, [title, content, currentNote, isLocked]);
 
   useEffect(() => {
     const key = localStorage.getItem('gemini-api-key');
@@ -235,7 +250,11 @@ const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSa
   };
 
   const handleSave = () => {
-    onSave({ id: currentNote?.id, title, content, audioNotes, privacy, pin, type: currentNote!.type });
+    if (currentNote) {
+      const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
+      localStorage.removeItem(draftKey);
+    }
+    onSave({ id: currentNote?.id, title, content, audioNotes, privacy, pin, type: NoteType.CLASSIC });
   };
   
   const handlePrivacyChange = (newPrivacy: 'public' | 'private') => {

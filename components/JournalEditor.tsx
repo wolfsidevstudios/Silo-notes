@@ -4,7 +4,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from './icons';
 
 interface JournalEditorProps {
   currentNote: Note | null;
-  onSave: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => void;
+  onSave: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string; type: NoteType; }) => void;
 }
 
 const JournalEditor: React.FC<JournalEditorProps> = ({ currentNote, onSave }) => {
@@ -27,15 +27,42 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ currentNote, onSave }) =>
 
   useEffect(() => {
     if (currentNote) {
-      setTitle(currentNote.title || 'My Journal Entry');
-      const initialPages = currentNote.content ? currentNote.content.split('<!--PAGE_BREAK-->') : [''];
+      const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
+      const savedDraftJSON = localStorage.getItem(draftKey);
+
+      let initialTitle = currentNote.title || 'My Journal Entry';
+      let initialPages = currentNote.content ? currentNote.content.split('<!--PAGE_BREAK-->') : [''];
+
+      if (savedDraftJSON) {
+        try {
+          const savedDraft = JSON.parse(savedDraftJSON);
+          initialTitle = savedDraft.title;
+          initialPages = savedDraft.pages;
+        } catch (e) {
+          console.error("Failed to parse editor draft", e);
+        }
+      }
+      
+      setTitle(initialTitle);
       setPages(initialPages.length > 0 ? initialPages : ['']);
       setPrivacy(currentNote.privacy || 'public');
       setCurrentPageIndex(0);
     }
   }, [currentNote]);
 
+  useEffect(() => {
+    if (currentNote) {
+      const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
+      const draft = { title, pages };
+      localStorage.setItem(draftKey, JSON.stringify(draft));
+    }
+  }, [title, pages, currentNote]);
+
   const handleSave = () => {
+    if (currentNote) {
+      const draftKey = `silo-editor-draft:${currentNote.id || `new-${currentNote.type}`}`;
+      localStorage.removeItem(draftKey);
+    }
     const contentToSave = pages.join('<!--PAGE_BREAK-->');
     onSave({ id: currentNote?.id, title, content: contentToSave, privacy, type: NoteType.JOURNAL });
   };

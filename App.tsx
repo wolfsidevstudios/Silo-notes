@@ -29,7 +29,7 @@ import { ArrowUpIcon, CloseIcon } from './components/icons';
 import NewNoteTypeModal from './components/NewNoteTypeModal';
 
 
-import { View, Note, Space, Board, BoardType, Task, Meeting, NoteType } from './types';
+import { View, Note, Space, Board, BoardType, Task, Meeting, NoteType, TaskPriority } from './types';
 
 // Timer Component
 const TimerComponent = ({ initialSeconds, onClose }: { initialSeconds: number; onClose: () => void }) => {
@@ -153,9 +153,9 @@ const StopwatchComponent = ({ onClose }: { onClose: () => void }) => {
 // AI Chat Component
 const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey, onAddTask, onAddMeeting, onSetTimer, onSetStopwatch }: { 
     onClose: () => void; 
-    onSaveNote: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => void; 
+    onSaveNote: (note: Omit<Note, 'id' | 'createdAt'> & { id?: string; type: NoteType; }) => void;
     geminiApiKey: string | null; 
-    onAddTask: (title: string) => void; 
+    onAddTask: (title: string, priority: TaskPriority) => void; 
     onAddMeeting: (title: string, dateTime: string) => void;
     onSetTimer: (props: { initialSeconds: number }) => void;
     onSetStopwatch: () => void;
@@ -203,7 +203,7 @@ const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey, onAddTask, onAddMe
                 onClose();
             } else if (resultText.startsWith('TASK::')) {
                 const title = resultText.split('::')[1];
-                if (title) onAddTask(title);
+                if (title) onAddTask(title, TaskPriority.MEDIUM);
                 onClose();
             } else if (resultText.startsWith('MEETING::')) {
                 const parts = resultText.split('::');
@@ -342,7 +342,15 @@ const App: React.FC = () => {
       }
       if (savedSpaces) setSpaces(JSON.parse(savedSpaces));
       if (savedBoards) setBoards(JSON.parse(savedBoards));
-      if (savedTasks) setTasks(JSON.parse(savedTasks));
+      if (savedTasks) {
+        const parsedTasks = JSON.parse(savedTasks);
+        // Migration for tasks without priority
+        const migratedTasks = parsedTasks.map((task: any) => ({
+          ...task,
+          priority: task.priority || TaskPriority.MEDIUM,
+        }));
+        setTasks(migratedTasks);
+      }
       if (savedMeetings) setMeetings(JSON.parse(savedMeetings));
       if (savedGeminiKey) setGeminiApiKey(savedGeminiKey);
 
@@ -393,7 +401,7 @@ const App: React.FC = () => {
     handleViewChange(View.CREATE);
   };
 
-  const handleSaveNote = (noteData: Omit<Note, 'id' | 'createdAt'> & { id?: string }) => {
+  const handleSaveNote = (noteData: Omit<Note, 'id' | 'createdAt'> & { id?: string; type: NoteType; }) => {
     if (noteData.id) {
       setNotes(notes.map(n => n.id === noteData.id ? { ...n, ...noteData, id: noteData.id } : n));
     } else {
@@ -406,7 +414,7 @@ const App: React.FC = () => {
     handleViewChange(View.HOME);
   };
   
-  const handleAddTask = (title: string) => { setTasks(prev => [{ id: new Date().toISOString(), title, completed: false, createdAt: new Date().toISOString() }, ...prev]); };
+  const handleAddTask = (title: string, priority: TaskPriority) => { setTasks(prev => [{ id: new Date().toISOString(), title, completed: false, createdAt: new Date().toISOString(), priority }, ...prev]); };
   const handleAddMeeting = (title: string, dateTime: string) => { setMeetings(prev => [{ id: new Date().toISOString(), title, dateTime, createdAt: new Date().toISOString() }, ...prev]); };
   const handleToggleTask = (taskId: string) => { setTasks(tasks.map(task => task.id === taskId ? { ...task, completed: !task.completed } : task)); };
   const handleDeleteTask = (taskId: string) => { setTasks(tasks.filter(task => task.id !== taskId)); };

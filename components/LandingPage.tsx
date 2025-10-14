@@ -72,24 +72,23 @@ const AppPreviewAnimation = () => {
                 case 1: // Carousel
                     timeout = window.setTimeout(() => setPhase(2), 3000);
                     break;
-                case 2: // Typing
+                case 2: // Typing Note
                     if (subPhase === 'start') {
                         setSubPhase('typing');
+                    } else if (subPhase === 'typing') {
                         interval = window.setInterval(() => {
                             setTypedText(prev => {
-                                if (prev.length < noteText.length) {
-                                    return noteText.substring(0, prev.length + 2);
+                                const newText = noteText.substring(0, prev.length + 1);
+                                if (newText.length >= noteText.length) {
+                                    clearInterval(interval);
+                                    setSubPhase('show-tools');
                                 }
-                                clearInterval(interval);
-                                setSubPhase('show-tools');
-                                return prev;
+                                return newText;
                             });
-                        }, 25);
-                    }
-                    if (subPhase === 'show-tools') {
+                        }, 30);
+                    } else if (subPhase === 'show-tools') {
                         timeout = window.setTimeout(() => setSubPhase('click-rewrite'), 1500);
-                    }
-                    if (subPhase === 'click-rewrite') {
+                    } else if (subPhase === 'click-rewrite') {
                         timeout = window.setTimeout(() => setPhase(3), 500);
                     }
                     break;
@@ -98,8 +97,7 @@ const AppPreviewAnimation = () => {
                         setTypedText(rewrittenNoteText);
                         setSubPhase('click-save');
                         timeout = window.setTimeout(() => setSubPhase('done'), 1500);
-                     }
-                     if (subPhase === 'done') {
+                     } else if (subPhase === 'done') {
                          timeout = window.setTimeout(() => setPhase(4), 500);
                      }
                     break;
@@ -107,21 +105,22 @@ const AppPreviewAnimation = () => {
                     timeout = window.setTimeout(() => setPhase(5), 3000);
                     break;
                 case 5: // AI Timer
-                    if (subPhase === 'done') {
+                    if (subPhase === 'done' || subPhase.includes('click') || subPhase === 'start') {
+                        setAiChatText('');
                         setSubPhase('typing-timer');
+                    } else if (subPhase === 'typing-timer') {
                         const timerText = "start a 5 minute timer";
                         interval = window.setInterval(() => {
                             setAiChatText(prev => {
-                                if(prev.length < timerText.length) {
-                                    return timerText.substring(0, prev.length + 1);
+                                const newText = timerText.substring(0, prev.length + 1);
+                                if (newText.length >= timerText.length) {
+                                    clearInterval(interval);
+                                    setSubPhase('show-timer');
                                 }
-                                clearInterval(interval);
-                                setSubPhase('show-timer');
-                                return prev;
+                                return newText;
                             });
                         }, 50);
-                    }
-                     if (subPhase === 'show-timer') {
+                    } else if (subPhase === 'show-timer') {
                         interval = window.setInterval(() => setTimerSeconds(s => s > 0 ? s - 1 : 0), 10);
                         timeout = window.setTimeout(() => {
                            clearInterval(interval);
@@ -130,32 +129,33 @@ const AppPreviewAnimation = () => {
                     }
                     break;
                 case 6: // AI Task
-                    if (phase === 6 && subPhase !== 'start') {
-                       setSubPhase('typing-task');
+                    if (subPhase === 'show-timer') {
                        setAiChatText('');
+                       setSubPhase('typing-task');
+                    } else if (subPhase === 'typing-task') {
                        const taskText = "add a task to buy groceries";
                        interval = window.setInterval(() => {
                            setAiChatText(prev => {
-                               if (prev.length < taskText.length) return taskText.substring(0, prev.length + 1);
-                               clearInterval(interval);
-                               setSubPhase('show-task');
-                               return prev;
+                               const newText = taskText.substring(0, prev.length + 1);
+                               if (newText.length >= taskText.length) {
+                                   clearInterval(interval);
+                                   setSubPhase('show-task');
+                               }
+                               return newText;
                            });
                        }, 50);
-                    }
-                    if (subPhase === 'show-task') {
+                    } else if (subPhase === 'show-task') {
                         setTasks([{id: 1, text: 'Buy groceries'}]);
                         timeout = window.setTimeout(() => setPhase(7), 2500);
                     }
                     break;
                 case 7: // Loop
-                     // Reset all states for looping
                     setTypedText('');
                     setAiChatText('');
                     setTimerSeconds(300);
                     setTasks([]);
                     setSubPhase('start');
-                    setPhase(0); // Go back to start
+                    setPhase(0);
                     break;
             }
         };
@@ -166,7 +166,7 @@ const AppPreviewAnimation = () => {
             clearTimeout(timeout);
             clearInterval(interval);
         };
-    }, [phase, subPhase]);
+    }, [phase, subPhase, noteText, rewrittenNoteText]);
 
 
     return (
@@ -203,7 +203,7 @@ const AppPreviewAnimation = () => {
                                     Marketing Campaign
                                 </div>
                                 <div className="flex-1 w-full text-lg leading-relaxed text-gray-700">
-                                    <pre className="whitespace-pre-wrap font-sans transition-opacity duration-500">{typedText}{phase === 2 && subPhase === 'typing' && <span className="blinking-cursor">|</span>}</pre>
+                                    <pre className="whitespace-pre-wrap font-sans transition-opacity duration-500">{typedText}{(phase === 2 && subPhase === 'typing') && <span className="blinking-cursor">|</span>}</pre>
                                 </div>
                                 <div className={`flex-shrink-0 mt-4 flex items-center justify-center gap-2 flex-wrap transition-opacity duration-500 ${subPhase.startsWith('show-tools') || subPhase.startsWith('click-rewrite') ? 'opacity-100' : 'opacity-0'}`}>
                                     <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-white border border-gray-200">Summarize</button>
@@ -227,7 +227,7 @@ const AppPreviewAnimation = () => {
                      <div className={`absolute inset-0 flex flex-col items-center justify-center gap-8 transition-opacity duration-500 ${phase === 5 || phase === 6 ? 'opacity-100' : 'opacity-0'}`}>
                         {/* AI Bar */}
                         <div className="w-[500px] h-14 bg-white rounded-full shadow-lg border flex items-center px-4 gap-2">
-                             <p className="flex-1 text-sm">{aiChatText}<span className="blinking-cursor">|</span></p>
+                             <p className="flex-1 text-sm">{aiChatText}{(subPhase === 'typing-timer' || subPhase === 'typing-task') && <span className="blinking-cursor">|</span>}</p>
                              <div className="w-10 h-10 bg-black text-white rounded-full"></div>
                         </div>
                         {/* Timer UI */}

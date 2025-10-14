@@ -38,11 +38,18 @@ export interface Note {
   color?: string; // For sticky notes
 }
 
+export enum TaskPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+}
+
 export interface Task {
   id: string;
   title: string;
   completed: boolean;
   createdAt: string; // ISO string
+  priority: TaskPriority;
 }
 
 export interface Meeting {
