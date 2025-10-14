@@ -1,1 +1,79 @@
-full contents of components/icons.tsx
+import React from 'react';
+
+export const HomeIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+  </svg>
+);
+
+export const CreateIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+);
+
+export const ExploreIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21.05 12.05a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+
+export const IdeasIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+    </svg>
+);
+
+export const PlusIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+    </svg>
+);
+
+export const HashtagIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+    </svg>
+);
+
+export const NoteBoardIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+);
+
+export const DiagramIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.55-4.55a2 2 0 00-2.828-2.828L12.172 7.172a2 2 0 000 2.828L15 10zM9 14l-4.55 4.55a2 2 0 01-2.828-2.828L6.172 11.172a2 2 0 012.828 0L9 14zm-1-5l6 6" />
+    </svg>
+);
+
+export const JamBoardIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 12h6m-1 8h2" />
+    </svg>
+);
+
+export const BackIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+);
+
+export const AIAudioIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 48 48" height="24" width="24">
+    <path fill="currentColor" fillRule="evenodd" d="M38.5 2c0 -0.82843 -0.6716 -1.5 -1.5 -1.5s-1.5 0.67157 -1.5 1.5v2.50783c-4.9536 0.07917 -9 3.95114 -9 8.99217 0 1.2509 0.0834 2.7111 0.1754 3.9469 0.1782 2.3953 1.9634 4.4027 4.4244 4.6981 1.5387 0.1848 3.5837 0.355 5.9002 0.355s4.3615 -0.1702 5.9002 -0.355c2.461 -0.2954 4.2462 -2.3028 4.4244 -4.6981 0.092 -1.2358 0.1754 -2.696 0.1754 -3.9469 0 -5.04103 -4.0464 -8.913 -9 -8.99217V2ZM35 13c0 -0.8284 -0.6716 -1.5 -1.5 -1.5S32 12.1716 32 13v1c0 0.8284 0.6716 1.5 1.5 1.5S35 14.8284 35 14v-1Zm7 0c0 -0.8284 -0.6716 -1.5 -1.5 -1.5S39 12.1716 39 13v1c0 0.8284 0.6716 1.5 1.5 1.5S42 14.8284 42 14v-1ZM24.8657 7.92103C23.0429 6.70732 20.8541 6 18.5 6 12.1487 6 7 11.1487 7 17.5v9C7 32.8513 12.1487 38 18.5 38S30 32.8513 30 26.5v-1.5001c-3.567 -0.7652 -6.0552 -3.8208 -6.3164 -7.3304 -0.0938 -1.261 -0.1836 -2.8077 -0.1836 -4.1695 0 -2.0392 0.4952 -3.92988 1.3657 -5.57897ZM5.00116 26.6587C5.08621 34.0414 11.0974 40 18.5002 40c7.4005 0 13.4102 -5.9548 13.499 -13.3342 1.3011 -0.0601 2.3761 0.1727 3.1179 0.4162 0.915 0.3002 1.4043 1.1887 1.3436 2.0844 -0.5511 8.13 -6.8168 14.691 -14.8131 15.6992 -0.0349 0.256 -0.0727 0.5166 -0.1135 0.7841 -0.1438 0.9428 -0.855 1.7439 -1.8811 1.8139 -0.3194 0.0218 -0.7017 0.0364 -1.1525 0.0364 -0.4508 0 -0.833 -0.0146 -1.1524 -0.0364 -1.0261 -0.07 -1.738 -0.8712 -1.8795 -1.8155 -0.0397 -0.2655 -0.0767 -0.5257 -0.1109 -0.7819C7.39403 43.8646 1.14565 37.3554 0.54711 29.2729c-0.071772 -0.9692 0.49489 -1.8951 1.46263 -2.1877 0.75116 -0.2271 1.8113 -0.4554 2.99142 -0.4265Z" clipRule="evenodd"></path>
+  </svg>
+);
+
+export const VoiceMemoIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" height="24" width="24">
+        <path 
+            fill="currentColor" 
+            fillRule="evenodd" 
+            d="M17.1161 2.11612C16.3592 2.87305 15.5339 3.25 15 3.25v2.5c0.5339 0 1.3592 0.37695 2.1161 1.13388C17.873 7.64081 18.25 8.46608 18.25 9h2.5c0 -0.53392 0.377 -1.35919 1.1339 -2.11612C22.6408 6.12695 23.4661 5.75 24 5.75v-2.5c-0.5339 0 -1.3592 -0.37695 -2.1161 -1.13388C21.127 1.35919 20.75 0.533919 20.75 0h-2.5c0 0.533919 -0.377 1.35919 -1.1339 2.11612ZM5.73999 6.5h-1.25v7.2857c0 2.2354 1.81218 4.0476 4.04762 4.0476 2.23539 0 4.04759 -1.8121 4.04759 -4.0476V6.5H5.73999Zm1.25 7.2857V9h3.09521v4.7857c0 0.8547 -0.69287 1.5476 -1.54759 1.5476 -0.85473 0 -1.54762 -0.6929 -1.54762 -1.5476ZM0 13.7861c0 4.2897 3.16434 7.8403 7.28613 8.4449v1.7689h2.5v-1.769c4.12137 -0.605 7.28527 -4.1554 7.28527 -8.4448h-2.5c0 3.3335 -2.7023 6.0357 -6.03569 6.0357 -3.33343 0 -6.03571 -2.7022 -6.03571 -6.0357H0Z" 
+            clipRule="evenodd"
+        ></path>
+    </svg>
+);
