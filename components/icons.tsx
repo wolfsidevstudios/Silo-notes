@@ -257,12 +257,27 @@ export const YahooIcon = () => (
 );
 
 export const ZoomIcon = ({className}: {className?: string}) => (
-    <svg className={className || "h-5 w-5"} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M11 12.25C11 11.0074 12.0074 10 13.25 10H16.75C17.9926 10 19 11.0074 19 12.25V15.75C19 16.9926 17.9926 18 16.75 18H13.25C12.0074 18 11 16.9926 11 15.75V12.25Z" stroke="#2D8CFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M5 12.25C5 11.0074 6.00736 10 7.25 10H8.75C9.99264 10 11 11.0074 11 12.25V15.75C11 16.9926 9.99264 18 8.75 18H7.25C6.00736 18 5 16.9926 5 15.75V12.25Z" stroke="#2D8CFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M14 6L14 8" stroke="#2D8CFF" strokeWidth="2" strokeLinecap="round"/>
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 96 96" id="Zoom-Icon--Streamline-Svg-Logos" className={className || "h-5 w-5"}>
+        <desc>
+        Zoom Icon Streamline Icon: https://streamlinehq.com
+        </desc>
+        <path fill="url(#zoom-gradient)" d="M95 48c0 4.982-.376 9.964-1.222 14.758-2.538 15.886-15.134 28.482-31.02 31.02C57.964 94.624 52.982 95 48 95c-4.982 0-9.964-.376-14.758-1.222C17.356 91.24 4.76 78.644 2.222 62.758 1.376 57.964 1 52.982 1 48c0-4.982.376-9.964 1.222-14.758C4.76 17.356 17.356 4.76 33.242 2.222 38.036 1.376 43.018 1 48 1c4.982 0 9.964.376 14.758 1.222 15.886 2.538 28.482 15.134 31.02 31.02C94.624 38.036 95 43.018 95 48Z"></path>
+        <path fill="#ffffff" d="M75.9175 77.3291h-47.376c-3.102 0-6.11-1.692-7.52-4.418-1.692-3.196-1.034-7.05 1.504-9.588l32.994-32.994h-23.688c-6.486 0-11.75-5.264-11.75-11.75h43.616c3.102 0 6.11 1.692 7.52 4.418 1.692 3.196 1.034 7.05-1.504 9.588l-32.9 33.088h27.354c6.486 0 11.75 5.17 11.75 11.656Z"></path>
+        <defs>
+        <linearGradient id="zoom-gradient" x1="2225.6" x2="7176.4" y1="8988.51" y2="413.491" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stopColor="#0845bf"></stop>
+        <stop offset=".191" stopColor="#0950de"></stop>
+        <stop offset=".382" stopColor="#0b59f6"></stop>
+        <stop offset=".5" stopColor="#0b5cff"></stop>
+        <stop offset=".673" stopColor="#0e5efe"></stop>
+        <stop offset=".777" stopColor="#1665fc"></stop>
+        <stop offset=".863" stopColor="#246ff9"></stop>
+        <stop offset=".939" stopColor="#387ff4"></stop>
+        <stop offset="1" stopColor="#4f90ee"></stop>
+        </linearGradient>
+        </defs>
     </svg>
-)
+);
 
 export const Heading1Icon = () => (
     <span className="material-symbols-rounded" style={{ fontSize: '20px' }}>format_h1</span>

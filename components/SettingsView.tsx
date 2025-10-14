@@ -57,12 +57,13 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
     
     const clientId = 'qy8KhVTKRZG1Pl4dhQwZSw';
     const redirectUri = window.location.origin + window.location.pathname;
+    const scope = 'user:read meeting:read';
 
     const verifier = generateRandomString(128);
     sessionStorage.setItem('zoom_code_verifier', verifier);
     const challenge = await generateCodeChallenge(verifier);
 
-    const authUrl = `https://zoom.us/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256`;
+    const authUrl = `https://zoom.us/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256&scope=${encodeURIComponent(scope)}`;
     window.location.href = authUrl;
   };
 
@@ -115,6 +116,9 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
                     <button onClick={handleZoomConnect} className="text-sm font-semibold text-blue-600 bg-white border rounded-full px-4 py-1.5 hover:bg-blue-50">Connect</button>
                 </div>
             )}
+            <div className="text-center mt-6 p-4 bg-gray-100 rounded-lg border-2 border-dashed">
+                <p className="text-sm text-gray-500">More integrations coming soon!</p>
+            </div>
         </div>
 
 
