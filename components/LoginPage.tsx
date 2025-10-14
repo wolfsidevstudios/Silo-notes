@@ -80,7 +80,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         
         const clientId = 'qy8KhVTKRZG1Pl4dhQwZSw';
         const redirectUri = window.location.origin + window.location.pathname;
-        const scope = 'openid user:read';
+        const scope = 'user:read';
     
         const verifier = generateRandomString(128);
         sessionStorage.setItem('zoom_code_verifier', verifier);
