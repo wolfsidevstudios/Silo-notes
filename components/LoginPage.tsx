@@ -70,7 +70,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             });
             window.google.accounts.id.renderButton(
                 signInButtonRef.current,
-                { theme: 'outline', size: 'large', type: 'standard', width: '300' } 
+                { theme: 'outline', size: 'large', type: 'standard', width: '300', shape: 'pill' } 
             );
         }
     }, []);
@@ -103,7 +103,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                         <div ref={signInButtonRef}></div>
                         <button
                           onClick={handleYahooLogin}
-                          className="flex justify-center items-center gap-2 w-[300px] h-[40px] bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                          className="flex justify-center items-center gap-2 w-[300px] h-[40px] bg-[#6001D2] text-white rounded-full shadow-sm text-sm font-bold hover:bg-[#5001b0] transition-colors"
                         >
                           <YahooIcon />
                           Sign in with Yahoo
