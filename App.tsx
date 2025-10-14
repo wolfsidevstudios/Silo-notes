@@ -363,6 +363,105 @@ const App: React.FC = () => {
   const [geminiApiKey, setGeminiApiKey] = useState<string | null>(null);
   const [activeClock, setActiveClock] = useState<{ type: 'timer' | 'stopwatch'; props: any } | null>(null);
 
+  // Zoom Integration State
+  const [zoomToken, setZoomToken] = useState<string | null>(() => localStorage.getItem('zoom_access_token'));
+  const [zoomUser, setZoomUser] = useState<any | null>(null);
+  const [zoomMeetings, setZoomMeetings] = useState<Meeting[]>([]);
+
+  // Zoom: Handle OAuth callback
+  useEffect(() => {
+    const handleZoomCallback = async (code: string) => {
+      const verifier = sessionStorage.getItem('zoom_code_verifier');
+      if (!verifier) {
+        console.error('Zoom code verifier not found in session storage.');
+        return;
+      }
+      
+      const clientId = 'qy8KhVTKRZG1Pl4dhQwZSw';
+      const redirectUri = window.location.origin + window.location.pathname;
+
+      const params = new URLSearchParams();
+      params.append('grant_type', 'authorization_code');
+      params.append('code', code);
+      params.append('redirect_uri', redirectUri);
+      params.append('client_id', clientId);
+      params.append('code_verifier', verifier);
+
+      try {
+        const response = await fetch('https://zoom.us/oauth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params,
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch Zoom token');
+        
+        const data = await response.json();
+        localStorage.setItem('zoom_access_token', data.access_token);
+        localStorage.setItem('zoom_refresh_token', data.refresh_token);
+        setZoomToken(data.access_token);
+        sessionStorage.removeItem('zoom_code_verifier');
+      } catch (error) {
+        console.error('Error exchanging Zoom code for token:', error);
+      }
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const zoomCode = urlParams.get('code');
+    if (zoomCode) {
+      handleZoomCallback(zoomCode);
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+    }
+  }, []);
+
+  // Zoom: Fetch data when token is available
+  useEffect(() => {
+    const fetchZoomData = async (token: string) => {
+        try {
+            // Fetch User Profile
+            const userResponse = await fetch('https://api.zoom.us/v2/users/me', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!userResponse.ok) throw new Error('Failed to fetch Zoom user');
+            const userData = await userResponse.json();
+            setZoomUser(userData);
+
+            // Fetch Meetings
+            const meetingsResponse = await fetch('https://api.zoom.us/v2/users/me/meetings?type=upcoming', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!meetingsResponse.ok) throw new Error('Failed to fetch Zoom meetings');
+            const meetingsData = await meetingsResponse.json();
+            
+            const mappedMeetings: Meeting[] = meetingsData.meetings.map((m: any) => ({
+                id: m.uuid,
+                title: m.topic,
+                dateTime: m.start_time,
+                createdAt: m.created_at,
+                source: 'zoom',
+                joinUrl: m.join_url,
+            }));
+            setZoomMeetings(mappedMeetings);
+        } catch (error) {
+            console.error('Error fetching Zoom data:', error);
+            // Handle token refresh logic here in a real app
+            handleZoomDisconnect();
+        }
+    };
+
+    if (zoomToken) {
+        fetchZoomData(zoomToken);
+    }
+  }, [zoomToken]);
+
+  const handleZoomDisconnect = () => {
+    localStorage.removeItem('zoom_access_token');
+    localStorage.removeItem('zoom_refresh_token');
+    setZoomToken(null);
+    setZoomUser(null);
+    setZoomMeetings([]);
+  };
+
   useEffect(() => {
     if (route.startsWith('#/')) {
         const viewKey = route.substring(2).toUpperCase();
@@ -397,11 +496,7 @@ const App: React.FC = () => {
       if (savedBoards) setBoards(JSON.parse(savedBoards));
       if (savedTasks) {
         const parsedTasks = JSON.parse(savedTasks);
-        // Migration for tasks without priority
-        const migratedTasks = parsedTasks.map((task: any) => ({
-          ...task,
-          priority: task.priority || TaskPriority.MEDIUM,
-        }));
+        const migratedTasks = parsedTasks.map((task: any) => ({ ...task, priority: task.priority || TaskPriority.MEDIUM, }));
         setTasks(migratedTasks);
       }
       if (savedMeetings) setMeetings(JSON.parse(savedMeetings));
@@ -431,6 +526,30 @@ const App: React.FC = () => {
       console.error("Failed to save data to localStorage", error);
     }
   }, [notes, spaces, boards, tasks, meetings, calendarEvents, gems]);
+
+  useEffect(() => {
+    // Sync meetings to calendar events
+    const siloMeetingEvents: CalendarEvent[] = meetings.map(m => ({
+      id: `meeting-${m.id}`,
+      date: m.dateTime.split('T')[0],
+      itemId: m.id,
+      itemType: 'meeting',
+    }));
+     const zoomMeetingEvents: CalendarEvent[] = zoomMeetings.map(m => ({
+      id: `meeting-${m.id}`,
+      date: m.dateTime.split('T')[0],
+      itemId: m.id,
+      itemType: 'meeting',
+    }));
+
+    setCalendarEvents(prev => {
+      const otherEvents = prev.filter(e => e.itemType !== 'meeting');
+      const allMeetingEvents = [...siloMeetingEvents, ...zoomMeetingEvents];
+      const uniqueMeetingEvents = allMeetingEvents.filter((event, index, self) => index === self.findIndex(t => t.id === event.id));
+      return [...otherEvents, ...uniqueMeetingEvents];
+    });
+  }, [meetings, zoomMeetings]);
+
 
   const handleToggleAiChat = useCallback(() => setIsAiChatVisible(prev => !prev), []);
   const handleSetTimer = useCallback((props: { initialSeconds: number }) => setActiveClock({ type: 'timer', props }), []);
@@ -465,20 +584,11 @@ const App: React.FC = () => {
     setCurrentNote(note);
     let view;
     switch (note.type) {
-        case NoteType.AI_NOTE:
-            view = View.AI_NOTE_EDITOR;
-            break;
-        case NoteType.FLASHCARDS:
-            view = View.FLASHCARD_TOOL;
-            break;
-        case NoteType.QUIZ:
-            view = View.QUIZ_TOOL;
-            break;
-        case NoteType.INFOGRAPHIC:
-            view = View.NOTES_TO_INFOGRAPHIC_TOOL;
-            break;
-        default:
-            view = View.CREATE;
+        case NoteType.AI_NOTE: view = View.AI_NOTE_EDITOR; break;
+        case NoteType.FLASHCARDS: view = View.FLASHCARD_TOOL; break;
+        case NoteType.QUIZ: view = View.QUIZ_TOOL; break;
+        case NoteType.INFOGRAPHIC: view = View.NOTES_TO_INFOGRAPHIC_TOOL; break;
+        default: view = View.CREATE;
     }
     handleViewChange(view, { keepCurrentNote: true });
   };
@@ -498,19 +608,15 @@ const App: React.FC = () => {
   };
   
   const handleAddTask = (title: string, priority: TaskPriority) => { setTasks(prev => [{ id: new Date().toISOString(), title, completed: false, createdAt: new Date().toISOString(), priority }, ...prev]); };
-  const handleAddMeeting = (title: string, dateTime: string) => { setMeetings(prev => [{ id: new Date().toISOString(), title, dateTime, createdAt: new Date().toISOString() }, ...prev]); };
+  const handleAddMeeting = (title: string, dateTime: string) => { setMeetings(prev => [{ id: new Date().toISOString(), title, dateTime, createdAt: new Date().toISOString(), source: 'silo' }, ...prev]); };
   const handleToggleTask = (taskId: string) => { setTasks(tasks.map(task => task.id === taskId ? { ...task, completed: !task.completed } : task)); };
   const handleDeleteTask = (taskId: string) => { setTasks(tasks.filter(task => task.id !== taskId)); };
   const handleDeleteMeeting = (meetingId: string) => { setMeetings(meetings.filter(meeting => meeting.id !== meetingId)); };
 
-  const handleAddCalendarEvents = (date: string, items: { id: string; type: 'note' | 'task' }[]) => {
+  const handleAddCalendarEvents = (date: string, items: { id: string; type: 'note' | 'task' | 'meeting' }[]) => {
     const newEvents: CalendarEvent[] = items.map(item => ({
-        id: `${date}-${item.id}`,
-        date,
-        itemId: item.id,
-        itemType: item.type,
+        id: `${item.type}-${date}-${item.id}`, date, itemId: item.id, itemType: item.type,
     }));
-
     setCalendarEvents(prev => {
         const existingEventIds = new Set(prev.map(e => e.id));
         const uniqueNewEvents = newEvents.filter(e => !existingEventIds.has(e.id));
@@ -522,23 +628,9 @@ const App: React.FC = () => {
     setCalendarEvents(prev => prev.filter(e => e.id !== eventId));
   };
 
-  const handleAddSpace = (name: string) => {
-    if (name.trim() === '') return;
-    setSpaces([...spaces, { id: new Date().toISOString(), name }]);
-  };
-
-  const handleSelectSpace = (spaceId: string) => {
-    setActiveSpaceId(spaceId);
-    setActiveView(View.SPACE);
-    setActiveBoard(null);
-    setCurrentNote(null);
-  };
-  
-  const handleAddBoard = (name: string, spaceId: string, type: BoardType) => {
-    if (name.trim() === '') return;
-    setBoards([...boards, { id: new Date().toISOString(), name, spaceId, type }]);
-  };
-
+  const handleAddSpace = (name: string) => { if (name.trim() !== '') setSpaces([...spaces, { id: new Date().toISOString(), name }]); };
+  const handleSelectSpace = (spaceId: string) => { setActiveSpaceId(spaceId); setActiveView(View.SPACE); setActiveBoard(null); setCurrentNote(null); };
+  const handleAddBoard = (name: string, spaceId: string, type: BoardType) => { if (name.trim() !== '') setBoards([...boards, { id: new Date().toISOString(), name, spaceId, type }]); };
   const handleSelectBoard = (board: Board) => { setActiveBoard(board); setActiveView(View.BOARD); };
   const handleBackToSpace = () => { setActiveView(View.SPACE); setActiveBoard(null); };
 
@@ -551,6 +643,7 @@ const App: React.FC = () => {
 
   const renderMainView = () => {
     const activeSpace = spaces.find(s => s.id === activeSpaceId);
+    const allMeetings = [...meetings, ...zoomMeetings];
     if (activeView === View.BOARD && activeBoard && activeSpace) {
         switch (activeBoard.type) {
             case BoardType.NOTE_BOARD: return <NoteBoardView board={activeBoard} space={activeSpace} onBack={handleBackToSpace} />;
@@ -570,10 +663,10 @@ const App: React.FC = () => {
         if (currentNote?.type === NoteType.STICKY) return <StickyNoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
         if (currentNote?.type === NoteType.AI_NOTE) return <AiNoteEditor currentNote={currentNote} onSave={handleSaveNote} geminiApiKey={geminiApiKey} />;
         return <ClassicNoteEditor currentNote={currentNote} onSave={handleSaveNote} gems={gems} setGems={setGems} />;
-      case View.CALENDAR: return <CalendarView events={calendarEvents} notes={notes} tasks={tasks} onAddEvents={handleAddCalendarEvents} onDeleteEvent={handleDeleteCalendarEvent} onEditNote={handleEditNote} />;
+      case View.CALENDAR: return <CalendarView events={calendarEvents} notes={notes} tasks={tasks} meetings={allMeetings} onAddEvents={handleAddCalendarEvents} onDeleteEvent={handleDeleteCalendarEvent} onEditNote={handleEditNote} />;
       case View.GEMS: return <GemsView gems={gems} />;
-      case View.AGENDA: return <AgendaView tasks={tasks} meetings={meetings} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onDeleteMeeting={handleDeleteMeeting} />;
-      case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} onViewChange={handleViewChange} />;
+      case View.AGENDA: return <AgendaView tasks={tasks} meetings={allMeetings} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onDeleteMeeting={handleDeleteMeeting} />;
+      case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} onViewChange={handleViewChange} zoomUser={zoomUser} onZoomDisconnect={handleZoomDisconnect} />;
       case View.SILO_LABS: return <SiloLabsView onViewChange={handleViewChange} />;
       case View.SILO_CHAT: return <SiloChatView geminiApiKey={geminiApiKey} onSaveNote={handleSaveNote} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} />;
       case View.SUMMARIZE_TOOL: return <SummarizeToolView onBack={() => handleViewChange(View.SILO_LABS)} notes={notes} />;

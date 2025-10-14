@@ -69,13 +69,15 @@ export interface Meeting {
   title: string;
   dateTime: string;
   createdAt: string; // ISO string
+  source?: 'silo' | 'zoom';
+  joinUrl?: string;
 }
 
 export interface CalendarEvent {
   id: string;
   date: string; // YYYY-MM-DD
   itemId: string;
-  itemType: 'note' | 'task';
+  itemType: 'note' | 'task' | 'meeting';
 }
 
 export interface Space {

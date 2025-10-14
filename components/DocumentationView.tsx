@@ -83,8 +83,12 @@ const DocumentationView: React.FC<DocumentationViewProps> = ({ onBack }) => {
                         description="Used for generating lifelike, high-quality audio from text, with support for multiple languages and voices."
                     />
                     <IntegrationCard 
-                        name="Google Sign-In"
-                        description="Handles secure authentication without requiring you to create a separate password for Silo Notes. We do not store your Google account information."
+                        name="Google Sign-In & Yahoo"
+                        description="Handles secure authentication without requiring you to create a separate password for Silo Notes. We do not store your account information."
+                    />
+                     <IntegrationCard 
+                        name="Zoom"
+                        description="Connect your Zoom account to automatically sync your upcoming meetings to your Calendar and Agenda, creating a unified view of your schedule."
                     />
                 </div>
             </Section>

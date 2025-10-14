@@ -256,6 +256,14 @@ export const YahooIcon = () => (
     </svg>
 );
 
+export const ZoomIcon = ({className}: {className?: string}) => (
+    <svg className={className || "h-5 w-5"} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M11 12.25C11 11.0074 12.0074 10 13.25 10H16.75C17.9926 10 19 11.0074 19 12.25V15.75C19 16.9926 17.9926 18 16.75 18H13.25C12.0074 18 11 16.9926 11 15.75V12.25Z" stroke="#2D8CFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M5 12.25C5 11.0074 6.00736 10 7.25 10H8.75C9.99264 10 11 11.0074 11 12.25V15.75C11 16.9926 9.99264 18 8.75 18H7.25C6.00736 18 5 16.9926 5 15.75V12.25Z" stroke="#2D8CFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M14 6L14 8" stroke="#2D8CFF" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+)
+
 export const Heading1Icon = () => (
     <span className="material-symbols-rounded" style={{ fontSize: '20px' }}>format_h1</span>
 );

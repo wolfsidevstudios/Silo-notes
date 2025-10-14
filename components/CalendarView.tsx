@@ -1,27 +1,30 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { CalendarEvent, Note, Task, NoteType } from '../types';
-import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, CloseIcon, JournalIcon } from './icons';
+import { CalendarEvent, Note, Task, Meeting, NoteType } from '../types';
+import { ChevronLeftIcon, ChevronRightIcon, PlusIcon, CloseIcon, JournalIcon, ZoomIcon } from './icons';
 
 const AddItemModal = ({
   onClose,
   onAddItems,
   notes,
   tasks,
+  meetings
 }: {
   onClose: () => void;
-  onAddItems: (items: { id: string; type: 'note' | 'task' }[]) => void;
+  onAddItems: (items: { id: string; type: 'note' | 'task' | 'meeting' }[]) => void;
   notes: Note[];
   tasks: Task[];
+  meetings: Meeting[];
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedItems, setSelectedItems] = useState<{ [key: string]: { id: string; type: 'note' | 'task' } }>({});
+  const [selectedItems, setSelectedItems] = useState<{ [key: string]: { id: string; type: 'note' | 'task' | 'meeting' } }>({});
 
   const combinedItems = useMemo(() => {
     const allNotes = notes.map(n => ({ ...n, itemType: 'note' as const }));
     const allTasks = tasks.filter(t => !t.completed).map(t => ({ ...t, itemType: 'task' as const }));
-    return [...allNotes, ...allTasks]
+    const allMeetings = meetings.filter(m => m.source === 'silo').map(m => ({...m, itemType: 'meeting' as const}));
+    return [...allNotes, ...allTasks, ...allMeetings]
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [notes, tasks]);
+  }, [notes, tasks, meetings]);
 
   const filteredItems = useMemo(() => {
     if (!searchTerm) return combinedItems;
@@ -30,7 +33,7 @@ const AddItemModal = ({
     );
   }, [searchTerm, combinedItems]);
 
-  const toggleItem = (item: { id: string; type: 'note' | 'task' }) => {
+  const toggleItem = (item: { id: string; type: 'note' | 'task' | 'meeting' }) => {
     const key = `${item.type}-${item.id}`;
     setSelectedItems(prev => {
       const newSelected = { ...prev };
@@ -56,7 +59,7 @@ const AddItemModal = ({
           <div className="relative">
             <input
               type="text"
-              placeholder="Search notes and tasks..."
+              placeholder="Search notes, tasks, and meetings..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-full focus:ring-2 focus:ring-black focus:border-black"
@@ -74,7 +77,8 @@ const AddItemModal = ({
                 {item.itemType === 'note' && (item as Note).type === NoteType.STICKY && <div className="w-4 h-4 rounded" style={{ backgroundColor: (item as Note).color || '#FFF9C4' }}></div>}
                 {item.itemType === 'note' && (item as Note).type === NoteType.JOURNAL && <JournalIcon />}
                 {item.itemType === 'task' && <div className="w-4 h-4 rounded-full bg-gray-300"></div>}
-                <span className="font-medium text-gray-800 flex-grow">{item.title || (item.itemType === 'note' ? 'Untitled Note' : 'Untitled Task')}</span>
+                 {item.itemType === 'meeting' && <div className="w-4 h-4 rounded-full bg-blue-300"></div>}
+                <span className="font-medium text-gray-800 flex-grow">{item.title || 'Untitled'}</span>
               </div>
             ))}
           </div>
@@ -89,8 +93,10 @@ const AddItemModal = ({
   );
 };
 
-const ItemPreviewModal = ({ item, onClose, onGoToItem }: { item: Note | Task; onClose: () => void; onGoToItem: (item: Note) => void; }) => {
+const ItemPreviewModal = ({ item, onClose, onGoToItem }: { item: Note | Task | Meeting; onClose: () => void; onGoToItem?: (item: Note) => void; }) => {
     const isNote = 'content' in item;
+    const isTask = 'completed' in item;
+    const isMeeting = 'dateTime' in item;
 
     const stripHtml = (html: string) => {
         const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -105,23 +111,18 @@ const ItemPreviewModal = ({ item, onClose, onGoToItem }: { item: Note | Task; on
                     <button onClick={onClose}><CloseIcon /></button>
                 </div>
                 <div className="p-6 flex-grow overflow-y-auto">
-                    {isNote ? (
-                        <div className="prose max-w-none">
-                           <p>{stripHtml((item as Note).content)}</p>
-                        </div>
-                    ) : (
-                        <div>
-                            <p className="text-lg">Status: <span className="font-semibold">{(item as Task).completed ? 'Completed' : 'To-Do'}</span></p>
-                        </div>
-                    )}
+                    {isNote && <div className="prose max-w-none"><p>{stripHtml((item as Note).content)}</p></div>}
+                    {isTask && <div><p className="text-lg">Status: <span className="font-semibold">{(item as Task).completed ? 'Completed' : 'To-Do'}</span></p></div>}
+                    {isMeeting && <div><p className="text-lg">Time: <span className="font-semibold">{new Date((item as Meeting).dateTime).toLocaleString()}</span></p></div>}
                 </div>
-                {isNote && (
-                    <div className="p-6 border-t flex justify-end">
-                        <button onClick={() => onGoToItem(item as Note)} className="bg-gray-100 font-semibold py-2 px-5 rounded-full hover:bg-gray-200 transition-colors">
-                            View Full Note
-                        </button>
-                    </div>
-                )}
+                <div className="p-6 border-t flex justify-end">
+                  {isNote && onGoToItem && (
+                    <button onClick={() => onGoToItem(item as Note)} className="bg-gray-100 font-semibold py-2 px-5 rounded-full hover:bg-gray-200 transition-colors">View Full Note</button>
+                  )}
+                  {isMeeting && (item as Meeting).source === 'zoom' && (item as Meeting).joinUrl && (
+                    <a href={(item as Meeting).joinUrl} target="_blank" rel="noopener noreferrer" className="bg-blue-500 text-white font-semibold py-2 px-5 rounded-full hover:bg-blue-600 transition-colors">Join Meeting</a>
+                  )}
+                </div>
             </div>
         </div>
     )
@@ -131,30 +132,26 @@ interface CalendarViewProps {
   events: CalendarEvent[];
   notes: Note[];
   tasks: Task[];
-  onAddEvents: (date: string, items: { id: string; type: 'note' | 'task' }[]) => void;
+  meetings: Meeting[];
+  onAddEvents: (date: string, items: { id: string; type: 'note' | 'task' | 'meeting' }[]) => void;
   onDeleteEvent: (eventId: string) => void;
   onEditNote: (note: Note) => void;
 }
 
-const CalendarView: React.FC<CalendarViewProps> = ({ events, notes, tasks, onAddEvents, onDeleteEvent, onEditNote }) => {
+const CalendarView: React.FC<CalendarViewProps> = ({ events, notes, tasks, meetings, onAddEvents, onDeleteEvent, onEditNote }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [previewItem, setPreviewItem] = useState<Note | Task | null>(null);
+  const [previewItem, setPreviewItem] = useState<Note | Task | Meeting | null>(null);
 
   const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
-
   const startingDayOfWeek = firstDayOfMonth.getDay();
 
   const calendarDays = useMemo(() => {
     const days = [];
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i));
-    }
+    for (let i = 0; i < startingDayOfWeek; i++) { days.push(null); }
+    for (let i = 1; i <= daysInMonth; i++) { days.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i)); }
     return days;
   }, [currentMonth, daysInMonth, startingDayOfWeek]);
 
@@ -168,17 +165,16 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, notes, tasks, onAdd
   };
 
   const handlePreviewItem = (event: CalendarEvent) => {
-      const item = event.itemType === 'note' 
-        ? notes.find(n => n.id === event.itemId)
-        : tasks.find(t => t.id === event.itemId);
-      if (item) {
-          setPreviewItem(item);
-      }
+      let item;
+      if (event.itemType === 'note') item = notes.find(n => n.id === event.itemId);
+      else if (event.itemType === 'task') item = tasks.find(t => t.id === event.itemId);
+      else if (event.itemType === 'meeting') item = meetings.find(m => m.id === event.itemId);
+      if (item) setPreviewItem(item);
   };
 
   return (
     <div className="p-8 lg:p-12 h-full flex flex-col">
-      {isModalOpen && selectedDate && <AddItemModal onClose={() => setIsModalOpen(false)} onAddItems={(items) => onAddEvents(selectedDate, items)} notes={notes} tasks={tasks} />}
+      {isModalOpen && selectedDate && <AddItemModal onClose={() => setIsModalOpen(false)} onAddItems={(items) => onAddEvents(selectedDate, items)} notes={notes} tasks={tasks} meetings={meetings} />}
       {previewItem && <ItemPreviewModal item={previewItem} onClose={() => setPreviewItem(null)} onGoToItem={onEditNote} />}
 
       <header className="mb-8 flex items-center justify-between">
@@ -206,13 +202,26 @@ const CalendarView: React.FC<CalendarViewProps> = ({ events, notes, tasks, onAdd
                  </button>
                 <div className="mt-2 space-y-1 overflow-y-auto">
                     {events.filter(e => e.date === day.toISOString().split('T')[0]).map(event => {
-                        const item = event.itemType === 'note' ? notes.find(n => n.id === event.itemId) : tasks.find(t => t.id === event.itemId);
+                        let item;
+                        if (event.itemType === 'note') item = notes.find(n => n.id === event.itemId);
+                        else if (event.itemType === 'task') item = tasks.find(t => t.id === event.itemId);
+                        else if (event.itemType === 'meeting') item = meetings.find(m => m.id === event.itemId);
+
                         if (!item) return null;
+                        
                         const noteColor = (item as Note).color;
                         const isSticky = (item as Note).type === NoteType.STICKY;
+                        const isMeeting = event.itemType === 'meeting';
+                        const isZoomMeeting = isMeeting && (item as Meeting).source === 'zoom';
+
+                        let bgColor = '#f3f4f6';
+                        if (isSticky) bgColor = noteColor || '#FFF9C4';
+                        if (isMeeting) bgColor = '#dbeafe'; // blue-100
+
                         return (
-                            <div key={event.id} onClick={() => handlePreviewItem(event)} className="p-1.5 px-2 rounded-full text-xs font-medium cursor-pointer truncate" style={{backgroundColor: isSticky ? noteColor || '#FFF9C4' : '#f3f4f6'}}>
-                                {item.title || 'Untitled'}
+                            <div key={event.id} onClick={() => handlePreviewItem(event)} className="p-1.5 px-2 rounded-full text-xs font-medium cursor-pointer truncate flex items-center gap-1" style={{backgroundColor: bgColor}}>
+                                {isZoomMeeting && <ZoomIcon className="h-3 w-3 flex-shrink-0" />}
+                                <span>{item.title || 'Untitled'}</span>
                             </div>
                         )
                     })}

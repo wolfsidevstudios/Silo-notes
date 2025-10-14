@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View } from '../types';
-import { BookOpenIcon, ChevronRightIcon } from './icons';
+import { BookOpenIcon, ChevronRightIcon, ZoomIcon } from './icons';
 
 interface UserProfile {
     name: string;
@@ -13,9 +13,11 @@ interface SettingsViewProps {
   onKeyUpdate: (key: string) => void;
   onLogout: () => void;
   onViewChange: (view: View) => void;
+  zoomUser: any | null;
+  onZoomDisconnect: () => void;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, onLogout, onViewChange }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, onLogout, onViewChange, zoomUser, onZoomDisconnect }) => {
   const [apiKey, setApiKey] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
 
@@ -35,6 +37,35 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
       setTimeout(() => setSaveStatus('idle'), 2000); 
     }, 500);
   };
+  
+  const handleZoomConnect = async () => {
+    const generateRandomString = (length: number) => {
+        const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let text = '';
+        for (let i = 0; i < length; i++) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return text;
+    };
+    const generateCodeChallenge = async (verifier: string) => {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(verifier);
+        const digest = await window.crypto.subtle.digest('SHA-256', data);
+        return btoa(String.fromCharCode(...new Uint8Array(digest)))
+            .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    };
+    
+    const clientId = 'qy8KhVTKRZG1Pl4dhQwZSw';
+    const redirectUri = window.location.origin + window.location.pathname;
+
+    const verifier = generateRandomString(128);
+    sessionStorage.setItem('zoom_code_verifier', verifier);
+    const challenge = await generateCodeChallenge(verifier);
+
+    const authUrl = `https://zoom.us/oauth/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256`;
+    window.location.href = authUrl;
+  };
+
 
   return (
     <div className="p-8 lg:p-12">
@@ -59,6 +90,25 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
             </div>
         )}
         
+        <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Third-Party Integrations</h2>
+            <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="bg-blue-100 p-2 rounded-full"><ZoomIcon /></div>
+                    <div>
+                        <p className="font-semibold text-gray-800">Zoom</p>
+                        <p className="text-sm text-gray-500">{zoomUser ? `Connected as ${zoomUser.email}` : 'Sync your meetings'}</p>
+                    </div>
+                </div>
+                {zoomUser ? (
+                    <button onClick={onZoomDisconnect} className="text-sm font-semibold text-red-600 bg-white border rounded-full px-4 py-1.5 hover:bg-red-50">Disconnect</button>
+                ) : (
+                    <button onClick={handleZoomConnect} className="text-sm font-semibold text-blue-600 bg-white border rounded-full px-4 py-1.5 hover:bg-blue-50">Connect</button>
+                )}
+            </div>
+        </div>
+
+
         <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
             <h2 className="text-2xl font-semibold text-gray-800 mb-6">API Configuration</h2>
             

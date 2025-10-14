@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Task, Meeting, TaskPriority } from '../types';
-import { PlusIcon } from './icons';
+import { PlusIcon, ZoomIcon } from './icons';
 
 interface AgendaViewProps {
   tasks: Task[];
@@ -57,7 +57,7 @@ const AgendaView: React.FC<AgendaViewProps> = ({ tasks, meetings, onAddTask, onA
     }
   };
   
-  const upcomingMeetings = meetings.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  const upcomingMeetings = [...meetings].sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime());
   const incompleteTasks = tasks.filter(t => !t.completed).sort((a, b) => {
     const priorityOrder = { [TaskPriority.HIGH]: 0, [TaskPriority.MEDIUM]: 1, [TaskPriority.LOW]: 2 };
     return priorityOrder[a.priority] - priorityOrder[b.priority];
@@ -87,10 +87,18 @@ const AgendaView: React.FC<AgendaViewProps> = ({ tasks, meetings, onAddTask, onA
             {upcomingMeetings.length > 0 ? upcomingMeetings.map(meeting => (
               <div key={meeting.id} className="bg-gray-50/70 p-4 rounded-lg flex justify-between items-start group">
                 <div>
-                  <p className="font-semibold text-gray-800">{meeting.title}</p>
-                  <p className="text-sm text-gray-500">{meeting.dateTime}</p>
+                    <div className="flex items-center gap-2">
+                        {meeting.source === 'zoom' && <ZoomIcon />}
+                        <p className="font-semibold text-gray-800">{meeting.title}</p>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">{new Date(meeting.dateTime).toLocaleString()}</p>
+                    {meeting.source === 'zoom' && meeting.joinUrl && (
+                        <a href={meeting.joinUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-blue-600 hover:underline mt-2 inline-block">Join Meeting</a>
+                    )}
                 </div>
-                <button onClick={() => onDeleteMeeting(meeting.id)} className="text-gray-400 hover:text-red-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity text-xl">&times;</button>
+                {meeting.source !== 'zoom' && (
+                    <button onClick={() => onDeleteMeeting(meeting.id)} className="text-gray-400 hover:text-red-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity text-xl">&times;</button>
+                )}
               </div>
             )) : <p className="text-gray-500 text-center pt-10">No upcoming meetings.</p>}
           </div>
