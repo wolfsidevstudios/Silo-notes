@@ -50,194 +50,128 @@ const FaqItem = ({ question, answer }: { question: string; answer: string }) => 
 };
 
 const AppPreviewAnimation = () => {
-    const [phase, setPhase] = useState(0); // 0: intro, 1: carousel, 2: typing, 3: rewrite, 4: grid, 5: ai-timer, 6: ai-task, 7: loop
-    const [subPhase, setSubPhase] = useState('start');
-    const [typedText, setTypedText] = useState('');
-    const [aiChatText, setAiChatText] = useState('');
-    const [timerSeconds, setTimerSeconds] = useState(300);
-    const [tasks, setTasks] = useState<{id: number, text: string}[]>([]);
+    const [phase, setPhase] = useState('intro');
+    const [typedNote, setTypedNote] = useState('');
+    const [typedChat, setTypedChat] = useState('');
+    const [timer, setTimer] = useState(300);
+    const [showTask, setShowTask] = useState(false);
 
-    const noteText = "Brainstorming session for the new marketing campaign...\n- Key message: 'Simplicity is the ultimate sophistication.'\n- Target audience: Creative professionals, students.";
+    const fullNoteText = "Brainstorming session for the new marketing campaign...\n- Key message: 'Simplicity is the ultimate sophistication.'\n- Target audience: Creative professionals, students.";
     const rewrittenNoteText = "Marketing Campaign Brainstorm:\n\nWe're targeting creative pros and students with a core message of sophisticated simplicity. Let's explore this concept further.";
+    const timerChatText = "start a 5 minute timer";
+    const taskChatText = "add a task to buy groceries";
 
     useEffect(() => {
         let timeout: number;
         let interval: number;
 
-        const runAnimation = () => {
-            switch (phase) {
-                case 0: // Intro text
-                    timeout = window.setTimeout(() => setPhase(1), 2500);
-                    break;
-                case 1: // Carousel
-                    timeout = window.setTimeout(() => setPhase(2), 3000);
-                    break;
-                case 2: // Typing Note
-                    if (subPhase === 'start') {
-                        setSubPhase('typing');
-                    } else if (subPhase === 'typing') {
-                        interval = window.setInterval(() => {
-                            setTypedText(prev => {
-                                const newText = noteText.substring(0, prev.length + 1);
-                                if (newText.length >= noteText.length) {
-                                    clearInterval(interval);
-                                    setSubPhase('show-tools');
-                                }
-                                return newText;
-                            });
-                        }, 30);
-                    } else if (subPhase === 'show-tools') {
-                        timeout = window.setTimeout(() => setSubPhase('click-rewrite'), 1500);
-                    } else if (subPhase === 'click-rewrite') {
-                        timeout = window.setTimeout(() => setPhase(3), 500);
-                    }
-                    break;
-                case 3: // Rewrite
-                     if (subPhase !== 'done') {
-                        setTypedText(rewrittenNoteText);
-                        setSubPhase('click-save');
-                        timeout = window.setTimeout(() => setSubPhase('done'), 1500);
-                     } else if (subPhase === 'done') {
-                         timeout = window.setTimeout(() => setPhase(4), 500);
-                     }
-                    break;
-                case 4: // Grid
-                    timeout = window.setTimeout(() => setPhase(5), 3000);
-                    break;
-                case 5: // AI Timer
-                    if (subPhase === 'done' || subPhase.includes('click') || subPhase === 'start') {
-                        setAiChatText('');
-                        setSubPhase('typing-timer');
-                    } else if (subPhase === 'typing-timer') {
-                        const timerText = "start a 5 minute timer";
-                        interval = window.setInterval(() => {
-                            setAiChatText(prev => {
-                                const newText = timerText.substring(0, prev.length + 1);
-                                if (newText.length >= timerText.length) {
-                                    clearInterval(interval);
-                                    setSubPhase('show-timer');
-                                }
-                                return newText;
-                            });
-                        }, 50);
-                    } else if (subPhase === 'show-timer') {
-                        interval = window.setInterval(() => setTimerSeconds(s => s > 0 ? s - 1 : 0), 10);
-                        timeout = window.setTimeout(() => {
-                           clearInterval(interval);
-                           setPhase(6);
-                        }, 2500);
-                    }
-                    break;
-                case 6: // AI Task
-                    if (subPhase === 'show-timer') {
-                       setAiChatText('');
-                       setSubPhase('typing-task');
-                    } else if (subPhase === 'typing-task') {
-                       const taskText = "add a task to buy groceries";
-                       interval = window.setInterval(() => {
-                           setAiChatText(prev => {
-                               const newText = taskText.substring(0, prev.length + 1);
-                               if (newText.length >= taskText.length) {
-                                   clearInterval(interval);
-                                   setSubPhase('show-task');
-                               }
-                               return newText;
-                           });
-                       }, 50);
-                    } else if (subPhase === 'show-task') {
-                        setTasks([{id: 1, text: 'Buy groceries'}]);
-                        timeout = window.setTimeout(() => setPhase(7), 2500);
-                    }
-                    break;
-                case 7: // Loop
-                    setTypedText('');
-                    setAiChatText('');
-                    setTimerSeconds(300);
-                    setTasks([]);
-                    setSubPhase('start');
-                    setPhase(0);
-                    break;
-            }
+        const typeText = (text: string, setter: React.Dispatch<React.SetStateAction<string>>, onComplete: () => void) => {
+            let i = 0;
+            setter('');
+            interval = window.setInterval(() => {
+                i++;
+                setter(text.substring(0, i));
+                if (i >= text.length) {
+                    clearInterval(interval);
+                    onComplete();
+                }
+            }, 30);
         };
 
-        runAnimation();
+        const sequence: Record<string, () => void> = {
+            intro: () => timeout = window.setTimeout(() => setPhase('note-start'), 2500),
+            'note-start': () => typeText(fullNoteText, setTypedNote, () => setPhase('note-tools')),
+            'note-tools': () => timeout = window.setTimeout(() => setPhase('note-rewrite'), 1500),
+            'note-rewrite': () => timeout = window.setTimeout(() => setPhase('note-save'), 1500),
+            'note-save': () => timeout = window.setTimeout(() => setPhase('grid-view'), 2000),
+            'grid-view': () => timeout = window.setTimeout(() => setPhase('ai-timer-start'), 3000),
+            'ai-timer-start': () => typeText(timerChatText, setTypedChat, () => setPhase('ai-timer-show')),
+            'ai-timer-show': () => {
+                interval = window.setInterval(() => setTimer(s => Math.max(0, s - 1)), 10);
+                timeout = window.setTimeout(() => { clearInterval(interval); setPhase('ai-task-start'); }, 2500);
+            },
+            'ai-task-start': () => typeText(taskChatText, setTypedChat, () => setPhase('ai-task-show')),
+            'ai-task-show': () => {
+                setShowTask(true);
+                timeout = window.setTimeout(() => setPhase('outro'), 2500);
+            },
+            outro: () => timeout = window.setTimeout(() => {
+                // Reset states for loop
+                setTypedNote('');
+                setTypedChat('');
+                setTimer(300);
+                setShowTask(false);
+                setPhase('intro');
+            }, 1000)
+        };
+        
+        sequence[phase]?.();
 
         return () => {
             clearTimeout(timeout);
             clearInterval(interval);
         };
-    }, [phase, subPhase, noteText, rewrittenNoteText]);
+    }, [phase]);
 
+    const isActive = (phases: string[]) => phases.includes(phase);
 
     return (
         <section className="py-20 sm:py-24 bg-white">
             <div className="mx-auto max-w-5xl px-6 lg:px-8">
-                <div className="relative w-full h-96 bg-gray-100 rounded-2xl shadow-xl overflow-hidden flex items-center justify-center p-4">
-                    
-                    {/* Phase 0: Intro */}
-                    <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${phase === 0 ? 'opacity-100' : 'opacity-0'}`}>
-                        <h2 className="text-4xl lg:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600">Introducing Silo Notes</h2>
+                <div className="relative w-full h-[26rem] bg-gray-100 rounded-2xl shadow-xl overflow-hidden p-4">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 animate-gradient-pan" style={{ backgroundSize: '200% 200%' }}></div>
+
+                    {/* Intro Scene */}
+                    <div className={`scene-container justify-center ${isActive(['intro']) ? 'active' : ''}`}>
+                        <h2 className="text-4xl lg:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 animate-text-in">Introducing Silo Notes</h2>
                     </div>
 
-                    {/* Phase 1: Carousel */}
-                    <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 ${phase === 1 ? 'opacity-100' : 'opacity-0'}`}>
-                         <div className="absolute w-[900px] flex gap-4 animate-carousel">
-                            <div className="w-60 h-60 bg-yellow-200 rounded-lg p-4 shadow-lg"><h3 className="font-bold">Quick Idea</h3><p className="text-sm">A sticky note for thoughts.</p></div>
-                            <div className="w-60 h-60 bg-gray-50 rounded-lg p-4 shadow-lg border"><h3 className="font-bold">Project Plan</h3><p className="text-sm">A classic note for details.</p></div>
-                            <div className="w-60 h-60 bg-amber-50 rounded-lg p-4 shadow-lg border"><h3 className="font-bold">Daily Reflection</h3><p className="text-sm">A journal entry.</p></div>
-                            <div className="w-60 h-60 bg-blue-200 rounded-lg p-4 shadow-lg"><h3 className="font-bold">To-Do List</h3><p className="text-sm">- Item 1</p></div>
-                         </div>
-                    </div>
-
-                    {/* Phase 2 & 3: Notepad UI */}
-                    <div className={`absolute inset-0 transition-opacity duration-500 ${phase === 2 || phase === 3 ? 'opacity-100' : 'opacity-0'}`}>
-                        <div className="w-full h-full bg-white rounded-lg flex flex-col p-6 lg:p-8">
-                            <div className="flex items-center justify-between mb-4 flex-shrink-0">
+                    {/* Note & Grid Scene */}
+                    <div className={`scene-container transition-transform,opacity duration-1000 ease-in-out ${isActive(['note-start', 'note-tools', 'note-rewrite', 'note-save', 'grid-view']) ? 'active' : ''} ${isActive(['grid-view']) ? 'scale-30 -translate-x-2/3 -translate-y-2/3' : ''}`}>
+                         <div className="w-full h-full bg-white/80 backdrop-blur-sm rounded-lg flex flex-col p-6 lg:p-8">
+                            <div className="flex items-center justify-between mb-4 flex-shrink-0 animate-pop-in">
                                 <h1 className="text-2xl font-bold text-gray-400">Classic Note</h1>
-                                <button className={`font-semibold py-2 px-6 rounded-full transition-all duration-300 ${subPhase === 'click-save' ? 'bg-green-600 text-white' : 'bg-black text-white'}`}>
-                                    {subPhase === 'click-save' ? 'Saved!' : 'Save Note'}
+                                <button className={`font-semibold py-2 px-6 rounded-full transition-all duration-300 ${isActive(['note-save']) ? 'bg-green-600 text-white' : 'bg-black text-white'}`}>
+                                    {isActive(['note-save']) ? 'Saved!' : 'Save Note'}
                                 </button>
                             </div>
                             <div className="flex-grow flex flex-col overflow-hidden">
-                                <div className="text-4xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200">
-                                    Marketing Campaign
-                                </div>
+                                <div className="text-4xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200 animate-pop-in" style={{ animationDelay: '0.2s' }}>Marketing Campaign</div>
                                 <div className="flex-1 w-full text-lg leading-relaxed text-gray-700">
-                                    <pre className="whitespace-pre-wrap font-sans transition-opacity duration-500">{typedText}{(phase === 2 && subPhase === 'typing') && <span className="blinking-cursor">|</span>}</pre>
+                                    <pre className="whitespace-pre-wrap font-sans transition-opacity duration-500 animate-pop-in" style={{ animationDelay: '0.3s' }}>
+                                        {isActive(['note-rewrite', 'note-save', 'grid-view']) ? rewrittenNoteText : typedNote}
+                                        {isActive(['note-start']) && <span className="blinking-cursor">|</span>}
+                                    </pre>
                                 </div>
-                                <div className={`flex-shrink-0 mt-4 flex items-center justify-center gap-2 flex-wrap transition-opacity duration-500 ${subPhase.startsWith('show-tools') || subPhase.startsWith('click-rewrite') ? 'opacity-100' : 'opacity-0'}`}>
-                                    <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-white border border-gray-200">Summarize</button>
-                                    <button className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-white border border-gray-200 transition-all ${subPhase === 'click-rewrite' ? 'bg-black text-white scale-95' : ''}`}>Rewrite</button>
+                                <div className={`flex-shrink-0 mt-4 flex items-center justify-center gap-2 flex-wrap transition-all duration-500 ${isActive(['note-tools', 'note-rewrite']) ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+                                    <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-white border border-gray-200 animate-pop-in" style={{ animationDelay: '0.4s' }}>Summarize</button>
+                                    <button className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-white border border-gray-200 transition-all animate-pop-in ${isActive(['note-rewrite']) ? 'bg-black text-white scale-95' : ''}`} style={{ animationDelay: '0.5s' }}>Rewrite</button>
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                     {/* Phase 4: Grid View */}
-                    <div className={`absolute inset-0 grid grid-cols-3 gap-4 p-4 transition-opacity duration-500 ${phase === 4 ? 'opacity-100' : 'opacity-0'}`}>
-                        <div className="bg-white p-2 rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0s'}}><p className="font-bold text-xs">Campaign</p><p className="text-xs">Rewritten marketing...</p></div>
-                        <div className="bg-yellow-200 p-2 rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.1s'}}><p className="font-bold text-xs">Quick Idea</p></div>
-                        <div className="bg-white p-2 rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.2s'}}><p className="font-bold text-xs">Meeting Notes</p></div>
-                        <div className="bg-amber-100 p-2 rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.15s'}}><p className="font-bold text-xs">Journal</p></div>
-                        <div className="bg-white p-2 rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.25s'}}><p className="font-bold text-xs">Book List</p></div>
-                        <div className="bg-blue-200 p-2 rounded-lg shadow-md animate-fade-in-up" style={{animationDelay: '0.3s'}}><p className="font-bold text-xs">Recipe</p></div>
+                    {/* Grid Items */}
+                    <div className={`absolute inset-0 grid grid-cols-3 grid-rows-2 gap-4 p-4 ${isActive(['grid-view']) ? '' : 'pointer-events-none'}`}>
+                        <div className={`bg-yellow-200 p-2 rounded-lg shadow-md grid-item ${isActive(['grid-view']) ? 'active' : ''}`} style={{ transitionDelay: '0.2s' }}><p className="font-bold text-xs">Quick Idea</p></div>
+                        <div className={`bg-white p-2 rounded-lg shadow-md grid-item ${isActive(['grid-view']) ? 'active' : ''}`} style={{ transitionDelay: '0.3s' }}><p className="font-bold text-xs">Meeting Notes</p></div>
+                        <div className={`bg-amber-100 p-2 rounded-lg shadow-md grid-item ${isActive(['grid-view']) ? 'active' : ''}`} style={{ transitionDelay: '0.25s' }}><p className="font-bold text-xs">Journal</p></div>
+                        <div className={`bg-white p-2 rounded-lg shadow-md grid-item ${isActive(['grid-view']) ? 'active' : ''}`} style={{ transitionDelay: '0.35s' }}><p className="font-bold text-xs">Book List</p></div>
+                        <div className={`bg-blue-200 p-2 rounded-lg shadow-md grid-item ${isActive(['grid-view']) ? 'active' : ''}`} style={{ transitionDelay: '0.4s' }}><p className="font-bold text-xs">Recipe</p></div>
                     </div>
 
-                    {/* Phase 5 & 6: AI Chat */}
-                     <div className={`absolute inset-0 flex flex-col items-center justify-center gap-8 transition-opacity duration-500 ${phase === 5 || phase === 6 ? 'opacity-100' : 'opacity-0'}`}>
-                        {/* AI Bar */}
-                        <div className="w-[500px] h-14 bg-white rounded-full shadow-lg border flex items-center px-4 gap-2">
-                             <p className="flex-1 text-sm">{aiChatText}{(subPhase === 'typing-timer' || subPhase === 'typing-task') && <span className="blinking-cursor">|</span>}</p>
+                    {/* AI Scenes */}
+                    <div className={`scene-container flex-col gap-8 justify-center ${isActive(['ai-timer-start', 'ai-timer-show', 'ai-task-start', 'ai-task-show']) ? 'active' : ''}`}>
+                        <div className={`w-[500px] h-14 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border flex items-center px-4 gap-2 transition-all duration-500 ${isActive(['ai-timer-start', 'ai-task-start']) ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+                             <p className="flex-1 text-sm">{typedChat}{isActive(['ai-timer-start', 'ai-task-start']) && <span className="blinking-cursor">|</span>}</p>
                              <div className="w-10 h-10 bg-black text-white rounded-full"></div>
                         </div>
-                        {/* Timer UI */}
-                        <div className={`bg-black text-white w-80 rounded-3xl p-6 text-center transition-opacity duration-500 ${subPhase === 'show-timer' ? 'opacity-100' : 'opacity-0'}`}>
-                            <p className="text-5xl font-mono">{Math.floor(timerSeconds / 60).toString().padStart(2, '0')}:{(timerSeconds % 60).toString().padStart(2, '0')}</p>
+                        <div className={`bg-black text-white w-80 rounded-3xl p-6 text-center transition-all duration-500 ${isActive(['ai-timer-show']) ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+                            <p className="text-5xl font-mono">{Math.floor(timer / 60).toString().padStart(2, '0')}:{(timer % 60).toString().padStart(2, '0')}</p>
                         </div>
-                        {/* Task UI */}
-                         <div className={`bg-white p-6 rounded-2xl shadow-sm border w-[500px] transition-opacity duration-500 ${subPhase === 'show-task' ? 'opacity-100' : 'opacity-0'}`}>
+                         <div className={`bg-white p-6 rounded-2xl shadow-sm border w-[500px] transition-all duration-500 ${isActive(['ai-task-show']) ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
                             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Tasks</h2>
-                            {tasks.map(task => <div key={task.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded-md"><input type="checkbox" className="h-5 w-5 rounded" /><span>{task.text}</span></div>)}
+                            <div className={`flex items-center gap-3 p-2 bg-gray-50 rounded-md transition-all duration-500 ${showTask ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}><input type="checkbox" className="h-5 w-5 rounded" /><span>Buy groceries</span></div>
                          </div>
                     </div>
 
@@ -246,21 +180,24 @@ const AppPreviewAnimation = () => {
             <style>{`
                 .blinking-cursor { animation: blink 1s step-end infinite; } 
                 @keyframes blink { 50% { opacity: 0; } }
-                @keyframes carousel {
-                    0% { transform: translateX(0); }
-                    100% { transform: translateX(-300px); }
-                }
-                .animate-carousel { animation: carousel 3s linear infinite; }
-                @keyframes fade-in-up {
-                    from { opacity: 0; transform: translateY(20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                .animate-fade-in-up { animation: fade-in-up 0.5s ease-out forwards; }
+                @keyframes gradient-pan { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+                .animate-gradient-pan { animation: gradient-pan 15s ease infinite; }
+                
+                .scene-container { position: absolute; inset: 0; display: flex; align-items: center; opacity: 0; transition: opacity 0.7s ease-in-out; pointer-events: none; }
+                .scene-container.active { opacity: 1; pointer-events: auto; }
+                
+                @keyframes text-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+                .animate-text-in { animation: text-in 1s ease-out forwards; }
+                
+                @keyframes pop-in { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+                .animate-pop-in { animation: pop-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; opacity: 0; }
+
+                .grid-item { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease-out, transform 0.5s ease-out; }
+                .grid-item.active { opacity: 1; transform: translateY(0); }
             `}</style>
         </section>
     );
 };
-
 
 const LandingPage: React.FC = () => {
     return (
