@@ -62,12 +62,41 @@ const GemsView: React.FC<GemsViewProps> = ({ gems }) => {
         </section>
 
         <section>
-            <h3 className="text-2xl font-bold text-gray-800 mb-6">Purchase Gems</h3>
-             <div className="text-center p-10 h-full flex flex-col items-center justify-center bg-gray-100 rounded-lg border-2 border-dashed">
-                <h2 className="text-lg font-semibold text-gray-700">Coming Soon</h2>
-                <p className="text-gray-500 text-sm mt-2 max-w-md">
-                    Need more Gems? Soon you'll be able to purchase packs to power up your productivity.
-                </p>
+            <h3 className="text-2xl font-bold text-gray-800 mb-6">Purchase Gems & Memberships</h3>
+             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-center">
+                {/* Plus Tier */}
+                <div className="bg-white p-8 rounded-2xl border border-gray-200 flex flex-col">
+                    <h4 className="text-2xl font-bold text-gray-800">Plus</h4>
+                    <p className="mt-4 text-4xl font-bold">+100 <span className="text-lg font-medium text-gray-500">Gems</span></p>
+                    <p className="text-lg font-semibold text-gray-600 mt-2">$10 <span className="font-normal text-sm">/ month</span></p>
+                    <div className="flex-grow"></div>
+                    <a href="https://silolabs.gumroad.com/l/gpvdjm" target="_blank" rel="noopener noreferrer" className="mt-8 bg-black text-white font-semibold py-3 rounded-full w-full block hover:bg-gray-800 transition-colors">
+                        Purchase
+                    </a>
+                </div>
+
+                {/* Pro Tier - Most Popular */}
+                <div className="bg-white p-8 rounded-2xl border-2 border-indigo-500 flex flex-col relative">
+                    <div className="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-xs font-bold uppercase px-3 py-1 rounded-full">Most Popular</div>
+                    <h4 className="text-2xl font-bold text-gray-800">Pro</h4>
+                    <p className="mt-4 text-4xl font-bold">+500 <span className="text-lg font-medium text-gray-500">Gems</span></p>
+                    <p className="text-lg font-semibold text-gray-600 mt-2">$20 <span className="font-normal text-sm">/ month</span></p>
+                    <div className="flex-grow"></div>
+                    <a href="https://silolabs.gumroad.com/l/gpvdjm" target="_blank" rel="noopener noreferrer" className="mt-8 bg-indigo-500 text-white font-semibold py-3 rounded-full w-full block hover:bg-indigo-600 transition-colors">
+                        Purchase
+                    </a>
+                </div>
+
+                {/* Ultra Tier */}
+                <div className="bg-white p-8 rounded-2xl border border-gray-200 flex flex-col">
+                    <h4 className="text-2xl font-bold text-gray-800">Ultra</h4>
+                    <p className="mt-4 text-4xl font-bold">&infin; <span className="text-lg font-medium text-gray-500">Gems</span></p>
+                    <p className="text-lg font-semibold text-gray-600 mt-2">$40 <span className="font-normal text-sm">/ month</span></p>
+                    <div className="flex-grow"></div>
+                    <a href="https://silolabs.gumroad.com/l/gpvdjm" target="_blank" rel="noopener noreferrer" className="mt-8 bg-black text-white font-semibold py-3 rounded-full w-full block hover:bg-gray-800 transition-colors">
+                        Purchase
+                    </a>
+                </div>
             </div>
         </section>
 

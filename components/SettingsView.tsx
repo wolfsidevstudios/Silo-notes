@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View } from '../types';
-import { BookOpenIcon, ChevronRightIcon, SlackIcon } from './icons';
+import { BookOpenIcon, ChevronRightIcon, SlackIcon, GoogleIcon } from './icons';
 
 interface UserProfile {
     name: string;
@@ -16,9 +16,23 @@ interface SettingsViewProps {
   slackUser: any | null;
   onSlackDisconnect: () => void;
   onSlackPatConnect: (token: string) => void;
+  googleUser: any | null;
+  onGoogleConnect: () => void;
+  onGoogleDisconnect: () => void;
 }
 
-const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, onLogout, onViewChange, slackUser, onSlackDisconnect, onSlackPatConnect }) => {
+const SettingsView: React.FC<SettingsViewProps> = ({ 
+    userProfile, 
+    onKeyUpdate, 
+    onLogout, 
+    onViewChange, 
+    slackUser, 
+    onSlackDisconnect, 
+    onSlackPatConnect,
+    googleUser,
+    onGoogleConnect,
+    onGoogleDisconnect
+}) => {
   const [apiKey, setApiKey] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [showTokenInput, setShowTokenInput] = useState(false);
@@ -106,6 +120,31 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
         
         <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
             <h2 className="text-2xl font-semibold text-gray-800 mb-6">Third-Party Integrations</h2>
+            
+            {googleUser ? (
+                <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                        <GoogleIcon className="w-8 h-8" />
+                        <div>
+                            <p className="font-semibold text-gray-800">{googleUser.name}</p>
+                            <p className="text-sm text-gray-500">{googleUser.email}</p>
+                        </div>
+                    </div>
+                    <button onClick={onGoogleDisconnect} className="text-sm font-semibold text-red-600 bg-white border rounded-full px-4 py-1.5 hover:bg-red-50">Disconnect</button>
+                </div>
+            ) : (
+                <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-full"><GoogleIcon className="w-8 h-8" /></div>
+                        <div>
+                            <p className="font-semibold text-gray-800">Google Calendar & Gmail</p>
+                            <p className="text-sm text-gray-500">View calendar events and share notes via email</p>
+                        </div>
+                    </div>
+                    <button onClick={onGoogleConnect} className="text-sm font-semibold text-blue-600 bg-white border rounded-full px-4 py-1.5 hover:bg-blue-50 flex-shrink-0">Connect</button>
+                </div>
+            )}
+
             {slackUser ? (
                  <div className="bg-gray-50 rounded-lg p-4 flex items-center justify-between">
                     <div className="flex items-center gap-4">
