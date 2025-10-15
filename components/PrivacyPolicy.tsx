@@ -35,7 +35,7 @@ const PrivacyPolicy: React.FC = () => {
                         If you have questions or comments about this Privacy Policy, please contact us at: contact@silonotes.app
                     </p>
 
-                    <a href="#/" className="mt-8 inline-block text-blue-600 hover:underline">
+                    <a href="/" className="mt-8 inline-block text-blue-600 hover:underline">
                         &larr; Back to Home
                     </a>
                 </div>

@@ -82,7 +82,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
     const userScope = "reminders:read users.profile:read";
     const authUrl = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&user_scope=${userScope}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256&response_type=code`;
     
-    sessionStorage.setItem('silo_slack_redirect_hash', window.location.hash);
+    sessionStorage.setItem('silo_slack_redirect_path', window.location.pathname);
     window.location.href = authUrl;
   };
   

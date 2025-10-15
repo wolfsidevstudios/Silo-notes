@@ -35,7 +35,7 @@ const TermsOfService: React.FC = () => {
                         We reserve the right to modify or replace these Terms at any time. We will provide notice of any changes by posting the new Terms of Service on this page.
                     </p>
 
-                    <a href="#/" className="mt-8 inline-block text-blue-600 hover:underline">
+                    <a href="/" className="mt-8 inline-block text-blue-600 hover:underline">
                         &larr; Back to Home
                     </a>
                 </div>

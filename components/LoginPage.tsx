@@ -148,8 +148,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
                     <p className="text-xs text-gray-400 mt-12">
                         By continuing, you agree to our 
-                        <a href="#/terms" className="underline hover:text-black"> Terms of Service</a> and 
-                        <a href="#/privacy" className="underline hover:text-black"> Privacy Policy</a>.
+                        <a href="/terms" className="underline hover:text-black"> Terms of Service</a> and 
+                        <a href="/privacy" className="underline hover:text-black"> Privacy Policy</a>.
                     </p>
                 </div>
             </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import HomeView from './components/HomeView';
-import ClassicNoteEditor from './components/NoteEditor';
+import ClassicNoteEditor from './components/ClassicNoteEditor';
 import StickyNoteEditor from './components/StickyNoteEditor';
 import JournalEditor from './components/JournalEditor';
 import CalendarView from './components/CalendarView';
@@ -299,14 +299,14 @@ const App: React.FC = () => {
     const savedProfile = localStorage.getItem('silo-user-profile');
     return savedProfile ? JSON.parse(savedProfile) : null;
   });
-  const [route, setRoute] = useState(window.location.hash || '#/');
+  const [route, setRoute] = useState(window.location.pathname);
 
   useEffect(() => {
-    const handleHashChange = () => {
-        setRoute(window.location.hash || '#/');
+    const handlePopState = () => {
+      setRoute(window.location.pathname);
     };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
   const handleLoginSuccess = useCallback((profile: UserProfile) => {
@@ -314,7 +314,9 @@ const App: React.FC = () => {
     localStorage.setItem('silo-user-profile', JSON.stringify(profile));
     setIsAuthenticated(true);
     setUserProfile(profile);
-    window.location.hash = '#/home';
+    const newPath = '/home';
+    window.history.pushState({}, '', newPath);
+    setRoute(newPath);
   }, []);
 
   const handleLogout = useCallback(() => {
@@ -322,7 +324,9 @@ const App: React.FC = () => {
     localStorage.removeItem('silo-user-profile');
     setIsAuthenticated(false);
     setUserProfile(null);
-    window.location.hash = '#/';
+    const newPath = '/';
+    window.history.pushState({}, '', newPath);
+    setRoute(newPath);
   }, []);
   
   // Handle Yahoo Login Redirect
@@ -342,10 +346,10 @@ const App: React.FC = () => {
                 };
                 handleLoginSuccess(userProfile);
                 sessionStorage.removeItem('yahoo_nonce');
-                window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+                window.history.replaceState({}, document.title, window.location.pathname);
             } else {
                 console.error("Yahoo login failed: Nonce mismatch or invalid token.");
-                window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
     }
@@ -458,7 +462,7 @@ const App: React.FC = () => {
       }
 
       const clientId = '7938298429665.9726628658528';
-      const redirectUri = window.location.origin; // Using origin for consistency
+      const redirectUri = window.location.origin;
       const params = new URLSearchParams();
       params.append('code', code);
       params.append('client_id', clientId);
@@ -503,16 +507,14 @@ const App: React.FC = () => {
     if (slackCode) {
       const processSlackAuth = async () => {
         await handleSlackOauth(slackCode);
-        const savedHash = sessionStorage.getItem('silo_slack_redirect_hash');
+        const savedPath = sessionStorage.getItem('silo_slack_redirect_path');
         
-        if (savedHash) {
-            sessionStorage.removeItem('silo_slack_redirect_hash');
-            // Clean URL search params and set hash to trigger navigation
-            window.history.replaceState({}, document.title, window.location.pathname);
-            window.location.hash = savedHash;
+        if (savedPath) {
+            sessionStorage.removeItem('silo_slack_redirect_path');
+            window.history.replaceState({}, document.title, savedPath);
+            setRoute(savedPath);
         } else {
-            // This is for login flow, which is handled by handleLoginSuccess. Clean URL.
-            window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
       };
       processSlackAuth();
@@ -565,16 +567,33 @@ const App: React.FC = () => {
     }
   }, [slackToken, handleSlackDisconnect]);
 
+  const handleViewChange = useCallback((view: View, options?: { keepCurrentNote?: boolean }) => {
+    setActiveView(view);
+    if (!options?.keepCurrentNote) {
+      setCurrentNote(null);
+    }
+    setActiveSpaceId(null);
+    setActiveBoard(null);
+    
+    const path = `/${view.toLowerCase()}`;
+    if (window.location.pathname !== path) {
+        window.history.pushState({}, '', path);
+    }
+    setRoute(path);
+  }, []);
+
   useEffect(() => {
-    if (route.startsWith('#/')) {
-        const viewKey = route.substring(2).toUpperCase();
+    // This effect handles initial load and back/forward navigation
+    const path = route;
+    if (isAuthenticated) {
+        const viewKey = (path === '/' ? 'home' : path.substring(1)).toUpperCase();
         if (Object.values(View).includes(viewKey as View)) {
-            handleViewChange(viewKey as View);
-        } else if (route === '#/home') {
-            handleViewChange(View.HOME);
+            setActiveView(viewKey as View);
+        } else {
+            setActiveView(View.HOME);
         }
     }
-  }, [route]);
+  }, [route, isAuthenticated]);
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -653,16 +672,6 @@ const App: React.FC = () => {
   const handleSetStopwatch = useCallback(() => setActiveClock({ type: 'stopwatch', props: {} }), []);
   const handleToggleSidebar = useCallback(() => setIsSidebarCollapsed(prev => !prev), []);
   const handleCloseClock = useCallback(() => setActiveClock(null), []);
-
-  const handleViewChange = useCallback((view: View, options?: { keepCurrentNote?: boolean }) => {
-    setActiveView(view);
-    if (!options?.keepCurrentNote) {
-      setCurrentNote(null);
-    }
-    setActiveSpaceId(null);
-    setActiveBoard(null);
-    window.location.hash = `/${view.toLowerCase()}`;
-  }, []);
 
   const handleOpenNewNoteModal = () => setIsNewNoteModalVisible(true);
   const handleCloseNewNoteModal = () => setIsNewNoteModalVisible(false);
@@ -782,9 +791,9 @@ const App: React.FC = () => {
   
   if (!isAuthenticated) {
     switch (route) {
-        case '#/login': return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-        case '#/privacy': return <PrivacyPolicy />;
-        case '#/terms': return <TermsOfService />;
+        case '/login': return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+        case '/privacy': return <PrivacyPolicy />;
+        case '/terms': return <TermsOfService />;
         default: return <LandingPage />;
     }
   }
