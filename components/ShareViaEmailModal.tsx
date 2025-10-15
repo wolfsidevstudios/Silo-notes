@@ -14,6 +14,7 @@ interface ShareViaEmailModalProps {
 const ShareViaEmailModal: React.FC<ShareViaEmailModalProps> = ({ noteTitle, noteContent, onClose }) => {
   const [to, setTo] = useState('');
   const [subject, setSubject] = useState(noteTitle);
+  const [body, setBody] = useState(noteContent);
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [error, setError] = useState('');
 
@@ -30,13 +31,13 @@ const ShareViaEmailModal: React.FC<ShareViaEmailModalProps> = ({ noteTitle, note
       `Subject: ${subject}`,
       'Content-Type: text/html; charset=utf-8',
       '',
-      `<h1>${noteTitle}</h1>`,
-      noteContent
+      `<h1>${subject}</h1>`,
+      body
     ];
     const email = emailLines.join('\r\n');
     
-    // Using btoa which is sufficient for this use case as UTF-8 characters will be in the HTML body
-    const base64EncodedEmail = btoa(email).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    // The raw message needs to be base64url encoded.
+    const base64EncodedEmail = btoa(unescape(encodeURIComponent(email))).replace(/\+/g, '-').replace(/\//g, '_');
     
     try {
       await window.gapi.client.gmail.users.drafts.create({
@@ -63,7 +64,7 @@ const ShareViaEmailModal: React.FC<ShareViaEmailModalProps> = ({ noteTitle, note
             <h2 className="text-xl font-bold text-gray-800">Share Note via Email</h2>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-700"><CloseIcon /></button>
         </div>
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-4 overflow-y-auto">
             <div>
                 <label htmlFor="email-to" className="block text-sm font-medium text-gray-700 mb-1">To:</label>
                 <input type="email" id="email-to" value={to} onChange={e => setTo(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-black focus:border-black" placeholder="recipient@example.com" />
@@ -74,10 +75,15 @@ const ShareViaEmailModal: React.FC<ShareViaEmailModalProps> = ({ noteTitle, note
             </div>
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Body:</label>
-                <div className="w-full p-3 h-48 border border-gray-200 rounded-md bg-gray-50 overflow-y-auto" dangerouslySetInnerHTML={{ __html: noteContent }}></div>
+                <div
+                    contentEditable
+                    onInput={e => setBody(e.currentTarget.innerHTML)}
+                    className="w-full p-3 h-48 border border-gray-300 rounded-md focus:ring-black focus:border-black overflow-y-auto"
+                    dangerouslySetInnerHTML={{ __html: body }}
+                />
             </div>
         </div>
-        <div className="p-6 border-t flex justify-end items-center gap-4">
+        <div className="p-6 border-t flex justify-end items-center gap-4 flex-shrink-0">
             {error && <p className="text-sm text-red-500">{error}</p>}
             <button
                 onClick={createDraft}
