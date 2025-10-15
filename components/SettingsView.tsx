@@ -131,18 +131,23 @@ const SettingsView: React.FC<SettingsViewProps> = ({ userProfile, onKeyUpdate, o
                     </div>
                      <div className="mt-4 pt-4 border-t border-gray-200">
                         <button onClick={() => setShowTokenInput(p => !p)} className="text-xs text-gray-500 hover:text-gray-700">
-                            Or connect with a personal access token
+                            Or connect with a legacy personal access token
                         </button>
                         {showTokenInput && (
-                            <div className="mt-2 flex gap-2 animate-fade-in">
-                                <input 
-                                    type="password"
-                                    value={slackPat}
-                                    onChange={(e) => setSlackPat(e.target.value)}
-                                    placeholder="Paste your xoxp- token here"
-                                    className="flex-grow p-2 border rounded-lg text-sm focus:ring-black focus:border-black"
-                                />
-                                <button onClick={handleSavePat} className="text-sm font-semibold bg-black text-white rounded-lg px-4 hover:bg-gray-800 transition-colors">Save</button>
+                            <div className="mt-2 animate-fade-in space-y-2">
+                                <p className="text-xs text-gray-500">
+                                    Create a <a href="https://api.slack.com/apps?new_classic_app=1" target="_blank" rel="noopener noreferrer" className="underline hover:text-black">classic Slack app</a> and generate a token with the following scopes: <code>users.profile:read</code> and <code>reminders:read</code>.
+                                </p>
+                                <div className="flex gap-2">
+                                    <input 
+                                        type="password"
+                                        value={slackPat}
+                                        onChange={(e) => setSlackPat(e.target.value)}
+                                        placeholder="Paste your xoxp- token here"
+                                        className="flex-grow p-2 border rounded-lg text-sm focus:ring-black focus:border-black"
+                                    />
+                                    <button onClick={handleSavePat} className="text-sm font-semibold bg-black text-white rounded-lg px-4 hover:bg-gray-800 transition-colors">Save</button>
+                                </div>
                             </div>
                         )}
                     </div>
