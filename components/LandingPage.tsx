@@ -205,10 +205,21 @@ const LandingPage: React.FC = () => {
         <div className="bg-white text-gray-800 font-sans">
             {/* Header */}
             <header className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
-                <nav className="flex items-center gap-4 bg-white/70 backdrop-blur-xl rounded-full shadow-lg px-6 py-3 border border-white/80">
+                <nav className="flex items-center gap-6 bg-white/70 backdrop-blur-xl rounded-full shadow-lg px-6 py-3 border border-white/80">
                     <div className="flex items-center">
                         <AppLogoIcon className="w-6 h-6" />
                         <span className="ml-2 font-bold text-md">Silo Notes</span>
+                    </div>
+                    <div className="hidden md:flex items-center gap-6">
+                        <a href="#about" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">
+                            About
+                        </a>
+                        <a href="#features" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">
+                            Features
+                        </a>
+                        <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">
+                            FAQ
+                        </a>
                     </div>
                     <a href="#/login" className="bg-black text-white font-semibold py-2 px-5 rounded-full text-sm hover:bg-gray-800 transition-colors">
                         Login
@@ -233,6 +244,32 @@ const LandingPage: React.FC = () => {
                     </div>
                 </section>
                 
+                {/* About Section */}
+                <section id="about" className="py-20 sm:py-24 bg-white">
+                    <div className="mx-auto max-w-7xl px-6 lg:px-8">
+                        <div className="mx-auto max-w-2xl lg:text-center">
+                            <h2 className="text-base font-semibold leading-7 text-indigo-600">The Studio</h2>
+                            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">From the Developer</p>
+                        </div>
+                        <div className="mx-auto mt-16 max-w-2xl">
+                            <div className="bg-gray-50 p-8 rounded-2xl border border-gray-200 text-center">
+                                <h3 className="text-2xl font-bold text-gray-800">Emanuel Martinez</h3>
+                                <p className="text-indigo-600 font-semibold mt-1">Silo Labs</p>
+                                <p className="mt-4 text-gray-600">
+                                    Silo Labs is the creative studio behind Silo Notes, dedicated to building intuitive and powerful tools for creative individuals. As the developer, I am passionate about crafting applications that are both beautiful and functional, empowering users to organize their thoughts and unlock their potential.
+                                </p>
+                                <div className="mt-6 border-t pt-6">
+                                    <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Contact</h4>
+                                    <ul className="mt-2 space-y-1 text-gray-700">
+                                        <li><a href="mailto:survivalcreativeminecraftadven@gmail.com" className="hover:underline">survivalcreativeminecraftadven@gmail.com</a></li>
+                                        <li><a href="mailto:rocio1976ramirezpena@gmail.com" className="hover:underline">rocio1976ramirezpena@gmail.com</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <AppPreviewAnimation />
                 
                 {/* Features Section */}
