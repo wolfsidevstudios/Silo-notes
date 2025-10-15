@@ -241,6 +241,17 @@ const LandingPage: React.FC = () => {
                         <a href="/login" className="mt-10 inline-block bg-black text-white font-semibold py-4 px-8 rounded-full text-lg hover:bg-gray-800 transition-colors">
                             Get Started for Free
                         </a>
+                        <div className="mt-8 flex justify-center">
+                            <a href="https://www.producthunt.com/products/silo-notes?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-silo-notes" target="_blank" rel="noopener noreferrer">
+                                <img
+                                    src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1026771&theme=light&t=1760538777146"
+                                    alt="Silo Notes - Your Ideas, Organized. | Product Hunt"
+                                    style={{width: '250px', height: '54px'}}
+                                    width="250"
+                                    height="54"
+                                />
+                            </a>
+                        </div>
                     </div>
                 </section>
                 
