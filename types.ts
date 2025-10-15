@@ -69,8 +69,9 @@ export interface Meeting {
   title: string;
   dateTime: string;
   createdAt: string; // ISO string
-  source?: 'silo';
+  source?: 'silo' | 'google';
   joinUrl?: string;
+  htmlLink?: string;
 }
 
 export interface CalendarEvent {

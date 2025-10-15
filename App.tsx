@@ -39,6 +39,13 @@ import DocumentationView from './components/DocumentationView';
 
 import { View, Note, Space, Board, BoardType, Task, Meeting, NoteType, TaskPriority, CalendarEvent } from './types';
 
+declare global {
+  interface Window {
+    google: any;
+    gapi: any;
+  }
+}
+
 // Timer Component
 const TimerComponent = ({ initialSeconds, onClose }: { initialSeconds: number; onClose: () => void }) => {
     const [secondsLeft, setSecondsLeft] = useState(initialSeconds);
@@ -366,6 +373,67 @@ const App: React.FC = () => {
   // Slack Integration State
   const [slackToken, setSlackToken] = useState<string | null>(() => localStorage.getItem('slack_access_token'));
   const [slackUser, setSlackUser] = useState<any | null>(null);
+  
+  // Google Integration State
+  const [googleUser, setGoogleUser] = useState<any | null>(() => {
+    const savedUser = localStorage.getItem('silo-google-user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  const [googleTokenClient, setGoogleTokenClient] = useState<any>(null);
+
+  useEffect(() => {
+    const checkGoogle = () => {
+        if (window.gapi && window.google) {
+            // GAPI client for API calls
+            window.gapi.load('client', () => {
+                window.gapi.client.init({
+                    clientId: '127898517822-hsudnhvhfc71gs1948b70949mcq6qe71.apps.googleusercontent.com',
+                    discoveryDocs: [
+                        'https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest',
+                        'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'
+                    ],
+                });
+            });
+
+            // GIS client for authorization
+            const client = window.google.accounts.oauth2.initTokenClient({
+                client_id: '127898517822-hsudnhvhfc71gs1948b70949mcq6qe71.apps.googleusercontent.com',
+                scope: 'https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/calendar.events.readonly',
+                callback: '', // Will be set right before use
+            });
+            setGoogleTokenClient(client);
+        } else {
+            setTimeout(checkGoogle, 100);
+        }
+    }
+    checkGoogle();
+  }, []);
+
+  const handleGoogleConnect = useCallback(() => {
+    if (!googleTokenClient) return;
+    googleTokenClient.callback = async (resp: any) => {
+        if (resp.error !== undefined) {
+            console.error(resp);
+            return;
+        }
+        window.gapi.client.setToken({ access_token: resp.access_token });
+        const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { 'Authorization': `Bearer ${resp.access_token}` }
+        });
+        const user = await response.json();
+        setGoogleUser(user);
+        localStorage.setItem('silo-google-user', JSON.stringify(user));
+    };
+    googleTokenClient.requestAccessToken();
+  }, [googleTokenClient]);
+
+  const handleGoogleDisconnect = useCallback(() => {
+    if (googleUser) {
+        setGoogleUser(null);
+        if (window.gapi?.client) window.gapi.client.setToken(null);
+        localStorage.removeItem('silo-google-user');
+    }
+  }, [googleUser]);
 
   const handleSlackPatConnect = useCallback((token: string) => {
     localStorage.setItem('slack_access_token', token);
@@ -637,7 +705,7 @@ const App: React.FC = () => {
   };
   
   const handleAddTask = (title: string, priority: TaskPriority) => { setTasks(prev => [{ id: new Date().toISOString(), title, completed: false, createdAt: new Date().toISOString(), priority }, ...prev]); };
-  const handleAddMeeting = (title: string, dateTime: string) => { setMeetings(prev => [{ id: new Date().toISOString(), title, dateTime, createdAt: new Date().toISOString() }, ...prev]); };
+  const handleAddMeeting = (title: string, dateTime: string) => { setMeetings(prev => [{ id: new Date().toISOString(), title, dateTime, createdAt: new Date().toISOString(), source: 'silo' }, ...prev]); };
   const handleToggleTask = (taskId: string) => { setTasks(tasks.map(task => task.id === taskId ? { ...task, completed: !task.completed } : task)); };
   const handleDeleteTask = (taskId: string) => { setTasks(tasks.filter(task => task.id !== taskId)); };
   const handleDeleteMeeting = (meetingId: string) => { setMeetings(meetings.filter(meeting => meeting.id !== meetingId)); };
@@ -690,11 +758,11 @@ const App: React.FC = () => {
         if (currentNote?.type === NoteType.JOURNAL) return <JournalEditor currentNote={currentNote} onSave={handleSaveNote} />;
         if (currentNote?.type === NoteType.STICKY) return <StickyNoteEditor currentNote={currentNote} onSave={handleSaveNote} />;
         if (currentNote?.type === NoteType.AI_NOTE) return <AiNoteEditor currentNote={currentNote} onSave={handleSaveNote} geminiApiKey={geminiApiKey} />;
-        return <ClassicNoteEditor currentNote={currentNote} onSave={handleSaveNote} gems={gems} setGems={setGems} />;
+        return <ClassicNoteEditor currentNote={currentNote} onSave={handleSaveNote} gems={gems} setGems={setGems} isGoogleConnected={!!googleUser} />;
       case View.CALENDAR: return <CalendarView events={calendarEvents} notes={notes} tasks={tasks} meetings={meetings} onAddEvents={handleAddCalendarEvents} onDeleteEvent={handleDeleteCalendarEvent} onEditNote={handleEditNote} />;
       case View.GEMS: return <GemsView gems={gems} />;
-      case View.AGENDA: return <AgendaView tasks={tasks} meetings={meetings} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onDeleteMeeting={handleDeleteMeeting} />;
-      case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} onViewChange={handleViewChange} slackUser={slackUser} onSlackDisconnect={handleSlackDisconnect} onSlackPatConnect={handleSlackPatConnect} />;
+      case View.AGENDA: return <AgendaView tasks={tasks} meetings={meetings} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onDeleteMeeting={handleDeleteMeeting} googleUser={googleUser} />;
+      case View.SETTINGS: return <SettingsView userProfile={userProfile} onKeyUpdate={setGeminiApiKey} onLogout={handleLogout} onViewChange={handleViewChange} slackUser={slackUser} onSlackDisconnect={handleSlackDisconnect} onSlackPatConnect={handleSlackPatConnect} googleUser={googleUser} onGoogleConnect={handleGoogleConnect} onGoogleDisconnect={handleGoogleDisconnect} />;
       case View.SILO_LABS: return <SiloLabsView onViewChange={handleViewChange} />;
       case View.SILO_CHAT: return <SiloChatView geminiApiKey={geminiApiKey} onSaveNote={handleSaveNote} onAddTask={handleAddTask} onAddMeeting={handleAddMeeting} />;
       case View.SUMMARIZE_TOOL: return <SummarizeToolView onBack={() => handleViewChange(View.SILO_LABS)} notes={notes} />;
