@@ -200,7 +200,11 @@ const AppPreviewAnimation = () => {
     );
 };
 
-const LandingPage: React.FC = () => {
+interface LandingPageProps {
+    onNavigate: (path: string) => void;
+}
+
+const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
     return (
         <div className="bg-white text-gray-800 font-sans">
             {/* Header */}
@@ -221,7 +225,7 @@ const LandingPage: React.FC = () => {
                             FAQ
                         </a>
                     </div>
-                    <a href="/login" className="bg-black text-white font-semibold py-2 px-5 rounded-full text-sm hover:bg-gray-800 transition-colors">
+                    <a href="/login" onClick={(e) => { e.preventDefault(); onNavigate('/login'); }} className="bg-black text-white font-semibold py-2 px-5 rounded-full text-sm hover:bg-gray-800 transition-colors">
                         Login
                     </a>
                 </nav>
@@ -238,7 +242,7 @@ const LandingPage: React.FC = () => {
                         <p className="mt-6 text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
                             Silo Notes is a modern, minimalist note-taking app designed for creative individuals. Organize your thoughts, create detailed notes, and explore new ideas seamlessly with the power of AI.
                         </p>
-                        <a href="/login" className="mt-10 inline-block bg-black text-white font-semibold py-4 px-8 rounded-full text-lg hover:bg-gray-800 transition-colors">
+                        <a href="/login" onClick={(e) => { e.preventDefault(); onNavigate('/login'); }} className="mt-10 inline-block bg-black text-white font-semibold py-4 px-8 rounded-full text-lg hover:bg-gray-800 transition-colors">
                             Get Started for Free
                         </a>
                         <div className="mt-8 flex justify-center">
@@ -366,7 +370,7 @@ const LandingPage: React.FC = () => {
                     <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
                         <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Ready to get started?</h2>
                         <p className="mt-4 text-lg leading-8 text-gray-600">Start organizing your thoughts today. It's free.</p>
-                        <a href="/login" className="mt-10 inline-block bg-black text-white font-semibold py-4 px-8 rounded-full text-lg hover:bg-gray-800 transition-colors">
+                        <a href="/login" onClick={(e) => { e.preventDefault(); onNavigate('/login'); }} className="mt-10 inline-block bg-black text-white font-semibold py-4 px-8 rounded-full text-lg hover:bg-gray-800 transition-colors">
                             Create Your First Note
                         </a>
                     </div>
@@ -378,8 +382,8 @@ const LandingPage: React.FC = () => {
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left">
                     <p className="text-sm text-gray-500">&copy; {new Date().getFullYear()} Silo Notes. All rights reserved.</p>
                     <div className="flex gap-6 mt-4 md:mt-0">
-                        <a href="/privacy" className="text-sm text-gray-600 hover:text-black transition-colors">Privacy Policy</a>
-                        <a href="/terms" className="text-sm text-gray-600 hover:text-black transition-colors">Terms of Service</a>
+                        <a href="/privacy" onClick={(e) => { e.preventDefault(); onNavigate('/privacy'); }} className="text-sm text-gray-600 hover:text-black transition-colors">Privacy Policy</a>
+                        <a href="/terms" onClick={(e) => { e.preventDefault(); onNavigate('/terms'); }} className="text-sm text-gray-600 hover:text-black transition-colors">Terms of Service</a>
                     </div>
                 </div>
             </footer>

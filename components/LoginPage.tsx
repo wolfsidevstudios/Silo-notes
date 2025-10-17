@@ -16,9 +16,10 @@ interface UserProfile {
 
 interface LoginPageProps {
     onLoginSuccess: (profile: UserProfile) => void;
+    onNavigate: (path: string) => void;
 }
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, onNavigate }) => {
     const signInButtonRef = useRef<HTMLDivElement>(null);
 
     const decodeJwtResponse = (token: string) => {
@@ -86,7 +87,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         const challenge = await generateCodeChallenge(verifier);
     
         const scope = "openid profile email";
-        const authUrl = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&user_scope=${scope}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256&response_type=code`;
+        const authUrl = `https://slack.com/oauth/v2/authorize?client_id=${clientId}&scope=${scope}&redirect_uri=${encodeURIComponent(redirectUri)}&code_challenge=${challenge}&code_challenge_method=S256&response_type=code`;
         window.location.href = authUrl;
     };
 
@@ -154,8 +155,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
 
                     <p className="text-xs text-gray-400 mt-12">
                         By continuing, you agree to our 
-                        <a href="/terms" className="underline hover:text-black"> Terms of Service</a> and 
-                        <a href="/privacy" className="underline hover:text-black"> Privacy Policy</a>.
+                        <a href="/terms" onClick={(e) => { e.preventDefault(); onNavigate('/terms'); }} className="underline hover:text-black"> Terms of Service</a> and 
+                        <a href="/privacy" onClick={(e) => { e.preventDefault(); onNavigate('/privacy'); }} className="underline hover:text-black"> Privacy Policy</a>.
                     </p>
                 </div>
             </div>

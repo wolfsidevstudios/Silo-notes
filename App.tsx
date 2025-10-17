@@ -308,6 +308,11 @@ const App: React.FC = () => {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+  
+  const handleNavigate = (path: string) => {
+    window.history.pushState({}, '', path);
+    setRoute(path);
+  };
 
   const handleLoginSuccess = useCallback((profile: UserProfile) => {
     localStorage.setItem('silo-authenticated', 'true');
@@ -791,10 +796,10 @@ const App: React.FC = () => {
   
   if (!isAuthenticated) {
     switch (route) {
-        case '/login': return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-        case '/privacy': return <PrivacyPolicy />;
-        case '/terms': return <TermsOfService />;
-        default: return <LandingPage />;
+        case '/login': return <LoginPage onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        case '/privacy': return <PrivacyPolicy onNavigate={handleNavigate} />;
+        case '/terms': return <TermsOfService onNavigate={handleNavigate} />;
+        default: return <LandingPage onNavigate={handleNavigate} />;
     }
   }
 

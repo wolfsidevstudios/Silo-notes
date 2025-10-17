@@ -1,6 +1,10 @@
 import React from 'react';
 
-const PrivacyPolicy: React.FC = () => {
+interface PrivacyPolicyProps {
+    onNavigate: (path: string) => void;
+}
+
+const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onNavigate }) => {
     return (
         <div className="min-h-screen bg-gray-50 p-8 md:p-12 lg:p-16">
             <div className="max-w-4xl mx-auto bg-white p-8 md:p-12 rounded-lg shadow-sm border">
@@ -35,7 +39,7 @@ const PrivacyPolicy: React.FC = () => {
                         If you have questions or comments about this Privacy Policy, please contact us at: contact@silonotes.app
                     </p>
 
-                    <a href="/" className="mt-8 inline-block text-blue-600 hover:underline">
+                    <a href="/" onClick={(e) => { e.preventDefault(); onNavigate('/'); }} className="mt-8 inline-block text-blue-600 hover:underline">
                         &larr; Back to Home
                     </a>
                 </div>

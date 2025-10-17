@@ -1,6 +1,10 @@
 import React from 'react';
 
-const TermsOfService: React.FC = () => {
+interface TermsOfServiceProps {
+    onNavigate: (path: string) => void;
+}
+
+const TermsOfService: React.FC<TermsOfServiceProps> = ({ onNavigate }) => {
     return (
         <div className="min-h-screen bg-gray-50 p-8 md:p-12 lg:p-16">
             <div className="max-w-4xl mx-auto bg-white p-8 md:p-12 rounded-lg shadow-sm border">
@@ -35,7 +39,7 @@ const TermsOfService: React.FC = () => {
                         We reserve the right to modify or replace these Terms at any time. We will provide notice of any changes by posting the new Terms of Service on this page.
                     </p>
 
-                    <a href="/" className="mt-8 inline-block text-blue-600 hover:underline">
+                    <a href="/" onClick={(e) => { e.preventDefault(); onNavigate('/'); }} className="mt-8 inline-block text-blue-600 hover:underline">
                         &larr; Back to Home
                     </a>
                 </div>
