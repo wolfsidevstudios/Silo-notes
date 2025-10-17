@@ -551,27 +551,26 @@ const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSa
   };
 
 
-  const isActionActive = isRecording || isVoiceMemoRecording || isTtsModalOpen || writingToolStatus !== 'Idle' || isLocked || isYouTubeModalOpen || isComingSoonModalOpen || isRewriteModalOpen;
+  const isActionActive = isRecording || isVoiceMemoRecording || isTtsModalOpen || writingToolStatus !== 'Idle' || isLocked || isYouTubeModalOpen || isComingSoonModalOpen || isRewriteModalOpen || isShareModalOpen;
 
   const ToolButton: React.FC<{
     onClick: () => void;
     disabled: boolean;
-    label: string;
-    'aria-label': string;
+    title: string;
     children: React.ReactNode;
     isActive?: boolean;
-    }> = ({ onClick, disabled, label, children, isActive, ...props }) => (
+    }> = ({ onClick, disabled, title, children, isActive }) => (
     <button
         onClick={onClick}
         disabled={disabled}
-        className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full transition-colors duration-200 shadow-sm
-            ${isActive ? 'bg-black text-white' : 'bg-white hover:bg-gray-100'}
-            ${disabled ? 'bg-gray-50 text-gray-400 cursor-not-allowed' : 'border border-gray-200'}
+        title={title}
+        aria-label={title}
+        className={`p-3 rounded-full transition-colors duration-200
+            ${isActive ? 'bg-black text-white' : 'text-gray-600 hover:bg-gray-100'}
+            ${disabled ? 'text-gray-400 cursor-not-allowed' : ''}
         `}
-        aria-label={props['aria-label']}
     >
         {children}
-        <span className="pr-1">{label}</span>
     </button>
   );
 
@@ -661,45 +660,47 @@ const ClassicNoteEditor: React.FC<ClassicNoteEditorProps> = ({ currentNote, onSa
         )}
       </div>
 
-      <div className="flex-shrink-0 mt-4 p-2 flex items-center justify-center gap-2 flex-wrap">
-        <ToolButton onClick={handleToggleAiRecording} disabled={isVoiceMemoRecording || isLocked} label={isRecording ? 'Stop' : 'Voice Typing'} aria-label={isRecording ? 'Stop Voice Typing' : 'Start Voice Typing'} isActive={isRecording}>
+      <div className="absolute top-1/2 right-4 transform -translate-y-1/2 bg-white border border-gray-200 rounded-full shadow-lg p-2 flex flex-col items-center gap-2 z-10">
+        <ToolButton onClick={handleToggleAiRecording} disabled={isVoiceMemoRecording || isLocked} title={isRecording ? 'Stop Voice Typing' : 'Start Voice Typing'} isActive={isRecording}>
           {isRecording ? <StopIcon /> : <VoiceTypingIcon />}
         </ToolButton>
-        <ToolButton onClick={handleToggleVoiceMemoRecording} disabled={isRecording || isLocked} label={isVoiceMemoRecording ? 'Stop' : 'Voice Memo'} aria-label={isVoiceMemoRecording ? 'Stop Voice Memo' : 'Start Voice Memo'} isActive={isVoiceMemoRecording}>
+        <ToolButton onClick={handleToggleVoiceMemoRecording} disabled={isRecording || isLocked} title={isVoiceMemoRecording ? 'Stop Voice Memo' : 'Start Voice Memo'} isActive={isVoiceMemoRecording}>
           {isVoiceMemoRecording ? <StopIcon /> : <VoiceMemoIcon />}
         </ToolButton>
-        <ToolButton onClick={() => setIsTtsModalOpen(true)} disabled={isActionActive} label="Text to Speech" aria-label="Text to Speech">
+        <ToolButton onClick={() => setIsTtsModalOpen(true)} disabled={isActionActive} title="Text to Speech">
           <TextToSpeechIcon />
         </ToolButton>
         
-        <div className="border-l h-6 border-gray-300 mx-1"></div>
+        <div className="w-6 h-px bg-gray-300 my-1"></div>
 
-        <ToolButton onClick={handleAddImage} disabled={isActionActive} label="Image" aria-label="Add Image">
+        <ToolButton onClick={handleAddImage} disabled={isActionActive} title="Add Image">
             <ImageIcon />
         </ToolButton>
-        <ToolButton onClick={handleAddYouTubeVideo} disabled={isActionActive} label="YouTube" aria-label="Add YouTube Video">
+        <ToolButton onClick={handleAddYouTubeVideo} disabled={isActionActive} title="Add YouTube Video">
             <YouTubeIcon />
         </ToolButton>
-        <ToolButton onClick={() => setIsComingSoonModalOpen(true)} disabled={isActionActive} label="PDF" aria-label="Add PDF">
+        <ToolButton onClick={() => setIsComingSoonModalOpen(true)} disabled={isActionActive} title="Add PDF">
             <PdfIcon />
         </ToolButton>
-        <ToolButton onClick={() => setIsComingSoonModalOpen(true)} disabled={isActionActive} label="File" aria-label="Add File">
+        <ToolButton onClick={() => setIsComingSoonModalOpen(true)} disabled={isActionActive} title="Add File">
             <FileIcon />
         </ToolButton>
 
-        <div className="border-l h-6 border-gray-300 mx-1"></div>
+        <div className="w-6 h-px bg-gray-300 my-1"></div>
         
         {isGeminiConfigured ? (
             <>
-                <ToolButton onClick={() => handleWritingTool('rewrite')} disabled={isActionActive || !content.trim()} label="Rewrite" aria-label="Rewrite Text">
+                <ToolButton onClick={() => handleWritingTool('rewrite')} disabled={isActionActive || !content.trim()} title="Rewrite Text">
                     <RewriteIcon />
                 </ToolButton>
-                <ToolButton onClick={() => handleWritingTool('summarize')} disabled={isActionActive || !content.trim()} label={writingToolStatus === 'Summarizing...' ? 'Summarizing...' : 'Summarize'} aria-label="Summarize Text">
+                <ToolButton onClick={() => handleWritingTool('summarize')} disabled={isActionActive || !content.trim()} title="Summarize Text">
                     <SummarizeIcon />
                 </ToolButton>
             </>
         ) : (
-            <p className="text-xs text-gray-500 px-2">Add Gemini Key in Settings for more AI tools</p>
+            <div title="Add Gemini Key in Settings for more AI tools" className="p-3 text-gray-400 cursor-help">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
         )}
       </div>
       
