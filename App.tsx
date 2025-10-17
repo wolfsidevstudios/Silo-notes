@@ -22,7 +22,7 @@ import TextToSpeechToolView from './components/TextToSpeechToolView';
 import MindMapView from './components/MindMapView';
 import WorkflowView from './components/WorkflowView';
 import LandingPage from './components/LandingPage';
-import LoginPage from './components/LoginPage';
+import SiloLoginPage from './components/SiloLoginPage';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
 import { GoogleGenAI } from "@google/genai";
@@ -796,7 +796,7 @@ const App: React.FC = () => {
   
   if (!isAuthenticated) {
     switch (route) {
-        case '/login': return <LoginPage onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
+        case '/login': return <SiloLoginPage onLoginSuccess={handleLoginSuccess} onNavigate={handleNavigate} />;
         case '/privacy': return <PrivacyPolicy onNavigate={handleNavigate} />;
         case '/terms': return <TermsOfService onNavigate={handleNavigate} />;
         default: return <LandingPage onNavigate={handleNavigate} />;
