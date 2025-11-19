@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className={`flex-shrink-0 border-r border-gray-200 bg-white p-4 flex flex-col transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
       <div className={`flex items-center mb-8 w-full ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
-        <AppLogoIcon />
+        <AppLogoIcon className="w-10 h-10" />
         {!isCollapsed && <span className="ml-3 font-bold text-lg">Kyndra Notes</span>}
       </div>
       

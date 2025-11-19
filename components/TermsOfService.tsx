@@ -12,11 +12,11 @@ const TermsOfService: React.FC<TermsOfServiceProps> = ({ onNavigate }) => {
                 <div className="prose max-w-none text-gray-700">
                     <p className="lead">Last updated: {new Date().toLocaleDateString()}</p>
                     <p>
-                        By accessing or using Silo Notes (the "Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of the terms, then you may not access the Service.
+                        By accessing or using Kyndra Notes (the "Service"), you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of the terms, then you may not access the Service.
                     </p>
                     <h2>1. Use of Service</h2>
                     <p>
-                        Silo Notes is a note-taking application that stores all user-generated data in the browser's local storage. You are responsible for the content you create and for safeguarding your device to protect this data.
+                        Kyndra Notes is a note-taking application that stores all user-generated data in the browser's local storage. You are responsible for the content you create and for safeguarding your device to protect this data.
                     </p>
                     
                     <h2>2. User Accounts</h2>

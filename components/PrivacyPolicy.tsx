@@ -12,7 +12,7 @@ const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onNavigate }) => {
                 <div className="prose max-w-none text-gray-700">
                     <p className="lead">Last updated: {new Date().toLocaleDateString()}</p>
                     <p>
-                        Welcome to Silo Notes. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our application. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the application.
+                        Welcome to Kyndra Notes. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our application. Please read this privacy policy carefully. If you do not agree with the terms of this privacy policy, please do not access the application.
                     </p>
                     <h2>1. Collection of Your Information</h2>
                     <p>
@@ -36,7 +36,7 @@ const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onNavigate }) => {
 
                     <h2>4. Contact Us</h2>
                     <p>
-                        If you have questions or comments about this Privacy Policy, please contact us at: contact@silonotes.app
+                        If you have questions or comments about this Privacy Policy, please contact us at: contact@kyndranotes.app
                     </p>
 
                     <a href="/" onClick={(e) => { e.preventDefault(); onNavigate('/'); }} className="mt-8 inline-block text-blue-600 hover:underline">

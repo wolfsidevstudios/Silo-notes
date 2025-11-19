@@ -149,7 +149,7 @@ const TextToSpeechToolView: React.FC<TextToSpeechToolViewProps> = ({ onBack, gem
             <audio controls src={audioUrl} className="w-full"></audio>
             <a
               href={audioUrl}
-              download={`silo-tts-${new Date().getTime()}.mp3`}
+              download={`kyndra-tts-${new Date().getTime()}.mp3`}
               className="mt-4 w-full bg-white text-black border border-gray-300 font-semibold py-3 px-6 rounded-full hover:bg-gray-100 transition-colors flex items-center justify-center"
             >
               Download Audio
