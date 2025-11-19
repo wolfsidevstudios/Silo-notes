@@ -1,392 +1,247 @@
+
 import React, { useState, useEffect } from 'react';
-import { AppLogoIcon } from './icons';
+import { AppLogoIcon, GoogleIcon, SlackIcon } from './icons';
 
-// Icons for the feature section
-const FeatureIcon1 = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-    </svg>
-);
-const FeatureIcon2 = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-    </svg>
-);
-const FeatureIcon3 = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-    </svg>
-);
-const FeatureIcon4 = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-    </svg>
-);
-
-
-const FaqItem = ({ question, answer }: { question: string; answer: string }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    return (
-        <div className="border-b">
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="flex justify-between items-center w-full py-5 text-left"
-            >
-                <span className="text-lg font-medium text-gray-800">{question}</span>
-                <svg
-                    className={`w-6 h-6 transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
-                </svg>
-            </button>
-            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96' : 'max-h-0'}`}>
-                <p className="pb-5 pr-10 text-gray-600">{answer}</p>
-            </div>
+const FeatureCard = ({ title, description, icon }: { title: string; description: string; icon: React.ReactNode }) => (
+    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+        <div className="w-12 h-12 bg-indigo-50 rounded-xl flex items-center justify-center mb-6 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+            {icon}
         </div>
-    );
-};
+        <h3 className="text-xl font-bold text-gray-900 mb-3">{title}</h3>
+        <p className="text-gray-600 leading-relaxed">{description}</p>
+    </div>
+);
 
-const AppPreviewAnimation = () => {
-    const [phase, setPhase] = useState('intro');
-    const [typedNote, setTypedNote] = useState('');
-    const [typedChat, setTypedChat] = useState('');
-    const [timer, setTimer] = useState(300);
-    const [showTask, setShowTask] = useState(false);
+const BentoCard = ({ title, children, className }: { title: string; children?: React.ReactNode; className?: string }) => (
+    <div className={`rounded-3xl p-8 border overflow-hidden relative ${className}`}>
+        <h3 className="text-lg font-bold mb-4 z-10 relative">{title}</h3>
+        {children}
+    </div>
+);
 
-    const fullNoteText = "Brainstorming session for the new marketing campaign...\n- Key message: 'Simplicity is the ultimate sophistication.'\n- Target audience: Creative professionals, students.";
-    const rewrittenNoteText = "Marketing Campaign Brainstorm:\n\nWe're targeting creative pros and students with a core message of sophisticated simplicity. Let's explore this concept further.";
-    const timerChatText = "start a 5 minute timer";
-    const taskChatText = "add a task to buy groceries";
-
-    useEffect(() => {
-        let timeout: number;
-        let interval: number;
-
-        const typeText = (text: string, setter: React.Dispatch<React.SetStateAction<string>>, onComplete: () => void) => {
-            let i = 0;
-            setter('');
-            interval = window.setInterval(() => {
-                i++;
-                setter(text.substring(0, i));
-                if (i >= text.length) {
-                    clearInterval(interval);
-                    onComplete();
-                }
-            }, 30);
-        };
-
-        const sequence: Record<string, () => void> = {
-            intro: () => timeout = window.setTimeout(() => setPhase('note-start'), 2500),
-            'note-start': () => typeText(fullNoteText, setTypedNote, () => setPhase('note-tools')),
-            'note-tools': () => timeout = window.setTimeout(() => setPhase('note-rewrite'), 1500),
-            'note-rewrite': () => timeout = window.setTimeout(() => setPhase('note-save'), 1500),
-            'note-save': () => timeout = window.setTimeout(() => setPhase('grid-view'), 2000),
-            'grid-view': () => timeout = window.setTimeout(() => setPhase('ai-timer-start'), 3000),
-            'ai-timer-start': () => typeText(timerChatText, setTypedChat, () => setPhase('ai-timer-show')),
-            'ai-timer-show': () => {
-                interval = window.setInterval(() => setTimer(s => Math.max(0, s - 1)), 10);
-                timeout = window.setTimeout(() => { clearInterval(interval); setPhase('ai-task-start'); }, 2500);
-            },
-            'ai-task-start': () => typeText(taskChatText, setTypedChat, () => setPhase('ai-task-show')),
-            'ai-task-show': () => {
-                setShowTask(true);
-                timeout = window.setTimeout(() => setPhase('outro'), 2500);
-            },
-            outro: () => timeout = window.setTimeout(() => {
-                // Reset states for loop
-                setTypedNote('');
-                setTypedChat('');
-                setTimer(300);
-                setShowTask(false);
-                setPhase('intro');
-            }, 1000)
-        };
-        
-        sequence[phase]?.();
-
-        return () => {
-            clearTimeout(timeout);
-            clearInterval(interval);
-        };
-    }, [phase]);
-
-    const isActive = (phases: string[]) => phases.includes(phase);
-
+const LandingPage: React.FC<{ onNavigate: (path: string) => void }> = ({ onNavigate }) => {
     return (
-        <section className="py-20 sm:py-24 bg-white">
-            <div className="mx-auto max-w-5xl px-6 lg:px-8">
-                <div className="relative w-full h-[26rem] bg-gray-100 rounded-2xl shadow-xl overflow-hidden p-4">
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 animate-gradient-pan" style={{ backgroundSize: '200% 200%' }}></div>
-
-                    {/* Intro Scene */}
-                    <div className={`scene-container justify-center ${isActive(['intro']) ? 'active' : ''}`}>
-                        <h2 className="text-4xl lg:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 animate-text-in">Introducing Kyndra Notes</h2>
+        <div className="bg-white text-gray-900 font-sans selection:bg-indigo-100 selection:text-indigo-900">
+            {/* Navigation */}
+            <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+                <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <AppLogoIcon className="w-12 h-12 object-contain" />
+                        <span className="font-bold text-xl tracking-tight">Kyndra Notes</span>
                     </div>
+                    <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-600">
+                        <a href="#features" className="hover:text-black transition-colors">Features</a>
+                        <a href="#labs" className="hover:text-black transition-colors">Labs</a>
+                        <a href="#integrations" className="hover:text-black transition-colors">Integrations</a>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <a href="/login" onClick={(e) => { e.preventDefault(); onNavigate('/login'); }} className="hidden md:block text-sm font-semibold text-gray-900 hover:text-indigo-600 transition-colors">Log in</a>
+                        <a href="/login" onClick={(e) => { e.preventDefault(); onNavigate('/login'); }} className="bg-black text-white text-sm font-semibold py-2.5 px-6 rounded-full hover:bg-gray-800 transition-all hover:scale-105 active:scale-95">
+                            Get Started
+                        </a>
+                    </div>
+                </div>
+            </nav>
 
-                    {/* Note & Grid Scene */}
-                    <div className={`scene-container transition-transform,opacity duration-1000 ease-in-out ${isActive(['note-start', 'note-tools', 'note-rewrite', 'note-save', 'grid-view']) ? 'active' : ''} ${isActive(['grid-view']) ? 'scale-30 -translate-x-2/3 -translate-y-2/3' : ''}`}>
-                         <div className="w-full h-full bg-white/80 backdrop-blur-sm rounded-lg flex flex-col p-6 lg:p-8">
-                            <div className="flex items-center justify-between mb-4 flex-shrink-0 animate-pop-in">
-                                <h1 className="text-2xl font-bold text-gray-400">Classic Note</h1>
-                                <button className={`font-semibold py-2 px-6 rounded-full transition-all duration-300 ${isActive(['note-save']) ? 'bg-green-600 text-white' : 'bg-black text-white'}`}>
-                                    {isActive(['note-save']) ? 'Saved!' : 'Save Note'}
-                                </button>
-                            </div>
-                            <div className="flex-grow flex flex-col overflow-hidden">
-                                <div className="text-4xl font-bold text-gray-800 mb-4 pb-2 border-b border-gray-200 animate-pop-in" style={{ animationDelay: '0.2s' }}>Marketing Campaign</div>
-                                <div className="flex-1 w-full text-lg leading-relaxed text-gray-700">
-                                    <pre className="whitespace-pre-wrap font-sans transition-opacity duration-500 animate-pop-in" style={{ animationDelay: '0.3s' }}>
-                                        {isActive(['note-rewrite', 'note-save', 'grid-view']) ? rewrittenNoteText : typedNote}
-                                        {isActive(['note-start']) && <span className="blinking-cursor">|</span>}
-                                    </pre>
-                                </div>
-                                <div className={`flex-shrink-0 mt-4 flex items-center justify-center gap-2 flex-wrap transition-all duration-500 ${isActive(['note-tools', 'note-rewrite']) ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-                                    <button className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-white border border-gray-200 animate-pop-in" style={{ animationDelay: '0.4s' }}>Summarize</button>
-                                    <button className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-full bg-white border border-gray-200 transition-all animate-pop-in ${isActive(['note-rewrite']) ? 'bg-black text-white scale-95' : ''}`} style={{ animationDelay: '0.5s' }}>Rewrite</button>
-                                </div>
-                            </div>
-                        </div>
+            {/* Hero Section */}
+            <section className="pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden relative">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none">
+                    <div className="absolute top-20 left-10 w-72 h-72 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob"></div>
+                    <div className="absolute top-20 right-10 w-72 h-72 bg-yellow-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-2000"></div>
+                    <div className="absolute -bottom-32 left-1/3 w-72 h-72 bg-pink-100 rounded-full mix-blend-multiply filter blur-3xl opacity-40 animate-blob animation-delay-4000"></div>
+                </div>
+                
+                <div className="max-w-7xl mx-auto px-6 text-center relative z-10">
+                    <div className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-1.5 mb-8 animate-fade-in-up shadow-sm">
+                        <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                        <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">New: Kyndra Chat 2.0</span>
+                    </div>
+                    <h1 className="text-6xl md:text-8xl font-extrabold tracking-tight text-gray-900 mb-8 animate-fade-in-up" style={{animationDelay: '0.1s'}}>
+                        Capture thoughts.<br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">Unleash creativity.</span>
+                    </h1>
+                    <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-12 leading-relaxed animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+                        Kyndra Notes is more than just a notepad. It's an AI-powered workspace where your ideas evolve into plans, projects, and reality.
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up" style={{animationDelay: '0.3s'}}>
+                        <a href="/login" onClick={(e) => { e.preventDefault(); onNavigate('/login'); }} className="w-full sm:w-auto bg-black text-white text-lg font-bold py-4 px-8 rounded-full hover:bg-gray-900 transition-transform hover:scale-105 shadow-xl shadow-indigo-500/10">
+                            Start Writing for Free
+                        </a>
+                        <a href="#features" className="w-full sm:w-auto bg-white text-gray-900 border border-gray-200 text-lg font-bold py-4 px-8 rounded-full hover:bg-gray-50 transition-colors">
+                            Explore Features
+                        </a>
                     </div>
                     
-                    {/* Grid Items */}
-                    <div className={`absolute inset-0 grid grid-cols-3 grid-rows-2 gap-4 p-4 ${isActive(['grid-view']) ? '' : 'pointer-events-none'}`}>
-                        <div className={`bg-yellow-200 p-2 rounded-lg shadow-md grid-item ${isActive(['grid-view']) ? 'active' : ''}`} style={{ transitionDelay: '0.2s' }}><p className="font-bold text-xs">Quick Idea</p></div>
-                        <div className={`bg-white p-2 rounded-lg shadow-md grid-item ${isActive(['grid-view']) ? 'active' : ''}`} style={{ transitionDelay: '0.3s' }}><p className="font-bold text-xs">Meeting Notes</p></div>
-                        <div className={`bg-amber-100 p-2 rounded-lg shadow-md grid-item ${isActive(['grid-view']) ? 'active' : ''}`} style={{ transitionDelay: '0.25s' }}><p className="font-bold text-xs">Journal</p></div>
-                        <div className={`bg-white p-2 rounded-lg shadow-md grid-item ${isActive(['grid-view']) ? 'active' : ''}`} style={{ transitionDelay: '0.35s' }}><p className="font-bold text-xs">Book List</p></div>
-                        <div className={`bg-blue-200 p-2 rounded-lg shadow-md grid-item ${isActive(['grid-view']) ? 'active' : ''}`} style={{ transitionDelay: '0.4s' }}><p className="font-bold text-xs">Recipe</p></div>
-                    </div>
-
-                    {/* AI Scenes */}
-                    <div className={`scene-container flex-col gap-8 justify-center ${isActive(['ai-timer-start', 'ai-timer-show', 'ai-task-start', 'ai-task-show']) ? 'active' : ''}`}>
-                        <div className={`w-[500px] h-14 bg-white/80 backdrop-blur-sm rounded-full shadow-lg border flex items-center px-4 gap-2 transition-all duration-500 ${isActive(['ai-timer-start', 'ai-task-start']) ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-                             <p className="flex-1 text-sm">{typedChat}{isActive(['ai-timer-start', 'ai-task-start']) && <span className="blinking-cursor">|</span>}</p>
-                             <div className="w-10 h-10 bg-black text-white rounded-full"></div>
-                        </div>
-                        <div className={`bg-black text-white w-80 rounded-3xl p-6 text-center transition-all duration-500 ${isActive(['ai-timer-show']) ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-                            <p className="text-5xl font-mono">{Math.floor(timer / 60).toString().padStart(2, '0')}:{(timer % 60).toString().padStart(2, '0')}</p>
-                        </div>
-                         <div className={`bg-white p-6 rounded-2xl shadow-sm border w-[500px] transition-all duration-500 ${isActive(['ai-task-show']) ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Tasks</h2>
-                            <div className={`flex items-center gap-3 p-2 bg-gray-50 rounded-md transition-all duration-500 ${showTask ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}><input type="checkbox" className="h-5 w-5 rounded" /><span>Buy groceries</span></div>
-                         </div>
-                    </div>
-
-                </div>
-            </div>
-            <style>{`
-                .blinking-cursor { animation: blink 1s step-end infinite; } 
-                @keyframes blink { 50% { opacity: 0; } }
-                @keyframes gradient-pan { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-                .animate-gradient-pan { animation: gradient-pan 15s ease infinite; }
-                
-                .scene-container { position: absolute; inset: 0; display: flex; align-items: center; opacity: 0; transition: opacity 0.7s ease-in-out; pointer-events: none; }
-                .scene-container.active { opacity: 1; pointer-events: auto; }
-                
-                @keyframes text-in { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-                .animate-text-in { animation: text-in 1s ease-out forwards; }
-                
-                @keyframes pop-in { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
-                .animate-pop-in { animation: pop-in 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; opacity: 0; }
-
-                .grid-item { opacity: 0; transform: translateY(20px); transition: opacity 0.5s ease-out, transform 0.5s ease-out; }
-                .grid-item.active { opacity: 1; transform: translateY(0); }
-            `}</style>
-        </section>
-    );
-};
-
-interface LandingPageProps {
-    onNavigate: (path: string) => void;
-}
-
-const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
-    return (
-        <div className="bg-white text-gray-800 font-sans">
-            {/* Header */}
-            <header className="fixed top-6 left-1/2 -translate-x-1/2 z-50">
-                <nav className="flex items-center gap-6 bg-white/70 backdrop-blur-xl rounded-full shadow-lg px-6 py-3 border border-white/80">
-                    <div className="flex items-center">
-                        <AppLogoIcon className="w-6 h-6" />
-                        <span className="ml-2 font-bold text-md">Kyndra Notes</span>
-                    </div>
-                    <div className="hidden md:flex items-center gap-6">
-                        <a href="#about" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">
-                            About
-                        </a>
-                        <a href="#features" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">
-                            Features
-                        </a>
-                        <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">
-                            FAQ
-                        </a>
-                    </div>
-                    <a href="/login" onClick={(e) => { e.preventDefault(); onNavigate('/login'); }} className="bg-black text-white font-semibold py-2 px-5 rounded-full text-sm hover:bg-gray-800 transition-colors">
-                        Login
-                    </a>
-                </nav>
-            </header>
-
-            {/* Main Content */}
-            <main>
-                {/* Hero Section */}
-                <section className="min-h-screen flex items-center justify-center text-center px-4 bg-gray-50">
-                    <div className="max-w-3xl">
-                        <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-gray-900">
-                            Your Ideas, <span className="text-gray-500">Organized.</span>
-                        </h1>
-                        <p className="mt-6 text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-                            Kyndra Notes is a modern, minimalist note-taking app designed for creative individuals. Organize your thoughts, create detailed notes, and explore new ideas seamlessly with the power of AI.
-                        </p>
-                        <a href="/login" onClick={(e) => { e.preventDefault(); onNavigate('/login'); }} className="mt-10 inline-block bg-black text-white font-semibold py-4 px-8 rounded-full text-lg hover:bg-gray-800 transition-colors">
-                            Get Started for Free
-                        </a>
-                        <div className="mt-8 flex justify-center">
-                            <a href="https://www.producthunt.com/products/silo-notes?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-silo-notes" target="_blank" rel="noopener noreferrer">
-                                <img
-                                    src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1026771&theme=light&t=1760538777146"
-                                    alt="Kyndra Notes - Your Ideas, Organized. | Product Hunt"
-                                    style={{width: '250px', height: '54px'}}
-                                    width="250"
-                                    height="54"
-                                />
-                            </a>
-                        </div>
-                    </div>
-                </section>
-                
-                {/* About Section */}
-                <section id="about" className="py-20 sm:py-24 bg-white">
-                    <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                        <div className="mx-auto max-w-2xl lg:text-center">
-                            <h2 className="text-base font-semibold leading-7 text-indigo-600">The Studio</h2>
-                            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">From the Developer</p>
-                        </div>
-                        <div className="mx-auto mt-16 max-w-2xl">
-                            <div className="bg-gray-50 p-8 rounded-2xl border border-gray-200 text-center">
-                                <h3 className="text-2xl font-bold text-gray-800">Emanuel Martinez</h3>
-                                <p className="text-indigo-600 font-semibold mt-1">Kyndra Labs</p>
-                                <p className="mt-4 text-gray-600">
-                                    Kyndra Labs is the creative studio behind Kyndra Notes, dedicated to building intuitive and powerful tools for creative individuals. As the developer, I am passionate about crafting applications that are both beautiful and functional, empowering users to organize their thoughts and unlock their potential.
-                                </p>
-                                <div className="mt-6 border-t pt-6">
-                                    <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Contact</h4>
-                                    <ul className="mt-2 space-y-1 text-gray-700">
-                                        <li><a href="mailto:survivalcreativeminecraftadven@gmail.com" className="hover:underline">survivalcreativeminecraftadven@gmail.com</a></li>
-                                        <li><a href="mailto:rocio1976ramirezpena@gmail.com" className="hover:underline">rocio1976ramirezpena@gmail.com</a></li>
-                                    </ul>
-                                </div>
+                    {/* Hero Image / UI Preview */}
+                    <div className="mt-20 relative max-w-5xl mx-auto animate-fade-in-up" style={{animationDelay: '0.5s'}}>
+                        <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent z-20"></div>
+                        <img 
+                            src="https://i.ibb.co/mJ9dF3G/Clean-Shot-2025-02-12-at-11-47-12.png" 
+                            alt="App Interface" 
+                            className="rounded-2xl shadow-2xl border border-gray-200 w-full h-auto"
+                        />
+                         <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-white rounded-full shadow-lg py-3 px-8 flex items-center gap-8 border border-gray-100 z-30 whitespace-nowrap">
+                            <p className="text-sm font-bold text-gray-500 uppercase tracking-wider">Trusted by creators at</p>
+                            <div className="flex gap-6 opacity-60 grayscale">
+                                <GoogleIcon className="h-5 w-5" />
+                                <SlackIcon className="h-5 w-5" />
+                                {/* Add more fake logos if needed */}
                             </div>
                         </div>
                     </div>
-                </section>
+                </div>
+            </section>
 
-                <AppPreviewAnimation />
-                
-                {/* Features Section */}
-                <section id="features" className="py-20 sm:py-32 bg-gray-50">
-                    <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                        <div className="mx-auto max-w-2xl lg:text-center">
-                            <h2 className="text-base font-semibold leading-7 text-indigo-600">Your Creative Hub</h2>
-                            <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">All Your Ideas in One Place</p>
-                            <p className="mt-6 text-lg leading-8 text-gray-600">
-                                From quick thoughts to detailed projects, Kyndra Notes provides the tools you need to capture and develop your ideas effectively.
+            {/* Bento Grid Features */}
+            <section id="features" className="py-24 bg-white">
+                <div className="max-w-7xl mx-auto px-6">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl font-bold text-gray-900 mb-4">Everything you need to think clearly.</h2>
+                        <p className="text-xl text-gray-500 max-w-2xl mx-auto">From simple notes to complex workflows, we've got you covered.</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto md:h-[600px]">
+                        {/* Large Card - Now White Theme */}
+                        <BentoCard title="Kyndra AI Assistant" className="md:col-span-2 md:row-span-2 bg-white border-gray-200 shadow-xl shadow-gray-100 flex flex-col">
+                            <p className="text-gray-500 mb-8 max-w-md leading-relaxed">
+                                Not just a chatbot. A co-creator. Ask Kyndra to draft emails, brainstorm ideas, create tasks, or even schedule meetings directly from your chat.
                             </p>
-                        </div>
-                        <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
-                            <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-10 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
-                                <div className="relative pl-16">
-                                    <dt className="text-base font-semibold leading-7 text-gray-900">
-                                        <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100">
-                                            <FeatureIcon1 />
-                                        </div>
-                                        AI-Powered Tools
-                                    </dt>
-                                    <dd className="mt-2 text-base leading-7 text-gray-600">Enhance your writing with built-in AI. Summarize long texts, rewrite sentences for clarity, and dictate notes with speech-to-text.</dd>
+                            <div className="mt-auto bg-gray-50/80 rounded-2xl p-6 border border-gray-100 relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-400 to-purple-400"></div>
+                                <div className="flex items-start gap-3 mb-6">
+                                    <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0"></div>
+                                    <div className="bg-white border border-gray-200 shadow-sm rounded-2xl rounded-tl-none p-4 text-sm text-gray-700">
+                                        Create a marketing plan for the new launch.
+                                    </div>
                                 </div>
-                                <div className="relative pl-16">
-                                    <dt className="text-base font-semibold leading-7 text-gray-900">
-                                        <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100">
-                                            <FeatureIcon2 />
-                                        </div>
-                                        Organize with Spaces & Boards
-                                    </dt>
-                                    <dd className="mt-2 text-base leading-7 text-gray-600">Group your notes into dedicated 'Spaces' for different projects or areas of your life. Use Boards for mind maps, workflows, and more.</dd>
+                                 <div className="flex items-start gap-3 justify-end">
+                                    <div className="bg-indigo-600 text-white shadow-md shadow-indigo-200 rounded-2xl rounded-tr-none p-4 text-sm">
+                                        Here's a draft marketing plan with key channels and a timeline...
+                                    </div>
+                                     <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-600">
+                                        <span className="material-symbols-rounded text-sm">smart_toy</span>
+                                     </div>
                                 </div>
-                                <div className="relative pl-16">
-                                    <dt className="text-base font-semibold leading-7 text-gray-900">
-                                        <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100">
-                                            <FeatureIcon3 />
-                                        </div>
-                                        Multiple Note Types
-                                    </dt>
-                                    <dd className="mt-2 text-base leading-7 text-gray-600">Choose from Classic notes for long-form writing, Journals for daily entries, or colorful Sticky Notes for quick thoughts.</dd>
-                                </div>
-                                <div className="relative pl-16">
-                                    <dt className="text-base font-semibold leading-7 text-gray-900">
-                                        <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100">
-                                             <FeatureIcon4 />
-                                        </div>
-                                        Private & Secure
-                                    </dt>
-                                    <dd className="mt-2 text-base leading-7 text-gray-600">All your data is stored directly in your browser's local storage. We never see or store your notes, ensuring your privacy is protected.</dd>
-                                </div>
-                            </dl>
-                        </div>
-                    </div>
-                </section>
+                            </div>
+                        </BentoCard>
 
-                {/* FAQ Section */}
-                <section id="faq" className="bg-white py-20 sm:py-32">
-                    <div className="mx-auto max-w-3xl px-6 lg:px-8">
-                        <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl text-center">Frequently Asked Questions</h2>
-                        <div className="mt-12">
-                             <FaqItem
-                                question="Is Kyndra Notes free to use?"
-                                answer="Yes, Kyndra Notes is completely free to use. Advanced AI features require you to provide your own Gemini API key, which may have associated costs from Google, but the core note-taking functionality is free."
-                            />
-                             <FaqItem
-                                question="Where is my data stored?"
-                                answer="Your privacy is our priority. All your notes, tasks, and other data are stored exclusively in your browser's local storage on your device. We do not have a server, and we never have access to your content."
-                            />
-                             <FaqItem
-                                question="Can I access my notes on other devices?"
-                                answer="Currently, because all data is stored locally in your browser, your notes are tied to the specific browser on the device you used to create them. We are exploring sync options for the future."
-                            />
-                             <FaqItem
-                                question="What AI features are available?"
-                                answer="You can use powerful AI tools like summarizing, rewriting, speech-to-text transcription, and text-to-speech generation. Just add your own Gemini API key in the settings to unlock these features."
-                            />
-                        </div>
+                        {/* Tall Card */}
+                        <BentoCard title="Spaces & Boards" className="md:row-span-2 bg-gray-50 border-gray-200">
+                            <p className="text-gray-500 text-sm mb-4">Organize your life into distinct spaces. Use Kanban boards, mind maps, and more.</p>
+                            <div className="grid grid-cols-2 gap-2 mt-8 opacity-100">
+                                <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-sm h-24 transform transition-transform hover:-translate-y-1"></div>
+                                <div className="bg-yellow-50 border border-yellow-100 p-3 rounded-xl shadow-sm h-24 transform translate-y-4 transition-transform hover:-translate-y-1"></div>
+                                <div className="bg-blue-50 border border-blue-100 p-3 rounded-xl shadow-sm h-24 transform -translate-y-2 transition-transform hover:-translate-y-1"></div>
+                                <div className="bg-white border border-gray-100 p-3 rounded-xl shadow-sm h-24 transform transition-transform hover:-translate-y-1"></div>
+                            </div>
+                        </BentoCard>
                     </div>
-                </section>
-                
-                {/* CTA Section */}
-                <section className="bg-gray-50 py-20 sm:py-24">
-                    <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
-                        <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Ready to get started?</h2>
-                        <p className="mt-4 text-lg leading-8 text-gray-600">Start organizing your thoughts today. It's free.</p>
-                        <a href="/login" onClick={(e) => { e.preventDefault(); onNavigate('/login'); }} className="mt-10 inline-block bg-black text-white font-semibold py-4 px-8 rounded-full text-lg hover:bg-gray-800 transition-colors">
-                            Create Your First Note
+                    
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                        <BentoCard title="Voice Memos" className="bg-orange-50 border-orange-100">
+                            <p className="text-gray-600 text-sm">Capture fleeting thoughts instantly with high-fidelity audio recording.</p>
+                             <div className="mt-6 h-12 bg-white rounded-full w-full flex items-center px-4 shadow-sm border border-orange-100">
+                                <div className="w-full h-1 bg-orange-400/30 rounded-full overflow-hidden">
+                                     <div className="h-full bg-orange-500 w-2/3 rounded-full"></div>
+                                </div>
+                             </div>
+                        </BentoCard>
+                        <BentoCard title="Infographic Mode" className="bg-blue-50 border-blue-100">
+                            <p className="text-gray-600 text-sm">Turn boring text notes into beautiful, shareable visuals in seconds.</p>
+                            <div className="mt-6 flex gap-2 justify-center">
+                                <div className="w-8 h-12 bg-blue-200 rounded shadow-sm"></div>
+                                <div className="w-8 h-12 bg-blue-300 rounded translate-y-2 shadow-sm"></div>
+                                <div className="w-8 h-12 bg-blue-400 rounded -translate-y-1 shadow-sm"></div>
+                            </div>
+                        </BentoCard>
+                         <BentoCard title="Privacy First" className="bg-green-50 border-green-100">
+                            <p className="text-gray-600 text-sm">Your data stays on your device. Local-first architecture means we never see your notes.</p>
+                             <div className="mt-6 flex items-center gap-2 text-green-700 font-bold bg-white px-4 py-2 rounded-full w-fit shadow-sm border border-green-100">
+                                <span className="material-symbols-rounded">lock</span>
+                                <span>End-to-End Local</span>
+                             </div>
+                        </BentoCard>
+                     </div>
+                </div>
+            </section>
+            
+            {/* Labs Teaser - Now White/Light Theme */}
+            <section id="labs" className="py-24 bg-gray-50 border-t border-gray-200 relative overflow-hidden">
+                <div className="max-w-7xl mx-auto px-6 relative z-10 flex flex-col md:flex-row items-center gap-12">
+                    <div className="flex-1">
+                        <div className="inline-block bg-indigo-100 text-indigo-700 px-4 py-1 rounded-full text-sm font-bold mb-6">Kyndra Labs</div>
+                        <h2 className="text-5xl font-bold mb-6 text-gray-900">Experimental tools for the curious mind.</h2>
+                        <p className="text-gray-600 text-lg mb-8 leading-relaxed">
+                            Access cutting-edge AI features like YouTube Summarization, Flashcard Generation, and Concept Explainers. Constantly evolving, always useful.
+                        </p>
+                        <a href="/login" onClick={(e) => { e.preventDefault(); onNavigate('/login'); }} className="inline-flex items-center gap-2 bg-black text-white px-6 py-3 rounded-full font-bold hover:bg-gray-800 transition-all hover:gap-4 shadow-lg shadow-gray-200">
+                            Explore Labs <span className="material-symbols-rounded">arrow_forward</span>
                         </a>
                     </div>
-                </section>
-            </main>
+                    <div className="flex-1 grid grid-cols-2 gap-4">
+                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all">
+                            <div className="w-12 h-12 bg-pink-50 rounded-xl flex items-center justify-center mb-4 text-pink-500">
+                                <span className="material-symbols-rounded text-2xl">smart_toy</span>
+                            </div>
+                            <h4 className="font-bold text-gray-900">Quiz Gen</h4>
+                        </div>
+                        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all translate-y-8">
+                            <div className="w-12 h-12 bg-yellow-50 rounded-xl flex items-center justify-center mb-4 text-yellow-500">
+                                <span className="material-symbols-rounded text-2xl">lightbulb</span>
+                            </div>
+                            <h4 className="font-bold text-gray-900">Concept Explainer</h4>
+                        </div>
+                         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all">
+                            <div className="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center mb-4 text-red-500">
+                                <span className="material-symbols-rounded text-2xl">youtube_activity</span>
+                            </div>
+                            <h4 className="font-bold text-gray-900">Video Notes</h4>
+                        </div>
+                         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all translate-y-8">
+                            <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4 text-blue-500">
+                                <span className="material-symbols-rounded text-2xl">school</span>
+                            </div>
+                            <h4 className="font-bold text-gray-900">Flashcards</h4>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             {/* Footer */}
-            <footer className="bg-white border-t py-8 px-4">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left">
-                    <p className="text-sm text-gray-500">&copy; {new Date().getFullYear()} Kyndra Notes. All rights reserved.</p>
-                    <div className="flex gap-6 mt-4 md:mt-0">
-                        <a href="/privacy" onClick={(e) => { e.preventDefault(); onNavigate('/privacy'); }} className="text-sm text-gray-600 hover:text-black transition-colors">Privacy Policy</a>
-                        <a href="/terms" onClick={(e) => { e.preventDefault(); onNavigate('/terms'); }} className="text-sm text-gray-600 hover:text-black transition-colors">Terms of Service</a>
+            <footer className="bg-white py-12 border-t border-gray-200">
+                <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center">
+                    <div className="flex items-center gap-3 mb-4 md:mb-0">
+                        <AppLogoIcon className="w-8 h-8" />
+                        <span className="font-bold text-lg text-gray-900">Kyndra Notes</span>
+                    </div>
+                    <div className="flex gap-8 text-sm text-gray-600">
+                        <a href="/privacy" onClick={(e) => { e.preventDefault(); onNavigate('/privacy'); }} className="hover:text-black transition-colors">Privacy</a>
+                        <a href="/terms" onClick={(e) => { e.preventDefault(); onNavigate('/terms'); }} className="hover:text-black transition-colors">Terms</a>
+                        <a href="mailto:support@kyndranotes.app" className="hover:text-black transition-colors">Contact</a>
+                    </div>
+                    <div className="text-sm text-gray-400 mt-4 md:mt-0">
+                        © {new Date().getFullYear()} Kyndra Labs.
                     </div>
                 </div>
             </footer>
+            
+            <style>{`
+                @keyframes blob {
+                    0% { transform: translate(0px, 0px) scale(1); }
+                    33% { transform: translate(30px, -50px) scale(1.1); }
+                    66% { transform: translate(-20px, 20px) scale(0.9); }
+                    100% { transform: translate(0px, 0px) scale(1); }
+                }
+                .animate-blob { animation: blob 7s infinite; }
+                .animation-delay-2000 { animation-delay: 2s; }
+                .animation-delay-4000 { animation-delay: 4s; }
+                
+                @keyframes fade-in-up {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                .animate-fade-in-up { animation: fade-in-up 0.6s ease-out forwards; opacity: 0; }
+            `}</style>
         </div>
     );
 };

@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { AppLogoIcon, YahooIcon, SlackIcon } from './icons';
 
@@ -104,12 +105,12 @@ const SiloLoginPage: React.FC<SiloLoginPageProps> = ({ onLoginSuccess, onNavigat
 
     return (
         <div className="flex h-screen bg-gray-50 items-center justify-center p-8">
-            <div className="max-w-sm w-full text-center bg-white p-8 rounded-2xl shadow-lg border">
-                <div className="flex justify-center mb-6">
-                    <AppLogoIcon className="w-10 h-10" />
+            <div className="max-w-sm w-full text-center bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+                <div className="flex justify-center mb-8">
+                    <AppLogoIcon className="w-16 h-16 object-contain" />
                 </div>
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">Welcome to Kyndra</h2>
-                <p className="text-gray-500 mb-10">Sign in to continue.</p>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome to Kyndra</h2>
+                <p className="text-gray-500 mb-10">Sign in to continue to your workspace.</p>
                 
                 <div className="flex flex-col items-center gap-4">
                     <div ref={signInButtonRef}></div>

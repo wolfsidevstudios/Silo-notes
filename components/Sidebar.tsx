@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { View, Space } from '../types';
 import { HomeIcon, CreateIcon, CalendarIcon, GemIcon, PlusIcon, HashtagIcon, SettingsIcon, SiloLabsIcon, SiloAiIcon, AgendaIcon, AppLogoIcon, CollapseSidebarIcon } from './icons';
@@ -61,8 +62,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className={`flex-shrink-0 border-r border-gray-200 bg-white p-4 flex flex-col transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
       <div className={`flex items-center mb-8 w-full ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
-        <AppLogoIcon className="w-10 h-10" />
-        {!isCollapsed && <span className="ml-3 font-bold text-lg">Kyndra Notes</span>}
+        <AppLogoIcon className="w-14 h-14 object-contain" />
+        {!isCollapsed && <span className="ml-3 font-bold text-lg tracking-tight">Kyndra Notes</span>}
       </div>
       
       <div className="flex-1 overflow-y-auto -mx-4 px-4">
@@ -125,8 +126,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             <button
             onClick={onToggleAiChat}
             className="p-3 bg-gray-200 text-black rounded-full hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-            aria-label="Open Kyndra AI"
-            title="Open Kyndra AI"
+            aria-label="Open Kyndra Chat"
+            title="Open Kyndra Chat"
             >
             <SiloAiIcon />
             </button>
