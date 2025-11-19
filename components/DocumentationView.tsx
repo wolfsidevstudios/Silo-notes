@@ -31,19 +31,19 @@ const DocumentationView: React.FC<DocumentationViewProps> = ({ onBack }) => {
           <span>Back to Settings</span>
         </button>
         <h1 className="text-5xl font-bold text-gray-900">Documentation</h1>
-        <p className="text-xl text-gray-500 mt-2">Discover how Silo Notes brings your ideas to life.</p>
+        <p className="text-xl text-gray-500 mt-2">Discover how Kyndra Notes brings your ideas to life.</p>
       </header>
       <div className="flex-grow overflow-y-auto pr-4 -mr-4">
         <div className="max-w-4xl mx-auto">
-            <Section title="Welcome to Silo Labs">
+            <Section title="Welcome to Kyndra Labs">
                 <p>
-                    Silo Labs is our experimental playground where we develop and test powerful, standalone AI tools. These tools are designed to augment your creativity and productivity, from transforming your study habits to streamlining your professional tasks. Our goal is to push the boundaries of what a note-taking app can be.
+                    Kyndra Labs is our experimental playground where we develop and test powerful, standalone AI tools. These tools are designed to augment your creativity and productivity, from transforming your study habits to streamlining your professional tasks. Our goal is to push the boundaries of what a note-taking app can be.
                 </p>
             </Section>
 
             <Section title="How Our Tools Work">
                 <p>
-                    We leverage cutting-edge third-party APIs to power the intelligent features in Silo Labs. Here’s a breakdown of the technology behind our tools:
+                    We leverage cutting-edge third-party APIs to power the intelligent features in Kyndra Labs. Here’s a breakdown of the technology behind our tools:
                 </p>
                 <ul>
                     <li>
@@ -63,7 +63,7 @@ const DocumentationView: React.FC<DocumentationViewProps> = ({ onBack }) => {
             
              <Section title="Third-Party Integrations">
                 <p>
-                    Silo Notes integrates with best-in-class services to provide a rich user experience. Your privacy is paramount, so your API keys and data are handled securely on your own device.
+                    Kyndra Notes integrates with best-in-class services to provide a rich user experience. Your privacy is paramount, so your API keys and data are handled securely on your own device.
                 </p>
                 <div className="grid md:grid-cols-2 gap-6 mt-6">
                     <IntegrationCard 
@@ -84,7 +84,7 @@ const DocumentationView: React.FC<DocumentationViewProps> = ({ onBack }) => {
                     />
                     <IntegrationCard 
                         name="Google Sign-In, Yahoo & Slack"
-                        description="Handles secure authentication without requiring you to create a separate password for Silo Notes. We do not store your account information."
+                        description="Handles secure authentication without requiring you to create a separate password for Kyndra Notes. We do not store your account information."
                     />
                      <IntegrationCard 
                         name="Slack"

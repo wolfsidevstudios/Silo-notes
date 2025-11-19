@@ -119,7 +119,7 @@ const NotesToInfographicToolView: React.FC<NotesToInfographicToolViewProps> = ({
         <p className="text-gray-500 mt-2">Please set your Gemini API key in the Settings to use this tool.</p>
         <button onClick={onBack} className="mt-6 flex items-center text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">
             <BackIcon />
-            <span>Back to Silo Labs</span>
+            <span>Back to Kyndra Labs</span>
         </button>
       </div>
     );
@@ -132,7 +132,7 @@ const NotesToInfographicToolView: React.FC<NotesToInfographicToolViewProps> = ({
       <header className="mb-10 flex-shrink-0">
         <button onClick={onBack} className="flex items-center text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors mb-4">
           <BackIcon />
-          <span>Back to {isViewerMode ? 'Home' : 'Silo Labs'}</span>
+          <span>Back to {isViewerMode ? 'Home' : 'Kyndra Labs'}</span>
         </button>
         <h1 className="text-4xl font-bold text-gray-900">{isViewerMode ? title : 'Notes to Infographic'}</h1>
         {!isViewerMode && <p className="text-lg text-gray-500 mt-2">Visualize your key points by turning text into a compelling infographic.</p>}

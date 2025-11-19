@@ -59,7 +59,7 @@ const SiloChatView: React.FC<SiloChatViewProps> = ({ geminiApiKey, onSaveNote, o
         model: 'gemini-2.5-flash',
         contents: input,
         config: {
-            systemInstruction: `You are Silo Chat, an intelligent assistant in a note-taking app. Your primary function is to help users create content like notes, tasks, and meetings. When a user asks you to create something, you MUST respond with a single JSON object. This object must contain two top-level keys: "responseText" and "action".
+            systemInstruction: `You are Kyndra Chat, an intelligent assistant in a note-taking app. Your primary function is to help users create content like notes, tasks, and meetings. When a user asks you to create something, you MUST respond with a single JSON object. This object must contain two top-level keys: "responseText" and "action".
 1. "responseText": A friendly, conversational message for the user, confirming what you've done. Use markdown for bolding important parts (e.g., **this is bold**) and include relevant emojis.
 2. "action": An object detailing the item to be created, or null if it's a simple conversation. The "action" object has "type" and "payload".
 - For a note: "type" is "CREATE_NOTE". "payload" is an object with "type" (one of "CLASSIC", "STICKY", "JOURNAL"), "title", and "content".
@@ -192,7 +192,7 @@ If the user is just chatting or you are clarifying, "action" should be null. Alw
     return (
         <div className="h-full flex flex-col bg-white relative overflow-hidden">
             <header className="p-4 text-center border-b z-10 bg-white/50 backdrop-blur-sm">
-                <h1 className="text-xl font-bold text-gray-800">Silo Chat</h1>
+                <h1 className="text-xl font-bold text-gray-800">Kyndra Chat</h1>
             </header>
             <div className="flex-grow flex flex-col items-center justify-center text-center p-4 z-10">
                 <div className="bg-yellow-100 text-yellow-800 p-3 rounded-full mb-4">
@@ -200,7 +200,7 @@ If the user is just chatting or you are clarifying, "action" should be null. Alw
                 </div>
                 <h2 className="text-2xl font-semibold text-gray-800">API Key Required</h2>
                 <p className="text-gray-600 mt-2 max-w-sm">
-                    Please set your Google Gemini API key in the Settings to enable Silo Chat.
+                    Please set your Google Gemini API key in the Settings to enable Kyndra Chat.
                 </p>
             </div>
         </div>
@@ -216,7 +216,7 @@ If the user is just chatting or you are clarifying, "action" should be null. Alw
         <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-yellow-200 rounded-full opacity-20 -translate-x-1/2 translate-y-1/2 filter blur-3xl"></div>
 
       <header className="p-4 text-center border-b z-10 bg-white/50 backdrop-blur-sm">
-        <h1 className="text-xl font-bold text-gray-800">Silo Chat</h1>
+        <h1 className="text-xl font-bold text-gray-800">Kyndra Chat</h1>
       </header>
 
       <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 z-10">

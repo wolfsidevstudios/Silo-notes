@@ -62,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     <aside className={`flex-shrink-0 border-r border-gray-200 bg-white p-4 flex flex-col transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`}>
       <div className={`flex items-center mb-8 w-full ${isCollapsed ? 'justify-center' : 'justify-start'}`}>
         <AppLogoIcon />
-        {!isCollapsed && <span className="ml-3 font-bold text-lg">Silo Notes</span>}
+        {!isCollapsed && <span className="ml-3 font-bold text-lg">Kyndra Notes</span>}
       </div>
       
       <div className="flex-1 overflow-y-auto -mx-4 px-4">
@@ -72,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <NavItem icon={<CalendarIcon />} label="Calendar" isActive={isNavActive(View.CALENDAR)} onClick={() => onViewChange(View.CALENDAR)} />
           <NavItem icon={<GemIcon />} label="Gems" isActive={isNavActive(View.GEMS)} onClick={() => onViewChange(View.GEMS)} />
           <NavItem icon={<AgendaIcon />} label="Agenda" isActive={isNavActive(View.AGENDA)} onClick={() => onViewChange(View.AGENDA)} />
-          <NavItem icon={<SiloLabsIcon />} label="Silo Labs" isActive={isNavActive(View.SILO_LABS)} onClick={() => onViewChange(View.SILO_LABS)} />
+          <NavItem icon={<SiloLabsIcon />} label="Kyndra Labs" isActive={isNavActive(View.SILO_LABS)} onClick={() => onViewChange(View.SILO_LABS)} />
         </nav>
         
         <div className="mt-10">
@@ -125,8 +125,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             <button
             onClick={onToggleAiChat}
             className="p-3 bg-gray-200 text-black rounded-full hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
-            aria-label="Open Silo AI"
-            title="Open Silo AI"
+            aria-label="Open Kyndra AI"
+            title="Open Kyndra AI"
             >
             <SiloAiIcon />
             </button>

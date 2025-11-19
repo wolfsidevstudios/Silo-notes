@@ -13,9 +13,9 @@ const GemsView: React.FC<GemsViewProps> = ({ gems }) => {
            <div className="bg-blue-100 p-2 rounded-full">
               <GemIcon />
            </div>
-           <h1 className="text-4xl font-bold text-gray-900 ml-4">Silo Gems</h1>
+           <h1 className="text-4xl font-bold text-gray-900 ml-4">Kyndra Gems</h1>
         </div>
-        <p className="text-lg text-gray-500 mt-2">Earn and spend Gems to unlock powerful features across Silo Notes.</p>
+        <p className="text-lg text-gray-500 mt-2">Earn and spend Gems to unlock powerful features across Kyndra Notes.</p>
       </header>
 
       <div className="max-w-4xl mx-auto space-y-12">

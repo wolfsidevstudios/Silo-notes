@@ -256,7 +256,7 @@ const AiChatComponent = ({ onClose, onSaveNote, geminiApiKey, onAddTask, onAddMe
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder={geminiApiKey ? "Ask Silo AI to create a note, timer, etc..." : "Please set Gemini API key in Settings"}
+                    placeholder={geminiApiKey ? "Ask Kyndra AI to create a note, timer, etc..." : "Please set Gemini API key in Settings"}
                     className="flex-1 bg-transparent focus:outline-none text-sm"
                     disabled={isLoading || !geminiApiKey}
                 />
@@ -833,8 +833,8 @@ const App: React.FC = () => {
         <button
           onClick={handleToggleAiChat}
           className="fixed bottom-8 right-8 z-40 p-3 bg-gray-200 text-black rounded-full hover:bg-gray-300 transition-all duration-200 shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black animate-pop-in"
-          aria-label="Open Silo AI"
-          title="Open Silo AI"
+          aria-label="Open Kyndra AI"
+          title="Open Kyndra AI"
         >
           <SiloAiIcon />
         </button>

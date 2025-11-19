@@ -50,7 +50,7 @@ const SiloLabsView: React.FC<SiloLabsViewProps> = ({ onViewChange }) => {
            <div className="bg-blue-100 p-2 rounded-full">
               <SiloLabsIcon />
            </div>
-           <h1 className="text-4xl font-bold text-gray-900 ml-4">Silo Labs</h1>
+           <h1 className="text-4xl font-bold text-gray-900 ml-4">Kyndra Labs</h1>
         </div>
         <p className="text-lg text-gray-500 mt-2">
           An experimental playground for powerful, standalone AI tools.
@@ -61,7 +61,7 @@ const SiloLabsView: React.FC<SiloLabsViewProps> = ({ onViewChange }) => {
         <SectionHeader title="Personal Tools" description="AI companions for your daily creative tasks." />
         <ToolCard
             icon={<SiloAiIcon />}
-            title="Silo Chat"
+            title="Kyndra Chat"
             description="An intelligent agent to help you create notes, tasks, meetings, and more, just by talking."
             onClick={() => onViewChange(View.SILO_CHAT)}
             isFeatured={true}

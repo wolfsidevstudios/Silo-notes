@@ -75,7 +75,7 @@ const ConceptExplainerToolView: React.FC<ConceptExplainerToolViewProps> = ({ onB
         <p className="text-gray-500 mt-2">Please set your Gemini API key in the Settings to use this tool.</p>
         <button onClick={onBack} className="mt-6 flex items-center text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors">
             <BackIcon />
-            <span>Back to Silo Labs</span>
+            <span>Back to Kyndra Labs</span>
         </button>
       </div>
     );
@@ -88,7 +88,7 @@ const ConceptExplainerToolView: React.FC<ConceptExplainerToolViewProps> = ({ onB
       <header className="mb-10 flex-shrink-0">
         <button onClick={onBack} className="flex items-center text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors mb-4">
           <BackIcon />
-          <span>Back to Silo Labs</span>
+          <span>Back to Kyndra Labs</span>
         </button>
         <h1 className="text-4xl font-bold text-gray-900">Concept Explainer</h1>
         <p className="text-lg text-gray-500 mt-2">Break down complex topics into simple explanations.</p>

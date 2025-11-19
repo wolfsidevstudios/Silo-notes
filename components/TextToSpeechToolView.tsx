@@ -87,7 +87,7 @@ const TextToSpeechToolView: React.FC<TextToSpeechToolViewProps> = ({ onBack, gem
       <header className="mb-10 flex-shrink-0">
         <button onClick={onBack} className="flex items-center text-sm font-semibold text-gray-500 hover:text-gray-800 transition-colors mb-4">
           <BackIcon />
-          <span>Back to Silo Labs</span>
+          <span>Back to Kyndra Labs</span>
         </button>
         <h1 className="text-4xl font-bold text-gray-900">Text-to-Speech Playground</h1>
         <p className="text-lg text-gray-500 mt-2">Bring your text to life. Experiment with different voices and languages.</p>

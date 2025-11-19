@@ -75,7 +75,7 @@ const NoteCard: React.FC<{ note: Note, onEditNote: (note: Note) => void }> = ({ 
                     </div>
                     {note.privacy === 'private' && <div className="text-gray-400 flex-shrink-0"><LockIcon /></div>}
                 </div>
-                <h3 className="font-bold text-lg mb-2 text-gray-800">{note.title || 'AI Note'}</h3>
+                <h3 className="font-bold text-lg mb-2 text-gray-800">{note.title || 'Kyndra AI Note'}</h3>
                 <p className="text-gray-600 text-sm line-clamp-3">
                     {contentPreview}
                 </p>

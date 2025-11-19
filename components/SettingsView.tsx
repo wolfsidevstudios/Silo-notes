@@ -235,7 +235,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
 
         <div className="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">About Silo Notes</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">About Kyndra Notes</h2>
             
             <button
                 onClick={() => onViewChange(View.DOCUMENTATION)}

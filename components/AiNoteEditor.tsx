@@ -254,7 +254,7 @@ const AiNoteEditor: React.FC<AiNoteEditorProps> = ({ currentNote, onSave, gemini
                     Save Note
                 </button>
                 <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <SiloAiIcon /> Silo AI Note
+                    <SiloAiIcon /> Kyndra AI Note
                     <span className="bg-gray-200 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">Beta</span>
                 </h1>
             </div>

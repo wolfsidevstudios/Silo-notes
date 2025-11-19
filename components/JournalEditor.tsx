@@ -19,7 +19,7 @@ const JournalEditor: React.FC<JournalEditorProps> = ({ currentNote, onSave }) =>
 
   useEffect(() => {
     const originalTitle = document.title;
-    document.title = 'Journal | Silo Notes';
+    document.title = 'Journal | Kyndra Notes';
 
     return () => {
       document.title = originalTitle;

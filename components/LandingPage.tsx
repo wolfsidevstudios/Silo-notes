@@ -124,7 +124,7 @@ const AppPreviewAnimation = () => {
 
                     {/* Intro Scene */}
                     <div className={`scene-container justify-center ${isActive(['intro']) ? 'active' : ''}`}>
-                        <h2 className="text-4xl lg:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 animate-text-in">Introducing Silo Notes</h2>
+                        <h2 className="text-4xl lg:text-5xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600 animate-text-in">Introducing Kyndra Notes</h2>
                     </div>
 
                     {/* Note & Grid Scene */}
@@ -212,7 +212,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                 <nav className="flex items-center gap-6 bg-white/70 backdrop-blur-xl rounded-full shadow-lg px-6 py-3 border border-white/80">
                     <div className="flex items-center">
                         <AppLogoIcon className="w-6 h-6" />
-                        <span className="ml-2 font-bold text-md">Silo Notes</span>
+                        <span className="ml-2 font-bold text-md">Kyndra Notes</span>
                     </div>
                     <div className="hidden md:flex items-center gap-6">
                         <a href="#about" className="text-sm font-medium text-gray-600 hover:text-black transition-colors">
@@ -240,7 +240,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                             Your Ideas, <span className="text-gray-500">Organized.</span>
                         </h1>
                         <p className="mt-6 text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
-                            Silo Notes is a modern, minimalist note-taking app designed for creative individuals. Organize your thoughts, create detailed notes, and explore new ideas seamlessly with the power of AI.
+                            Kyndra Notes is a modern, minimalist note-taking app designed for creative individuals. Organize your thoughts, create detailed notes, and explore new ideas seamlessly with the power of AI.
                         </p>
                         <a href="/login" onClick={(e) => { e.preventDefault(); onNavigate('/login'); }} className="mt-10 inline-block bg-black text-white font-semibold py-4 px-8 rounded-full text-lg hover:bg-gray-800 transition-colors">
                             Get Started for Free
@@ -249,7 +249,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                             <a href="https://www.producthunt.com/products/silo-notes?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-silo-notes" target="_blank" rel="noopener noreferrer">
                                 <img
                                     src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1026771&theme=light&t=1760538777146"
-                                    alt="Silo Notes - Your Ideas, Organized. | Product Hunt"
+                                    alt="Kyndra Notes - Your Ideas, Organized. | Product Hunt"
                                     style={{width: '250px', height: '54px'}}
                                     width="250"
                                     height="54"
@@ -269,9 +269,9 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                         <div className="mx-auto mt-16 max-w-2xl">
                             <div className="bg-gray-50 p-8 rounded-2xl border border-gray-200 text-center">
                                 <h3 className="text-2xl font-bold text-gray-800">Emanuel Martinez</h3>
-                                <p className="text-indigo-600 font-semibold mt-1">Silo Labs</p>
+                                <p className="text-indigo-600 font-semibold mt-1">Kyndra Labs</p>
                                 <p className="mt-4 text-gray-600">
-                                    Silo Labs is the creative studio behind Silo Notes, dedicated to building intuitive and powerful tools for creative individuals. As the developer, I am passionate about crafting applications that are both beautiful and functional, empowering users to organize their thoughts and unlock their potential.
+                                    Kyndra Labs is the creative studio behind Kyndra Notes, dedicated to building intuitive and powerful tools for creative individuals. As the developer, I am passionate about crafting applications that are both beautiful and functional, empowering users to organize their thoughts and unlock their potential.
                                 </p>
                                 <div className="mt-6 border-t pt-6">
                                     <h4 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Contact</h4>
@@ -294,7 +294,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                             <h2 className="text-base font-semibold leading-7 text-indigo-600">Your Creative Hub</h2>
                             <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">All Your Ideas in One Place</p>
                             <p className="mt-6 text-lg leading-8 text-gray-600">
-                                From quick thoughts to detailed projects, Silo Notes provides the tools you need to capture and develop your ideas effectively.
+                                From quick thoughts to detailed projects, Kyndra Notes provides the tools you need to capture and develop your ideas effectively.
                             </p>
                         </div>
                         <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-4xl">
@@ -346,8 +346,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
                         <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl text-center">Frequently Asked Questions</h2>
                         <div className="mt-12">
                              <FaqItem
-                                question="Is Silo Notes free to use?"
-                                answer="Yes, Silo Notes is completely free to use. Advanced AI features require you to provide your own Gemini API key, which may have associated costs from Google, but the core note-taking functionality is free."
+                                question="Is Kyndra Notes free to use?"
+                                answer="Yes, Kyndra Notes is completely free to use. Advanced AI features require you to provide your own Gemini API key, which may have associated costs from Google, but the core note-taking functionality is free."
                             />
                              <FaqItem
                                 question="Where is my data stored?"
@@ -380,7 +380,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onNavigate }) => {
             {/* Footer */}
             <footer className="bg-white border-t py-8 px-4">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center text-center md:text-left">
-                    <p className="text-sm text-gray-500">&copy; {new Date().getFullYear()} Silo Notes. All rights reserved.</p>
+                    <p className="text-sm text-gray-500">&copy; {new Date().getFullYear()} Kyndra Notes. All rights reserved.</p>
                     <div className="flex gap-6 mt-4 md:mt-0">
                         <a href="/privacy" onClick={(e) => { e.preventDefault(); onNavigate('/privacy'); }} className="text-sm text-gray-600 hover:text-black transition-colors">Privacy Policy</a>
                         <a href="/terms" onClick={(e) => { e.preventDefault(); onNavigate('/terms'); }} className="text-sm text-gray-600 hover:text-black transition-colors">Terms of Service</a>

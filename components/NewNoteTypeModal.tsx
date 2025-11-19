@@ -67,7 +67,7 @@ const NewNoteTypeModal: React.FC<NewNoteTypeModalProps> = ({ onSelect, onClose }
                 icon={<SiloAiIcon />} 
                 title={
                     <div className="flex items-center gap-2">
-                        Silo AI Note
+                        Kyndra AI Note
                         <span className="bg-gray-200 text-gray-600 text-xs font-semibold px-2 py-0.5 rounded-full">
                             Beta
                         </span>
